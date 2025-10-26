@@ -11,11 +11,10 @@ import (
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
-// BeamsEffect implements beams that travel across rows and columns, illuminating text
+// BeamsEffect implements beams as a full-screen background animation
 type BeamsEffect struct {
 	width  int
 	height int
-	text   string
 
 	// Configuration
 	beamRowSymbols      []rune
@@ -83,11 +82,10 @@ type BeamGroup struct {
 	beamLength         int // Length of visible beam trail
 }
 
-// BeamsConfig holds configuration for the beams effect
+// BeamsConfig holds configuration for the beams background effect
 type BeamsConfig struct {
 	Width                int
 	Height               int
-	Text                 string
 	BeamRowSymbols       []rune
 	BeamColumnSymbols    []rune
 	BeamDelay            int
@@ -138,24 +136,15 @@ func NewBeamsEffect(config BeamsConfig) *BeamsEffect {
 		config.FinalWipeSpeed = 3 // Activate multiple diagonal groups per frame
 	}
 
-	// Adjust speeds for background mode
-	rowSpeedRange := config.BeamRowSpeedRange
-	colSpeedRange := config.BeamColumnSpeedRange
-	beamDelay := config.BeamDelay
-	gradientSteps := config.BeamGradientSteps
-
-	if config.Text == "" {
-		// Background mode: much faster, denser beams
-		rowSpeedRange = [2]int{40, 120}
-		colSpeedRange = [2]int{30, 60}
-		beamDelay = 1
-		gradientSteps = 3
-	}
+	// Background mode: much faster, denser beams
+	rowSpeedRange := [2]int{40, 120}
+	colSpeedRange := [2]int{30, 60}
+	beamDelay := 1
+	gradientSteps := 3
 
 	b := &BeamsEffect{
 		width:                config.Width,
 		height:               config.Height,
-		text:                 config.Text,
 		beamRowSymbols:       config.BeamRowSymbols,
 		beamColumnSymbols:    config.BeamColumnSymbols,
 		beamDelay:            beamDelay,
@@ -172,7 +161,7 @@ func NewBeamsEffect(config BeamsConfig) *BeamsEffect {
 		frameCount:           0,
 		beamDelayCount:       0,
 		currentDiag:          0,
-		holdFrames:           100, // 5 seconds at 20fps
+		holdFrames:           100,
 		holdCounter:          0,
 		rng:                  rng,
 	}
@@ -181,15 +170,9 @@ func NewBeamsEffect(config BeamsConfig) *BeamsEffect {
 	return b
 }
 
-// init initializes characters and beam groups
+// init initializes characters and beam groups for background mode
 func (b *BeamsEffect) init() {
-	if b.text == "" {
-		// Background mode: fill entire terminal with invisible positions
-		b.initBackgroundMode()
-	} else {
-		// Text mode: use provided text
-		b.initTextMode()
-	}
+	b.initBackgroundMode()
 
 	// Create row groups
 	b.createRowGroups()
@@ -202,69 +185,6 @@ func (b *BeamsEffect) init() {
 
 	// Create diagonal groups for final wipe
 	b.createDiagonalGroups()
-}
-
-// initTextMode initializes with centered text
-func (b *BeamsEffect) initTextMode() {
-	lines := strings.Split(b.text, "\n")
-
-	// Calculate centered position for text block
-	startY := (b.height - len(lines)) / 2
-	if startY < 0 {
-		startY = 0
-	}
-
-	// Find the longest line for centering the entire block
-	maxWidth := 0
-	for _, line := range lines {
-		runes := []rune(line)
-		if len(runes) > maxWidth {
-			maxWidth = len(runes)
-		}
-	}
-
-	// Center based on longest line
-	blockStartX := (b.width - maxWidth) / 2
-	if blockStartX < 0 {
-		blockStartX = 0
-	}
-
-	// Create characters from text
-	for lineIdx, line := range lines {
-		runes := []rune(line)
-
-		for charIdx, char := range runes {
-			if char == ' ' || char == '\t' {
-				continue
-			}
-
-			x := blockStartX + charIdx
-			y := startY + lineIdx
-
-			if x >= b.width || y >= b.height {
-				continue
-			}
-
-			// Create beam gradients for this character
-			beamGradient := b.createGradient(b.beamGradientStops, b.beamGradientSteps)
-			fadeGradient := b.createFadeGradient(beamGradient[len(beamGradient)-1], 5)
-			brightenGradient := b.createGradient(b.finalGradientStops, b.finalGradientSteps)
-
-			b.chars = append(b.chars, BeamCharacter{
-				original:         char,
-				x:                x,
-				y:                y,
-				visible:          false,
-				currentSymbol:    char,
-				currentColor:     "",
-				sceneActive:      "",
-				sceneFrame:       0,
-				beamGradient:     beamGradient,
-				fadeGradient:     fadeGradient,
-				brightenGradient: brightenGradient,
-			})
-		}
-	}
 }
 
 // initBackgroundMode initializes full-screen background mode
@@ -605,46 +525,8 @@ func (b *BeamsEffect) updateGroup(group *BeamGroup) bool {
 // updateFinalWipePhase handles the final diagonal wipe
 func (b *BeamsEffect) updateFinalWipePhase() {
 	// In background mode, skip final wipe and go straight to hold
-	if b.text == "" {
-		b.phase = "hold"
-		b.holdCounter = 0
-		return
-	}
-
-	// Activate diagonal groups at specified speed
-	for i := 0; i < b.finalWipeSpeed && b.currentDiag < len(b.diagonalGroups); i++ {
-		for _, charIdx := range b.diagonalGroups[b.currentDiag] {
-			char := &b.chars[charIdx]
-			char.sceneActive = "brighten"
-			char.sceneFrame = 0
-			char.visible = true
-			char.currentSymbol = char.original
-		}
-		b.currentDiag++
-	}
-
-	// Check if final wipe is complete
-	if b.currentDiag >= len(b.diagonalGroups) {
-		// Check if all characters have finished their brighten animation
-		allComplete := true
-		for i := range b.chars {
-			char := &b.chars[i]
-			if char.sceneActive == "brighten" {
-				gradientLen := len(char.brightenGradient)
-				framesPerStep := b.finalGradientFrames
-				totalFrames := gradientLen * framesPerStep
-				if char.sceneFrame < totalFrames {
-					allComplete = false
-					break
-				}
-			}
-		}
-
-		if allComplete {
-			b.phase = "hold"
-			b.holdCounter = 0
-		}
-	}
+	b.phase = "hold"
+	b.holdCounter = 0
 }
 
 // updateHoldPhase handles the hold period after completion
@@ -652,13 +534,7 @@ func (b *BeamsEffect) updateHoldPhase() {
 	b.holdCounter++
 
 	// In background mode, loop immediately without hold
-	holdDuration := b.holdFrames
-	if b.text == "" {
-		holdDuration = 0
-	}
-
-	// After hold period, reset the animation
-	if b.holdCounter >= holdDuration {
+	if b.holdCounter >= 0 {
 		b.Reset()
 	}
 }

@@ -93,7 +93,7 @@ func showHelp() {
 	fmt.Println("\nOptions:")
 	fmt.Println("  -effect string")
 	fmt.Println("        Animation effect (default: fire)")
-	fmt.Println("        Available: fire, matrix, rain, fireworks, decrypt, pour, print, beams, aquarium")
+	fmt.Println("        Available: fire, matrix, rain, fireworks, decrypt, pour, print, beams, beam-text, aquarium")
 	fmt.Println()
 	fmt.Println("  -theme string")
 	fmt.Println("        Color theme (default: dracula)")
@@ -112,8 +112,13 @@ func showHelp() {
 	fmt.Println("        Duration in seconds (0 = infinite, default: 10)")
 	fmt.Println()
 	fmt.Println("  -file string")
-	fmt.Println("        Text file for text-based effects (decrypt, pour, print, beams)")
-	fmt.Println("        If omitted with beams effect, runs as full-screen background animation")
+	fmt.Println("        Text file for text-based effects (decrypt, pour, print, beam-text)")
+	fmt.Println()
+	fmt.Println("  -auto")
+	fmt.Println("        Auto-size canvas to fit text dimensions (beam-text effect only)")
+	fmt.Println()
+	fmt.Println("  -display")
+	fmt.Println("        Display mode: complete animation once and hold at final state (beam-text effect only)")
 	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Println("  syscgo -effect fire -theme dracula")
@@ -123,7 +128,9 @@ func showHelp() {
 	fmt.Println("  syscgo -effect pour -theme catppuccin -duration 10")
 	fmt.Println("  syscgo -effect print -theme dracula -duration 15")
 	fmt.Println("  syscgo -effect beams -theme nord -duration 0")
-	fmt.Println("  syscgo -effect beams -theme nord -file message.txt -duration 20")
+	fmt.Println("  syscgo -effect beam-text -theme nord -file message.txt -duration 20")
+	fmt.Println("  syscgo -effect beam-text -theme nord -file art.txt -auto -duration 15")
+	fmt.Println("  syscgo -effect beam-text -theme nord -file text.txt -auto -display -duration 5")
 	fmt.Println("  syscgo -effect aquarium -theme nord -duration 0")
 	fmt.Println()
 }
@@ -132,7 +139,9 @@ func main() {
 	effect := flag.String("effect", "fire", "Animation effect (fire, matrix, rain, fireworks, decrypt)")
 	theme := flag.String("theme", "dracula", "Color theme")
 	duration := flag.Int("duration", 10, "Duration in seconds (0 = infinite)")
-	file := flag.String("file", "", "Text file for text-based effects (decrypt, pour, print, beams)")
+	file := flag.String("file", "", "Text file for text-based effects (decrypt, pour, print, beam-text)")
+	auto := flag.Bool("auto", false, "Auto-size canvas to fit text (beam-text only)")
+	display := flag.Bool("display", false, "Display mode: complete once and hold (beam-text only)")
 	help := flag.Bool("h", false, "Show help")
 	flag.BoolVar(help, "help", false, "Show help")
 
@@ -177,12 +186,14 @@ func main() {
 	case "print":
 		runPrint(width, height, *theme, *file, frames)
 	case "beams":
-		runBeams(width, height, *theme, *file, frames)
+		runBeams(width, height, *theme, frames)
+	case "beam-text":
+		runBeamText(width, height, *theme, *file, *auto, *display, frames)
 	case "aquarium":
 		runAquarium(width, height, *theme, frames)
 	default:
 		fmt.Printf("Unknown effect: %s\n", *effect)
-		fmt.Println("Available: fire, matrix, rain, fireworks, decrypt, pour, print, beams, aquarium")
+		fmt.Println("Available: fire, matrix, rain, fireworks, decrypt, pour, print, beams, beam-text, aquarium")
 		os.Exit(1)
 	}
 }
@@ -385,8 +396,8 @@ func runPrint(width, height int, theme string, file string, frames int) {
 	}
 }
 
-func runBeams(width, height int, theme string, file string, frames int) {
-	// Get theme colors for beams effect
+func runBeams(width, height int, theme string, frames int) {
+	// Get theme colors for beams background effect
 	var beamGradientStops []string
 	var finalGradientStops []string
 
@@ -423,21 +434,10 @@ func runBeams(width, height int, theme string, file string, frames int) {
 		finalGradientStops = []string{"#4A4A4A", "#00D1FF", "#FFFFFF"}
 	}
 
-	// Read text from file if provided (empty = background mode)
-	text := ""
-	if file != "" {
-		data, err := os.ReadFile(file)
-		if err == nil {
-			// Wrap text to fit terminal width (leave margin for centering)
-			text = wrapText(string(data), width-10)
-		}
-	}
-
-	// Create beams effect configuration
+	// Create beams background effect configuration
 	config := animations.BeamsConfig{
 		Width:                width,
 		Height:               height,
-		Text:                 text,
 		BeamRowSymbols:       []rune{'▂', '▁', '_'},
 		BeamColumnSymbols:    []rune{'▌', '▍', '▎', '▏'},
 		BeamDelay:            2,
@@ -458,6 +458,98 @@ func runBeams(width, height int, theme string, file string, frames int) {
 	for frames == 0 || frame < frames {
 		beams.Update()
 		output := beams.Render()
+
+		fmt.Print("\033[H")
+		fmt.Print(output)
+		time.Sleep(50 * time.Millisecond)
+		frame++
+	}
+}
+
+func runBeamText(width, height int, theme string, file string, auto bool, display bool, frames int) {
+	// Get theme colors for beam text effect
+	var beamGradientStops []string
+	var finalGradientStops []string
+
+	switch theme {
+	case "dracula":
+		beamGradientStops = []string{"#ffffff", "#8be9fd", "#bd93f9"}
+		finalGradientStops = []string{"#6272a4", "#bd93f9", "#f8f8f2"}
+	case "gruvbox":
+		beamGradientStops = []string{"#ffffff", "#fabd2f", "#fe8019"}
+		finalGradientStops = []string{"#504945", "#fabd2f", "#ebdbb2"}
+	case "nord":
+		beamGradientStops = []string{"#ffffff", "#88c0d0", "#81a1c1"}
+		finalGradientStops = []string{"#434c5e", "#88c0d0", "#eceff4"}
+	case "tokyo-night":
+		beamGradientStops = []string{"#ffffff", "#7dcfff", "#bb9af7"}
+		finalGradientStops = []string{"#414868", "#7aa2f7", "#c0caf5"}
+	case "catppuccin":
+		beamGradientStops = []string{"#ffffff", "#89dceb", "#cba6f7"}
+		finalGradientStops = []string{"#45475a", "#cba6f7", "#cdd6f4"}
+	case "material":
+		beamGradientStops = []string{"#ffffff", "#89ddff", "#bb86fc"}
+		finalGradientStops = []string{"#546e7a", "#89ddff", "#eceff1"}
+	case "solarized":
+		beamGradientStops = []string{"#ffffff", "#2aa198", "#268bd2"}
+		finalGradientStops = []string{"#586e75", "#2aa198", "#fdf6e3"}
+	case "monochrome":
+		beamGradientStops = []string{"#ffffff", "#c0c0c0", "#808080"}
+		finalGradientStops = []string{"#3a3a3a", "#9a9a9a", "#ffffff"}
+	case "transishardjob":
+		beamGradientStops = []string{"#ffffff", "#55cdfc", "#f7a8b8"}
+		finalGradientStops = []string{"#55cdfc", "#f7a8b8", "#ffffff"}
+	default:
+		beamGradientStops = []string{"#ffffff", "#00D1FF", "#8A008A"}
+		finalGradientStops = []string{"#4A4A4A", "#00D1FF", "#FFFFFF"}
+	}
+
+	// Read text from file
+	text := ""
+	if file != "" {
+		data, err := os.ReadFile(file)
+		if err == nil {
+			text = string(data)
+			// Only wrap text if not auto-sizing
+			if !auto {
+				text = wrapText(text, width-10)
+			}
+		} else {
+			fmt.Printf("Error reading file: %v\n", err)
+			os.Exit(1)
+		}
+	} else {
+		fmt.Println("beam-text effect requires -file flag")
+		os.Exit(1)
+	}
+
+	// Create beam text effect configuration
+	config := animations.BeamTextConfig{
+		Width:                width,
+		Height:               height,
+		Text:                 text,
+		Auto:                 auto,
+		Display:              display,
+		BeamRowSymbols:       []rune{'▂', '▁', '_'},
+		BeamColumnSymbols:    []rune{'▌', '▍', '▎', '▏'},
+		BeamDelay:            2,
+		BeamRowSpeedRange:    [2]int{20, 80},
+		BeamColumnSpeedRange: [2]int{15, 30},
+		BeamGradientStops:    beamGradientStops,
+		BeamGradientSteps:    5,
+		BeamGradientFrames:   1,
+		FinalGradientStops:   finalGradientStops,
+		FinalGradientSteps:   8,
+		FinalGradientFrames:  1,
+		FinalWipeSpeed:       3,
+	}
+
+	beamText := animations.NewBeamTextEffect(config)
+
+	frame := 0
+	for frames == 0 || frame < frames {
+		beamText.Update()
+		output := beamText.Render()
 
 		fmt.Print("\033[H")
 		fmt.Print(output)
