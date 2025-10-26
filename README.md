@@ -10,7 +10,10 @@ Terminal animation library for Go. Pure Go animations ready to use in your TUI a
 - **Fire Effect** - DOOM PSX-style fire animation
 - **Decrypt Effect** - Movie-style text decryption animation
 - **Pour Effect** - Characters pour into position from different directions
-- **Print Effects** - Typewriter-style text rendering (library use only)
+- **Beams Effect** - Full-screen light beam background animation
+- **Beam Text Effect** - Text display with animated light beams and auto-sizing
+- **Aquarium** - Underwater scene with fish, diver, boat, and sea life
+- **Print Effect** - Typewriter-style text rendering
 
 ## Installation
 
@@ -51,9 +54,32 @@ syscgo -effect decrypt -theme catppuccin -file message.txt -duration 15
 
 # Pour effect with Tokyo Night theme
 syscgo -effect pour -theme tokyo-night -duration 10
+
+# Beams effect with Nord theme (full-screen background)
+syscgo -effect beams -theme nord -duration 0
+
+# Beam text effect with auto-sizing and display mode (perfect for .zshrc)
+syscgo -effect beam-text -theme nord -file message.txt -auto -display -duration 5
+
+# Aquarium effect with Dracula theme (infinite)
+syscgo -effect aquarium -theme dracula -duration 0
 ```
 
 **Available themes:** dracula, gruvbox, nord, tokyo-night, catppuccin, material, solarized, monochrome, transishardjob
+
+### Beam Text Special Flags
+
+The `beam-text` effect supports two special flags:
+
+- **`-auto`** - Automatically sizes the canvas to fit text dimensions exactly
+- **`-display`** - Completes animation once and holds at final bright state (perfect for `.zshrc`)
+
+Example for `.zshrc` startup animation:
+```bash
+syscgo -effect beam-text -file ~/header.txt -auto -display -theme nord -duration 5
+```
+
+This will animate your text, complete the full beam animation cycle, and hold at the final bright state before continuing shell startup.
 
 ## Effect Showcase
 
@@ -75,7 +101,17 @@ syscgo -effect pour -theme tokyo-night -duration 10
 ### Pour
 ![Pour Effect](assets/pour.gif)
 
-### Print *(in development)*
+### Beams
+![Beams Effect](assets/beams.gif)
+
+### Beam Text
+![Beam Text Effect](assets/beamtext.gif)
+
+### Aquarium
+![Aquarium Effect](assets/aquarium.gif)
+
+### Print
+![Print Effect](assets/print.gif)
 
 ## Demo
 
