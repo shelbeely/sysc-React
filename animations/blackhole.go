@@ -600,6 +600,8 @@ func (e *BlackholeEffect) Render() string {
 		}
 	}
 
+	// Border animation removed - doesn't work well with ASCII characters
+	/*
 	// Draw border
 	for _, borderChar := range e.borderChars {
 		if !borderChar.visible {
@@ -614,6 +616,7 @@ func (e *BlackholeEffect) Render() string {
 			colors[y][x] = borderChar.currentColor
 		}
 	}
+	*/
 
 	// Build output
 	var output strings.Builder
