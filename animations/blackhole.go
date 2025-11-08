@@ -65,8 +65,10 @@ type BlackholeEffect struct {
 	frameCount     int
 
 	// Animation state
-	phase          string // "static", "forming", "consuming", "collapsing", "exploding", "returning", "hold"
-	consumeCounter int    // Track consumption progress
+	phase              string // "static", "forming", "consuming", "collapsing", "exploding", "returning", "hold"
+	consumeCounter     int    // Track consumption progress
+	nextConsumeDelay   int    // Random delay before next character consumption
+	currentConsumeWait int    // Current wait counter for consumption
 }
 
 // BlackholeCharacter represents a single character in the animation
@@ -88,12 +90,13 @@ type BlackholeCharacter struct {
 
 // BorderCharacter represents a character on the blackhole border
 type BorderCharacter struct {
-	angle        float64
-	currentX     float64
-	currentY     float64
-	symbol       rune
-	currentColor string
-	visible      bool
+	angle          float64
+	currentX       float64
+	currentY       float64
+	symbol         rune
+	currentColor   string
+	visible        bool
+	formationDelay int // Delay before this char becomes visible
 }
 
 var unstableSymbols = []rune{'◦', '◎', '◉', '●'}
@@ -249,19 +252,29 @@ func (e *BlackholeEffect) parseText() {
 
 // createBorder creates the circular border around the blackhole
 func (e *BlackholeEffect) createBorder() {
-	// Create approximately 50 border characters around the circle
-	numBorderChars := 50
+	// Create approximately 3× radius border characters (matching TTE)
+	numBorderChars := int(e.blackholeRadius * 3)
+	if numBorderChars < 20 {
+		numBorderChars = 20
+	}
 	e.borderChars = make([]BorderCharacter, numBorderChars)
+
+	// Calculate staggered formation delay (matching TTE)
+	formationDelayIncrement := 100 / numBorderChars
+	if formationDelayIncrement < 10 {
+		formationDelayIncrement = 10
+	}
 
 	for i := range e.borderChars {
 		angle := (float64(i) / float64(numBorderChars)) * 2 * math.Pi
 		e.borderChars[i] = BorderCharacter{
-			angle:        angle,
-			currentX:     e.centerX + e.blackholeRadius*math.Cos(angle),
-			currentY:     e.centerY + e.blackholeRadius*math.Sin(angle),
-			symbol:       '●',
-			currentColor: e.blackholeColor,
-			visible:      false,
+			angle:          angle,
+			currentX:       e.centerX + e.blackholeRadius*math.Cos(angle),
+			currentY:       e.centerY + e.blackholeRadius*math.Sin(angle),
+			symbol:         '●',
+			currentColor:   e.blackholeColor,
+			visible:        false,
+			formationDelay: i * formationDelayIncrement,
 		}
 	}
 }
@@ -364,6 +377,16 @@ func (e *BlackholeEffect) applyStaticGradient() {
 func (e *BlackholeEffect) Update() {
 	e.frameCount++
 
+	// Rotate border continuously for swirling effect (matching TTE speed of 0.2)
+	rotationSpeed := 0.2 // radians per frame
+	for i := range e.borderChars {
+		e.borderChars[i].angle += rotationSpeed
+		// Keep angle in 0-2π range
+		if e.borderChars[i].angle > 2*math.Pi {
+			e.borderChars[i].angle -= 2 * math.Pi
+		}
+	}
+
 	switch e.phase {
 	case "static":
 		if e.frameCount >= e.staticFrames {
@@ -372,21 +395,25 @@ func (e *BlackholeEffect) Update() {
 		}
 
 	case "forming":
-		progress := float64(e.frameCount) / float64(e.formingFrames)
-		if progress > 1.0 {
-			progress = 1.0
+		// Update border positions based on current angles
+		for i := range e.borderChars {
+			e.borderChars[i].currentX = e.centerX + e.blackholeRadius*math.Cos(e.borderChars[i].angle)
+			e.borderChars[i].currentY = e.centerY + e.blackholeRadius*math.Sin(e.borderChars[i].angle)
 		}
 
-		// Gradually show border characters
-		visibleCount := int(progress * float64(len(e.borderChars)))
-		for i := 0; i < visibleCount && i < len(e.borderChars); i++ {
-			e.borderChars[i].visible = true
+		// Staggered formation - characters appear based on individual delays
+		for i := range e.borderChars {
+			if e.frameCount >= e.borderChars[i].formationDelay {
+				e.borderChars[i].visible = true
+			}
 		}
 
 		if e.frameCount >= e.formingFrames {
 			e.phase = "consuming"
 			e.frameCount = 0
 			e.consumeCounter = 0
+			e.nextConsumeDelay = e.rng.Intn(10) // Random delay before first consumption
+			e.currentConsumeWait = 0
 		}
 
 	case "consuming":
@@ -395,19 +422,25 @@ func (e *BlackholeEffect) Update() {
 			progress = 1.0
 		}
 
-		// Consume characters gradually (1-5 per frame based on progress)
-		charsPerFrame := 1 + int(progress*4)
-		for i := 0; i < charsPerFrame; i++ {
-			if e.consumeCounter < len(e.chars) {
-				// Find next character to consume
-				for j := range e.chars {
-					if e.chars[j].consumeOrder == e.consumeCounter && !e.chars[j].consumed {
-						e.chars[j].consumed = true
-						break
-					}
+		// Update border positions based on current angles (swirling)
+		for i := range e.borderChars {
+			e.borderChars[i].currentX = e.centerX + e.blackholeRadius*math.Cos(e.borderChars[i].angle)
+			e.borderChars[i].currentY = e.centerY + e.blackholeRadius*math.Sin(e.borderChars[i].angle)
+		}
+
+		// Consume characters with random delays for organic feel (matching TTE)
+		e.currentConsumeWait++
+		if e.currentConsumeWait >= e.nextConsumeDelay && e.consumeCounter < len(e.chars) {
+			// Find next character to consume
+			for j := range e.chars {
+				if e.chars[j].consumeOrder == e.consumeCounter && !e.chars[j].consumed {
+					e.chars[j].consumed = true
+					break
 				}
-				e.consumeCounter++
 			}
+			e.consumeCounter++
+			e.currentConsumeWait = 0
+			e.nextConsumeDelay = e.rng.Intn(10) // Random delay 0-9 frames before next consumption
 		}
 
 		// Move consumed characters toward center with exponential easing
@@ -611,6 +644,8 @@ func (e *BlackholeEffect) Reset() {
 	e.phase = "static"
 	e.frameCount = 0
 	e.consumeCounter = 0
+	e.nextConsumeDelay = 0
+	e.currentConsumeWait = 0
 
 	// Reset characters
 	for i := range e.chars {
