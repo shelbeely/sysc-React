@@ -472,7 +472,8 @@ func (e *BlackholeEffect) Update() {
 			}
 		}
 
-		if e.frameCount >= e.consumingFrames {
+		if e.consumeCounter >= len(e.chars) {
+			// All characters consumed, move to collapsing
 			e.phase = "collapsing"
 			e.frameCount = 0
 		}
