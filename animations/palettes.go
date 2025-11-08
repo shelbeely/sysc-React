@@ -102,6 +102,35 @@ func GetFirePalette(themeName string) []string {
 			"#55cdfc", // Blue again
 			"#ffffff", // White (hottest)
 		}
+	case "rama":
+		return []string{
+			"#2b2d42", // Space cadet (background)
+			"#8d99ae", // Cool gray
+			"#d90429", // Fire engine red
+			"#ef233c", // Red Pantone
+			"#edf2f4", // Anti-flash white (hottest)
+		}
+	case "eldritch":
+		return []string{
+			"#212337", // Background
+			"#292e42", // Current line
+			"#7081d0", // Comment
+			"#04d1f9", // Cyan
+			"#37f499", // Green
+			"#f1fc79", // Yellow
+			"#f7c67f", // Orange
+			"#f265b5", // Pink
+			"#f16c75", // Red (hottest)
+		}
+	case "dark":
+		return []string{
+			"#000000", // True black
+			"#333333", // Dark gray
+			"#666666", // Mid gray
+			"#999999", // Light gray
+			"#cccccc", // Lighter gray
+			"#ffffff", // True white (hottest)
+		}
 	default:
 		return GetDefaultFirePalette()
 	}
@@ -141,6 +170,12 @@ func GetMatrixPalette(themeName string) []string {
 		return []string{"#1a1a1a", "#3a3a3a", "#5a5a5a", "#7a7a7a", "#9a9a9a", "#bababa"}
 	case "transishardjob":
 		return []string{"#1a1a1a", "#55cdfc", "#f7a8b8", "#ffffff", "#f7a8b8", "#55cdfc"}
+	case "rama":
+		return []string{"#2b2d42", "#8d99ae", "#d90429", "#ef233c", "#edf2f4"}
+	case "eldritch":
+		return []string{"#212337", "#292e42", "#7081d0", "#04d1f9", "#37f499", "#f16c75"}
+	case "dark":
+		return []string{"#000000", "#333333", "#666666", "#999999", "#cccccc", "#ffffff"}
 	default:
 		return []string{"#001100", "#003300", "#005500", "#007700", "#00aa00", "#00ff00"}
 	}
@@ -167,6 +202,12 @@ func GetParticlePalette(themeName string) []string {
 		return []string{"#5a5a5a", "#7a7a7a", "#9a9a9a", "#bababa"}
 	case "transishardjob":
 		return []string{"#55cdfc", "#f7a8b8", "#ffffff"}
+	case "rama":
+		return []string{"#ef233c", "#d90429", "#8d99ae", "#edf2f4"}
+	case "eldritch":
+		return []string{"#37f499", "#04d1f9", "#a48cf2", "#f265b5"}
+	case "dark":
+		return []string{"#ffffff", "#cccccc", "#999999", "#666666"}
 	default:
 		return []string{"#ffffff", "#00ffff", "#ff00ff", "#ffff00"}
 	}
@@ -193,6 +234,12 @@ func GetRainPalette(themeName string) []string {
 		return []string{"#cccccc", "#aaaaaa", "#888888", "#666666"}
 	case "transishardjob":
 		return []string{"#55cdfc", "#f7a8b8", "#ffffff"}
+	case "rama":
+		return []string{"#ef233c", "#d90429", "#8d99ae", "#edf2f4"}
+	case "eldritch":
+		return []string{"#04d1f9", "#37f499", "#f7c67f", "#f265b5", "#a48cf2"}
+	case "dark":
+		return []string{"#ffffff", "#cccccc", "#999999", "#666666"}
 	default:
 		return []string{"#00ff00", "#00cc00", "#009900", "#006600"}
 	}
@@ -219,6 +266,12 @@ func GetFireworksPalette(themeName string) []string {
 		return []string{"#5a5a5a", "#7a5a7a", "#9a9a9a", "#bababa", "#ffffff"}
 	case "transishardjob":
 		return []string{"#55cdfc", "#f7a8b8", "#ffffff", "#f7a8b8", "#55cdfc", "#ffffff"}
+	case "rama":
+		return []string{"#ef233c", "#d90429", "#8d99ae", "#edf2f4", "#ef233c", "#edf2f4"}
+	case "eldritch":
+		return []string{"#f16c75", "#37f499", "#a48cf2", "#04d1f9", "#7081d0", "#f7c67f", "#ebfafa"}
+	case "dark":
+		return []string{"#ffffff", "#cccccc", "#999999", "#666666", "#333333", "#ffffff"}
 	default:
 		return []string{"#ff0000", "#ff8000", "#ffff00", "#80ff00", "#00ff80", "#00ffff", "#8000ff", "#ff00ff", "#ffffff"}
 	}
@@ -247,6 +300,12 @@ func GetScreensaverPalette(themeName string) []string {
 		return []string{"#1a1a1a", "#ffffff", "#cccccc", "#888888", "#666666", "#ffffff"}
 	case "transishardjob":
 		return []string{"#1a1a1a", "#5BCEFA", "#F5A9B8", "#FFFFFF", "#F5A9B8", "#FFFFFF"}
+	case "rama":
+		return []string{"#2b2d42", "#ef233c", "#d90429", "#edf2f4", "#8d99ae", "#edf2f4"}
+	case "eldritch":
+		return []string{"#212337", "#37f499", "#04d1f9", "#a48cf2", "#f265b5", "#ebfafa"}
+	case "dark":
+		return []string{"#000000", "#ffffff", "#ffffff", "#ffffff", "#cccccc", "#ffffff"}
 	default:
 		return []string{"#1a1a1a", "#8b5cf6", "#06b6d4", "#10b981", "#f59e0b", "#f8fafc"}
 	}
