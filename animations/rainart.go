@@ -43,7 +43,7 @@ func NewRainArtEffect(width, height int, palette []string, text string) *RainArt
 		palette:      palette,
 		chars:        []rune{'|', '⋮', '║', '¦', '┆', '┊', '╎', '╏', '▏', '▎', '▍', '▌', '▋', '▊', '▉'},
 		drops:        make([]RainDrop, 0, 200),
-		maxDrops:     width * 2,
+		maxDrops:     width * 4, // 4x width for very dense rain
 		text:         text,
 		artPositions: make(map[int]map[int]rune),
 		frozenChars:  make(map[int]map[int]*FrozenChar),
@@ -95,8 +95,8 @@ func (r *RainArtEffect) parseArt() {
 
 // init initializes rain drops
 func (r *RainArtEffect) init() {
-	// Create initial drops scattered across width
-	for i := 0; i < r.width/3; i++ {
+	// Create many initial drops for dense rain effect
+	for i := 0; i < r.width*2; i++ {
 		drop := RainDrop{
 			X:     r.rng.Intn(r.width),
 			Y:     -r.rng.Intn(r.height),
@@ -159,8 +159,8 @@ func (r *RainArtEffect) Update() {
 	}
 	r.drops = activeDrops
 
-	// Add new drops randomly
-	for len(r.drops) < r.maxDrops && r.rng.Float64() < 0.3 {
+	// Aggressively spawn new drops to maintain high density
+	for len(r.drops) < r.maxDrops && r.rng.Float64() < 0.5 {
 		drop := RainDrop{
 			X:     r.rng.Intn(r.width),
 			Y:     -r.rng.Intn(10),

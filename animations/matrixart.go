@@ -108,19 +108,17 @@ func (m *MatrixArtEffect) parseArt() {
 
 // init initializes matrix streaks
 func (m *MatrixArtEffect) init() {
-	// Create initial streaks across width - extremely dense for fast crystallization
-	for i := 0; i < m.width; i++ {
-		if m.rng.Float64() < 0.5 {
-			streak := MatrixStreak{
-				X:       i,
-				Y:       -m.rng.Intn(m.height),
-				Length:  m.rng.Intn(15) + 5,
-				Speed:   m.rng.Intn(3) + 1,
-				Counter: 0,
-				Active:  true,
-			}
-			m.streaks = append(m.streaks, streak)
+	// Create massive initial stream density for very fast crystallization
+	for i := 0; i < m.width*3; i++ {
+		streak := MatrixStreak{
+			X:       m.rng.Intn(m.width),
+			Y:       -m.rng.Intn(m.height),
+			Length:  m.rng.Intn(15) + 5,
+			Speed:   m.rng.Intn(3) + 1,
+			Counter: 0,
+			Active:  true,
 		}
+		m.streaks = append(m.streaks, streak)
 	}
 }
 
@@ -223,9 +221,9 @@ func (m *MatrixArtEffect) Update() {
 		}
 	}
 
-	// Keep spawning new streaks to maintain high density - target 4x width
-	maxActiveStreaks := m.width * 4
-	for activeCount < maxActiveStreaks && m.rng.Float64() < 0.4 {
+	// Keep spawning new streaks to maintain extremely high density - target 6x width
+	maxActiveStreaks := m.width * 6
+	for activeCount < maxActiveStreaks && m.rng.Float64() < 0.5 {
 		x := m.rng.Intn(m.width)
 		streak := MatrixStreak{
 			X:       x,
