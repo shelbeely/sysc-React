@@ -107,6 +107,9 @@ func showHelp() {
 	fmt.Println("          solarized     - Classic precision colors")
 	fmt.Println("          monochrome    - Grayscale aesthetic")
 	fmt.Println("          transishardjob - Trans pride colors")
+	fmt.Println("          rama          - RAMA keyboard aesthetics")
+	fmt.Println("          eldritch      - Cosmic horror palette")
+	fmt.Println("          dark          - Pure black and white minimalism")
 	fmt.Println()
 	fmt.Println("  -duration int")
 	fmt.Println("        Duration in seconds (0 = infinite, default: 10)")
@@ -389,10 +392,16 @@ func runPour(width, height int, theme string, file string, frames int) {
 		gradientStops = []string{"#808080", "#c0c0c0", "#ffffff"}
 	case "transishardjob":
 		gradientStops = []string{"#55cdfc", "#f7a8b8", "#ffffff"}
+	case "rama":
+		gradientStops = []string{"#ef233c", "#d90429", "#edf2f4"}
+	case "eldritch":
+		gradientStops = []string{"#37f499", "#04d1f9", "#ebfafa"}
+	case "dark":
+		gradientStops = []string{"#ffffff", "#cccccc", "#ffffff"}
 	default:
 		gradientStops = []string{"#8A008A", "#00D1FF", "#FFFFFF"}
 	}
-	
+
 	// Read text from file or use default
 	text := "POUR EFFECT\nDEMO TEXT\nTHIRD LINE"
 	if file != "" {
@@ -458,10 +467,16 @@ func runPrint(width, height int, theme string, file string, frames int) {
 		gradientStops = []string{"#808080", "#c0c0c0", "#ffffff"}
 	case "transishardjob":
 		gradientStops = []string{"#55cdfc", "#f7a8b8", "#ffffff"}
+	case "rama":
+		gradientStops = []string{"#ef233c", "#d90429", "#edf2f4"}
+	case "eldritch":
+		gradientStops = []string{"#37f499", "#04d1f9", "#ebfafa"}
+	case "dark":
+		gradientStops = []string{"#ffffff", "#cccccc", "#ffffff"}
 	default:
 		gradientStops = []string{"#8A008A", "#00D1FF", "#FFFFFF"}
 	}
-	
+
 	// Read text from file or use default
 	text := "PRINT EFFECT\nDEMO TEXT\nTHIRD LINE"
 	if file != "" {
@@ -533,6 +548,15 @@ func runBeams(width, height int, theme string, frames int) {
 	case "transishardjob":
 		beamGradientStops = []string{"#ffffff", "#55cdfc", "#f7a8b8"}
 		finalGradientStops = []string{"#55cdfc", "#f7a8b8", "#ffffff"}
+	case "rama":
+		beamGradientStops = []string{"#ffffff", "#ef233c", "#d90429"}
+		finalGradientStops = []string{"#8d99ae", "#ef233c", "#edf2f4"}
+	case "eldritch":
+		beamGradientStops = []string{"#ffffff", "#37f499", "#04d1f9"}
+		finalGradientStops = []string{"#7081d0", "#37f499", "#ebfafa"}
+	case "dark":
+		beamGradientStops = []string{"#ffffff", "#cccccc", "#999999"}
+		finalGradientStops = []string{"#333333", "#ffffff", "#ffffff"}
 	default:
 		beamGradientStops = []string{"#ffffff", "#00D1FF", "#8A008A"}
 		finalGradientStops = []string{"#4A4A4A", "#00D1FF", "#FFFFFF"}
@@ -603,6 +627,15 @@ func runBeamText(width, height int, theme string, file string, auto bool, displa
 	case "transishardjob":
 		beamGradientStops = []string{"#ffffff", "#55cdfc", "#f7a8b8"}
 		finalGradientStops = []string{"#55cdfc", "#f7a8b8", "#ffffff"}
+	case "rama":
+		beamGradientStops = []string{"#ffffff", "#ef233c", "#d90429"}
+		finalGradientStops = []string{"#8d99ae", "#ef233c", "#edf2f4"}
+	case "eldritch":
+		beamGradientStops = []string{"#ffffff", "#37f499", "#04d1f9"}
+		finalGradientStops = []string{"#7081d0", "#37f499", "#ebfafa"}
+	case "dark":
+		beamGradientStops = []string{"#ffffff", "#cccccc", "#999999"}
+		finalGradientStops = []string{"#333333", "#ffffff", "#ffffff"}
 	default:
 		beamGradientStops = []string{"#ffffff", "#00D1FF", "#8A008A"}
 		finalGradientStops = []string{"#4A4A4A", "#00D1FF", "#FFFFFF"}
@@ -695,6 +728,15 @@ func runDecrypt(width, height int, theme string, file string, frames int) {
 	case "transishardjob":
 		ciphertextColors = []string{"#008000", "#00cb00", "#00ff00"}
 		gradientStops = []string{"#55cdfc"}
+	case "rama":
+		ciphertextColors = []string{"#008000", "#00cb00", "#00ff00"}
+		gradientStops = []string{"#ef233c"}
+	case "eldritch":
+		ciphertextColors = []string{"#008000", "#00cb00", "#00ff00"}
+		gradientStops = []string{"#37f499"}
+	case "dark":
+		ciphertextColors = []string{"#808080", "#a0a0a0", "#c0c0c0"}
+		gradientStops = []string{"#ffffff"}
 	default:
 		ciphertextColors = []string{"#008000", "#00cb00", "#00ff00"}
 		gradientStops = []string{"#eda000"}
@@ -773,6 +815,15 @@ func runRingText(width, height int, theme string, file string, frames int) {
 	case "transishardjob":
 		ringColors = []string{"#55cdfc", "#f7a8b8", "#ffffff"}
 		finalGradientStops = []string{"#55cdfc", "#f7a8b8", "#ffffff"}
+	case "rama":
+		ringColors = []string{"#ef233c", "#d90429", "#8d99ae"}
+		finalGradientStops = []string{"#8d99ae", "#ef233c", "#edf2f4"}
+	case "eldritch":
+		ringColors = []string{"#37f499", "#04d1f9", "#a48cf2"}
+		finalGradientStops = []string{"#7081d0", "#37f499", "#ebfafa"}
+	case "dark":
+		ringColors = []string{"#ffffff", "#cccccc", "#999999"}
+		finalGradientStops = []string{"#333333", "#ffffff", "#ffffff"}
 	default:
 		ringColors = []string{"#bd93f9", "#ff79c6", "#f1fa8c"}
 		finalGradientStops = []string{"#4A4A4A", "#00D1FF", "#FFFFFF"}
@@ -870,6 +921,15 @@ func runBlackhole(width, height int, theme string, file string, frames int) {
 		blackholeColor = "#ffffff"
 	case "transishardjob":
 		starColors = []string{"#55cdfc", "#f7a8b8", "#ffffff", "#f7a8b8", "#55cdfc", "#ffffff"}
+		blackholeColor = "#ffffff"
+	case "rama":
+		starColors = []string{"#ef233c", "#d90429", "#8d99ae", "#edf2f4", "#ef233c", "#d90429"}
+		blackholeColor = "#edf2f4"
+	case "eldritch":
+		starColors = []string{"#37f499", "#04d1f9", "#a48cf2", "#f265b5", "#f16c75", "#f7c67f"}
+		blackholeColor = "#ebfafa"
+	case "dark":
+		starColors = []string{"#ffffff", "#cccccc", "#999999", "#666666", "#999999", "#ffffff"}
 		blackholeColor = "#ffffff"
 	default:
 		starColors = []string{"#ffffff", "#ffd700", "#ff6b6b", "#4ecdc4", "#95e1d3", "#f38181"}
@@ -1030,6 +1090,33 @@ func runAquarium(width, height int, theme string, frames int) {
 		boatColor = "#f7a8b8"
 		mermaidColor = "#f7a8b8"
 		anchorColor = "#55cdfc"
+	case "rama":
+		fishColors = []string{"#ef233c", "#d90429", "#8d99ae", "#edf2f4", "#ef233c"}
+		waterColors = []string{"#8d99ae", "#ef233c"}
+		seaweedColors = []string{"#2b2d42", "#8d99ae", "#ef233c"}
+		bubbleColor = "#edf2f4"
+		diverColor = "#edf2f4"
+		boatColor = "#ef233c"
+		mermaidColor = "#d90429"
+		anchorColor = "#8d99ae"
+	case "eldritch":
+		fishColors = []string{"#37f499", "#04d1f9", "#a48cf2", "#f265b5", "#f16c75"}
+		waterColors = []string{"#7081d0", "#a48cf2"}
+		seaweedColors = []string{"#212337", "#37f499", "#04d1f9"}
+		bubbleColor = "#04d1f9"
+		diverColor = "#ebfafa"
+		boatColor = "#f7c67f"
+		mermaidColor = "#f265b5"
+		anchorColor = "#292e42"
+	case "dark":
+		fishColors = []string{"#ffffff", "#cccccc", "#999999", "#ffffff", "#cccccc"}
+		waterColors = []string{"#666666", "#999999"}
+		seaweedColors = []string{"#000000", "#333333", "#666666"}
+		bubbleColor = "#ffffff"
+		diverColor = "#ffffff"
+		boatColor = "#cccccc"
+		mermaidColor = "#ffffff"
+		anchorColor = "#333333"
 	default:
 		fishColors = []string{"#00ffff", "#ff00ff", "#ffff00", "#00ff00", "#ff8000"}
 		waterColors = []string{"#4a9eff", "#c2b280"}

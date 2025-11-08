@@ -61,7 +61,7 @@ func NewMatrixArtEffect(width, height int, palette []string, text string) *Matri
 		artPositions: make(map[int]map[int]rune),
 		frozenChars:  make(map[int]map[int]*FrozenMatrixChar),
 		rng:          rand.New(rand.NewSource(time.Now().UnixNano())),
-		freezeChance: 0.10, // 10% chance to freeze when passing through art position
+		freezeChance: 0.65, // 65% chance to freeze when passing through art position (fast crystallization)
 	}
 
 	m.parseArt()
@@ -108,9 +108,9 @@ func (m *MatrixArtEffect) parseArt() {
 
 // init initializes matrix streaks
 func (m *MatrixArtEffect) init() {
-	// Create initial streaks across width
+	// Create initial streaks across width - much denser than regular matrix
 	for i := 0; i < m.width; i++ {
-		if m.rng.Float64() < 0.1 {
+		if m.rng.Float64() < 0.3 {
 			streak := MatrixStreak{
 				X:       i,
 				Y:       -m.rng.Intn(m.height),
@@ -215,8 +215,8 @@ func (m *MatrixArtEffect) Update() {
 	}
 	m.streaks = activeStreaks
 
-	// Add new streaks randomly
-	for len(m.streaks) < m.width && m.rng.Float64() < 0.05 {
+	// Add new streaks randomly - much higher spawn rate for dense effect
+	for len(m.streaks) < m.width*2 && m.rng.Float64() < 0.15 {
 		x := m.rng.Intn(m.width)
 		streak := MatrixStreak{
 			X:       x,
