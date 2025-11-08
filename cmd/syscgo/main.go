@@ -93,7 +93,7 @@ func showHelp() {
 	fmt.Println("\nOptions:")
 	fmt.Println("  -effect string")
 	fmt.Println("        Animation effect (default: fire)")
-	fmt.Println("        Available: fire, matrix, rain, fireworks, decrypt, pour, print, beams, beam-text, ring-text, blackhole, aquarium")
+	fmt.Println("        Available: fire, matrix, matrix-art, rain, rain-art, fireworks, decrypt, pour, print, beams, beam-text, ring-text, blackhole, aquarium")
 	fmt.Println()
 	fmt.Println("  -theme string")
 	fmt.Println("        Color theme (default: dracula)")
@@ -112,7 +112,7 @@ func showHelp() {
 	fmt.Println("        Duration in seconds (0 = infinite, default: 10)")
 	fmt.Println()
 	fmt.Println("  -file string")
-	fmt.Println("        Text file for text-based effects (decrypt, pour, print, beam-text, ring-text, blackhole)")
+	fmt.Println("        Text file for text-based effects (decrypt, pour, print, beam-text, ring-text, blackhole, rain-art, matrix-art)")
 	fmt.Println()
 	fmt.Println("  -auto")
 	fmt.Println("        Auto-size canvas to fit text dimensions (beam-text effect only)")
@@ -133,6 +133,8 @@ func showHelp() {
 	fmt.Println("  syscgo -effect beam-text -theme nord -file text.txt -auto -display -duration 5")
 	fmt.Println("  syscgo -effect ring-text -theme dracula -file art.txt -duration 20")
 	fmt.Println("  syscgo -effect blackhole -theme tokyo-night -file logo.txt -duration 25")
+	fmt.Println("  syscgo -effect rain-art -theme nord -file logo.txt -duration 60")
+	fmt.Println("  syscgo -effect matrix-art -theme dracula -file logo.txt -duration 60")
 	fmt.Println("  syscgo -effect aquarium -theme nord -duration 0")
 	fmt.Println()
 }
@@ -177,10 +179,14 @@ func main() {
 		runFire(width, height, *theme, frames)
 	case "matrix":
 		runMatrix(width, height, *theme, frames)
+	case "matrix-art":
+		runMatrixArt(width, height, *theme, *file, frames)
 	case "fireworks":
 		runFireworks(width, height, *theme, frames)
 	case "rain":
 		runRain(width, height, *theme, frames)
+	case "rain-art":
+		runRainArt(width, height, *theme, *file, frames)
 	case "decrypt":
 		runDecrypt(width, height, *theme, *file, frames)
 	case "pour":
@@ -236,6 +242,52 @@ func runMatrix(width, height int, theme string, frames int) {
 	}
 }
 
+func runMatrixArt(width, height int, theme string, file string, frames int) {
+	// Get theme palette for matrix
+	palette := animations.GetMatrixPalette(theme)
+
+	// Read text from file or use default (SYSC.txt)
+	text := `████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████▒▒▒▒▒▒▒▒████████ ████████        ████████  ████████▒▒▒▒▒▒▒▒████████ ████████▒▒▒▒▒▒▒▒████████
+████████        ████████ ████████        ████████  ████████        ████████ ████████        ████████
+████████        ▒▒▒▒▒▒▒▒ ████████        ████████  ████████        ▒▒▒▒▒▒▒▒ ████████        ▒▒▒▒▒▒▒▒
+████████                 ████████        ████████  ████████                 ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ▒▒▒▒▒▒▒▒████████▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ████████
+                ████████         ████████                          ████████ ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒         ▒▒▒▒▒▒▒▒          ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒`
+
+	if file != "" {
+		data, err := os.ReadFile(file)
+		if err == nil {
+			text = string(data)
+		} else {
+			fmt.Printf("Warning: Could not read file %s, using default text\n", file)
+			time.Sleep(2 * time.Second)
+		}
+	}
+
+	// Create matrix-art effect
+	matrixArt := animations.NewMatrixArtEffect(width, height, palette, text)
+
+	frame := 0
+	for frames == 0 || frame < frames {
+		matrixArt.Update()
+		output := matrixArt.Render()
+
+		fmt.Print("\033[H")
+		fmt.Print(output)
+		time.Sleep(50 * time.Millisecond)
+		frame++
+	}
+}
+
 func runFireworks(width, height int, theme string, frames int) {
 	palette := animations.GetFireworksPalette(theme)
 	fireworks := animations.NewFireworksEffect(width, height, palette)
@@ -260,6 +312,52 @@ func runRain(width, height int, theme string, frames int) {
 	for frames == 0 || frame < frames {
 		rain.Update()
 		output := rain.Render()
+
+		fmt.Print("\033[H")
+		fmt.Print(output)
+		time.Sleep(50 * time.Millisecond)
+		frame++
+	}
+}
+
+func runRainArt(width, height int, theme string, file string, frames int) {
+	// Get theme palette for rain
+	palette := animations.GetRainPalette(theme)
+
+	// Read text from file or use default (SYSC.txt)
+	text := `████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████▒▒▒▒▒▒▒▒████████ ████████        ████████  ████████▒▒▒▒▒▒▒▒████████ ████████▒▒▒▒▒▒▒▒████████
+████████        ████████ ████████        ████████  ████████        ████████ ████████        ████████
+████████        ▒▒▒▒▒▒▒▒ ████████        ████████  ████████        ▒▒▒▒▒▒▒▒ ████████        ▒▒▒▒▒▒▒▒
+████████                 ████████        ████████  ████████                 ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ▒▒▒▒▒▒▒▒████████▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ████████
+                ████████         ████████                          ████████ ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒         ▒▒▒▒▒▒▒▒          ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒`
+
+	if file != "" {
+		data, err := os.ReadFile(file)
+		if err == nil {
+			text = string(data)
+		} else {
+			fmt.Printf("Warning: Could not read file %s, using default text\n", file)
+			time.Sleep(2 * time.Second)
+		}
+	}
+
+	// Create rain-art effect
+	rainArt := animations.NewRainArtEffect(width, height, palette, text)
+
+	frame := 0
+	for frames == 0 || frame < frames {
+		rainArt.Update()
+		output := rainArt.Render()
 
 		fmt.Print("\033[H")
 		fmt.Print(output)
@@ -680,13 +778,22 @@ func runRingText(width, height int, theme string, file string, frames int) {
 		finalGradientStops = []string{"#4A4A4A", "#00D1FF", "#FFFFFF"}
 	}
 
-	// Read text from file or use default
-	text := `  _____ _   _ ____  ____
- / ____| | | / ___||  _ \
-| (___ | |_| \___ \| |_) |
- \___ \|  _  |___) |  __/
- ____) | | | |____/| |
-|_____/|_| |_|     |_|`
+	// Read text from file or use default (SYSC.txt)
+	text := `████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████▒▒▒▒▒▒▒▒████████ ████████        ████████  ████████▒▒▒▒▒▒▒▒████████ ████████▒▒▒▒▒▒▒▒████████
+████████        ████████ ████████        ████████  ████████        ████████ ████████        ████████
+████████        ▒▒▒▒▒▒▒▒ ████████        ████████  ████████        ▒▒▒▒▒▒▒▒ ████████        ▒▒▒▒▒▒▒▒
+████████                 ████████        ████████  ████████                 ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ▒▒▒▒▒▒▒▒████████▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ████████
+                ████████         ████████                          ████████ ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒         ▒▒▒▒▒▒▒▒          ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒`
 
 	if file != "" {
 		data, err := os.ReadFile(file)
@@ -734,59 +841,57 @@ func runRingText(width, height int, theme string, file string, frames int) {
 func runBlackhole(width, height int, theme string, file string, frames int) {
 	// Get theme colors for blackhole effect
 	var starColors []string
-	var finalGradientStops []string
 	var blackholeColor string
 
 	switch theme {
 	case "dracula":
 		starColors = []string{"#bd93f9", "#ff79c6", "#f1fa8c", "#8be9fd", "#50fa7b", "#ffb86c"}
-		finalGradientStops = []string{"#6272a4", "#bd93f9", "#f8f8f2"}
 		blackholeColor = "#f8f8f2"
 	case "gruvbox":
 		starColors = []string{"#fabd2f", "#fe8019", "#b8bb26", "#83a598", "#d3869b", "#fb4934"}
-		finalGradientStops = []string{"#504945", "#fabd2f", "#ebdbb2"}
 		blackholeColor = "#ebdbb2"
 	case "nord":
 		starColors = []string{"#88c0d0", "#81a1c1", "#5e81ac", "#8fbcbb", "#b48ead", "#a3be8c"}
-		finalGradientStops = []string{"#434c5e", "#88c0d0", "#eceff4"}
 		blackholeColor = "#eceff4"
 	case "tokyo-night":
 		starColors = []string{"#7dcfff", "#bb9af7", "#9ece6a", "#7aa2f7", "#f7768e", "#e0af68"}
-		finalGradientStops = []string{"#414868", "#7aa2f7", "#c0caf5"}
 		blackholeColor = "#c0caf5"
 	case "catppuccin":
 		starColors = []string{"#cba6f7", "#f5c2e7", "#a6e3a1", "#89dceb", "#fab387", "#f38ba8"}
-		finalGradientStops = []string{"#45475a", "#cba6f7", "#cdd6f4"}
 		blackholeColor = "#cdd6f4"
 	case "material":
 		starColors = []string{"#bb86fc", "#03dac6", "#cf6679", "#89ddff", "#c3e88d", "#ffcb6b"}
-		finalGradientStops = []string{"#546e7a", "#89ddff", "#eceff1"}
 		blackholeColor = "#eceff1"
 	case "solarized":
 		starColors = []string{"#268bd2", "#2aa198", "#859900", "#cb4b16", "#6c71c4", "#b58900"}
-		finalGradientStops = []string{"#586e75", "#2aa198", "#fdf6e3"}
 		blackholeColor = "#fdf6e3"
 	case "monochrome":
 		starColors = []string{"#ffffff", "#c0c0c0", "#808080", "#9a9a9a", "#bababa", "#dadada"}
-		finalGradientStops = []string{"#3a3a3a", "#9a9a9a", "#ffffff"}
 		blackholeColor = "#ffffff"
 	case "transishardjob":
 		starColors = []string{"#55cdfc", "#f7a8b8", "#ffffff", "#f7a8b8", "#55cdfc", "#ffffff"}
-		finalGradientStops = []string{"#55cdfc", "#f7a8b8", "#ffffff"}
 		blackholeColor = "#ffffff"
 	default:
 		starColors = []string{"#ffffff", "#ffd700", "#ff6b6b", "#4ecdc4", "#95e1d3", "#f38181"}
-		finalGradientStops = []string{"#4A4A4A", "#00D1FF", "#FFFFFF"}
 		blackholeColor = "#ffffff"
 	}
 
-	// Read text from file or use default
-	text := `  _____ _   _ ____  ____
- / ____| | | / ___||  _ \
-| (___ | |_| \___ \| |_) |
- \___ \|  _  |___) |  __/
- ____) | | | |____/| |
-|_____/|_| |_|     |_|`
+	// Read text from file or use default (SYSC.txt)
+	text := `████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████▒▒▒▒▒▒▒▒████████ ████████        ████████  ████████▒▒▒▒▒▒▒▒████████ ████████▒▒▒▒▒▒▒▒████████
+████████        ████████ ████████        ████████  ████████        ████████ ████████        ████████
+████████        ▒▒▒▒▒▒▒▒ ████████        ████████  ████████        ▒▒▒▒▒▒▒▒ ████████        ▒▒▒▒▒▒▒▒
+████████                 ████████        ████████  ████████                 ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ▒▒▒▒▒▒▒▒████████▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ████████
+                ████████         ████████                          ████████ ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒         ▒▒▒▒▒▒▒▒          ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒`
 
 	if file != "" {
 		data, err := os.ReadFile(file)
@@ -805,9 +910,9 @@ func runBlackhole(width, height int, theme string, file string, frames int) {
 		Text:                text,
 		BlackholeColor:      blackholeColor,
 		StarColors:          starColors,
-		FinalGradientStops:  finalGradientStops,
+		FinalGradientStops:  starColors, // Use same gradient as start
 		FinalGradientSteps:  12,
-		FinalGradientDir:    animations.GradientDiagonal,
+		FinalGradientDir:    animations.GradientHorizontal, // Match start direction
 		StaticGradientStops: starColors,
 		StaticGradientDir:   animations.GradientHorizontal,
 		FormingFrames:       10,
