@@ -48,7 +48,7 @@ func NewRainArtEffect(width, height int, palette []string, text string) *RainArt
 		artPositions: make(map[int]map[int]rune),
 		frozenChars:  make(map[int]map[int]*FrozenChar),
 		rng:          rand.New(rand.NewSource(time.Now().UnixNano())),
-		freezeChance: 0.60, // 60% chance to freeze when passing through art position (fast crystallization)
+		freezeChance: 0.90, // 90% chance to freeze when passing through art position (very fast crystallization)
 	}
 
 	r.parseArt()
