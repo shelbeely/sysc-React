@@ -364,6 +364,16 @@ func (e *BlackholeEffect) applyStaticGradient() {
 func (e *BlackholeEffect) Update() {
 	e.frameCount++
 
+	// Rotate border continuously for swirling effect (when visible)
+	rotationSpeed := 0.05 // radians per frame
+	for i := range e.borderChars {
+		e.borderChars[i].angle += rotationSpeed
+		// Keep angle in 0-2π range
+		if e.borderChars[i].angle > 2*math.Pi {
+			e.borderChars[i].angle -= 2 * math.Pi
+		}
+	}
+
 	switch e.phase {
 	case "static":
 		if e.frameCount >= e.staticFrames {
@@ -375,6 +385,12 @@ func (e *BlackholeEffect) Update() {
 		progress := float64(e.frameCount) / float64(e.formingFrames)
 		if progress > 1.0 {
 			progress = 1.0
+		}
+
+		// Update border positions based on current angles
+		for i := range e.borderChars {
+			e.borderChars[i].currentX = e.centerX + e.blackholeRadius*math.Cos(e.borderChars[i].angle)
+			e.borderChars[i].currentY = e.centerY + e.blackholeRadius*math.Sin(e.borderChars[i].angle)
 		}
 
 		// Gradually show border characters
@@ -393,6 +409,12 @@ func (e *BlackholeEffect) Update() {
 		progress := float64(e.frameCount) / float64(e.consumingFrames)
 		if progress > 1.0 {
 			progress = 1.0
+		}
+
+		// Update border positions based on current angles (swirling)
+		for i := range e.borderChars {
+			e.borderChars[i].currentX = e.centerX + e.blackholeRadius*math.Cos(e.borderChars[i].angle)
+			e.borderChars[i].currentY = e.centerY + e.blackholeRadius*math.Sin(e.borderChars[i].angle)
 		}
 
 		// Consume characters gradually (1-5 per frame based on progress)
