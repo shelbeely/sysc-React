@@ -93,7 +93,7 @@ func showHelp() {
 	fmt.Println("\nOptions:")
 	fmt.Println("  -effect string")
 	fmt.Println("        Animation effect (default: fire)")
-	fmt.Println("        Available: fire, matrix, rain, fireworks, decrypt, pour, print, beams, beam-text, aquarium")
+	fmt.Println("        Available: fire, matrix, rain, fireworks, decrypt, pour, print, beams, beam-text, ring-text, aquarium")
 	fmt.Println()
 	fmt.Println("  -theme string")
 	fmt.Println("        Color theme (default: dracula)")
@@ -112,7 +112,7 @@ func showHelp() {
 	fmt.Println("        Duration in seconds (0 = infinite, default: 10)")
 	fmt.Println()
 	fmt.Println("  -file string")
-	fmt.Println("        Text file for text-based effects (decrypt, pour, print, beam-text)")
+	fmt.Println("        Text file for text-based effects (decrypt, pour, print, beam-text, ring-text)")
 	fmt.Println()
 	fmt.Println("  -auto")
 	fmt.Println("        Auto-size canvas to fit text dimensions (beam-text effect only)")
@@ -131,6 +131,7 @@ func showHelp() {
 	fmt.Println("  syscgo -effect beam-text -theme nord -file message.txt -duration 20")
 	fmt.Println("  syscgo -effect beam-text -theme nord -file art.txt -auto -duration 15")
 	fmt.Println("  syscgo -effect beam-text -theme nord -file text.txt -auto -display -duration 5")
+	fmt.Println("  syscgo -effect ring-text -theme dracula -file art.txt -duration 20")
 	fmt.Println("  syscgo -effect aquarium -theme nord -duration 0")
 	fmt.Println()
 }
@@ -189,11 +190,13 @@ func main() {
 		runBeams(width, height, *theme, frames)
 	case "beam-text":
 		runBeamText(width, height, *theme, *file, *auto, *display, frames)
+	case "ring-text":
+		runRingText(width, height, *theme, *file, frames)
 	case "aquarium":
 		runAquarium(width, height, *theme, frames)
 	default:
 		fmt.Printf("Unknown effect: %s\n", *effect)
-		fmt.Println("Available: fire, matrix, rain, fireworks, decrypt, pour, print, beams, beam-text, aquarium")
+		fmt.Println("Available: fire, matrix, rain, fireworks, decrypt, pour, print, beams, beam-text, ring-text, aquarium")
 		os.Exit(1)
 	}
 }
@@ -635,6 +638,92 @@ func runDecrypt(width, height int, theme string, file string, frames int) {
 	}
 }
 
+
+func runRingText(width, height int, theme string, file string, frames int) {
+	// Get theme colors for ring text effect
+	var ringColors []string
+	var finalGradientStops []string
+
+	switch theme {
+	case "dracula":
+		ringColors = []string{"#bd93f9", "#ff79c6", "#f1fa8c"}
+		finalGradientStops = []string{"#6272a4", "#bd93f9", "#f8f8f2"}
+	case "gruvbox":
+		ringColors = []string{"#fabd2f", "#fe8019", "#b8bb26"}
+		finalGradientStops = []string{"#504945", "#fabd2f", "#ebdbb2"}
+	case "nord":
+		ringColors = []string{"#88c0d0", "#81a1c1", "#5e81ac"}
+		finalGradientStops = []string{"#434c5e", "#88c0d0", "#eceff4"}
+	case "tokyo-night":
+		ringColors = []string{"#7dcfff", "#bb9af7", "#9ece6a"}
+		finalGradientStops = []string{"#414868", "#7aa2f7", "#c0caf5"}
+	case "catppuccin":
+		ringColors = []string{"#cba6f7", "#f5c2e7", "#a6e3a1"}
+		finalGradientStops = []string{"#45475a", "#cba6f7", "#cdd6f4"}
+	case "material":
+		ringColors = []string{"#bb86fc", "#03dac6", "#cf6679"}
+		finalGradientStops = []string{"#546e7a", "#89ddff", "#eceff1"}
+	case "solarized":
+		ringColors = []string{"#268bd2", "#2aa198", "#859900"}
+		finalGradientStops = []string{"#586e75", "#2aa198", "#fdf6e3"}
+	case "monochrome":
+		ringColors = []string{"#c0c0c0", "#808080", "#606060"}
+		finalGradientStops = []string{"#3a3a3a", "#9a9a9a", "#ffffff"}
+	case "transishardjob":
+		ringColors = []string{"#55cdfc", "#f7a8b8", "#ffffff"}
+		finalGradientStops = []string{"#55cdfc", "#f7a8b8", "#ffffff"}
+	default:
+		ringColors = []string{"#bd93f9", "#ff79c6", "#f1fa8c"}
+		finalGradientStops = []string{"#4A4A4A", "#00D1FF", "#FFFFFF"}
+	}
+
+	// Read text from file or use default
+	text := `  _____ _   _ ____  ____
+ / ____| | | / ___||  _ \
+| (___ | |_| \___ \| |_) |
+ \___ \|  _  |___) |  __/
+ ____) | | | |____/| |
+|_____/|_| |_|     |_|`
+
+	if file != "" {
+		data, err := os.ReadFile(file)
+		if err == nil {
+			text = string(data)
+		} else {
+			fmt.Printf("Warning: Could not read file %s, using default text\n", file)
+			time.Sleep(2 * time.Second)
+		}
+	}
+
+	// Create ring text effect configuration
+	config := animations.RingTextConfig{
+		Width:              width,
+		Height:             height,
+		Text:               text,
+		RingColors:         ringColors,
+		RingGap:            0.15,
+		SpinSpeed:          0.05,
+		DisperseFrames:     100,
+		SpinFrames:         200,
+		ReturnFrames:       100,
+		StaticFrames:       60,
+		FinalGradientStops: finalGradientStops,
+		FinalGradientSteps: 12,
+	}
+
+	ringText := animations.NewRingTextEffect(config)
+
+	frame := 0
+	for frames == 0 || frame < frames {
+		ringText.Update()
+		output := ringText.Render()
+
+		fmt.Print("\033[H")
+		fmt.Print(output)
+		time.Sleep(50 * time.Millisecond)
+		frame++
+	}
+}
 
 func runAquarium(width, height int, theme string, frames int) {
 	// Theme-specific colors for aquarium
