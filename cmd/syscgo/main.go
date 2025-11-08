@@ -695,20 +695,21 @@ func runRingText(width, height int, theme string, file string, frames int) {
 		}
 	}
 
-	// Create ring text effect configuration
+	// Create ring text effect configuration (TTE-like parameters)
 	config := animations.RingTextConfig{
-		Width:              width,
-		Height:             height,
-		Text:               text,
-		RingColors:         ringColors,
-		RingGap:            0.15,
-		SpinSpeed:          0.05,
-		DisperseFrames:     100,
-		SpinFrames:         200,
-		ReturnFrames:       100,
-		StaticFrames:       60,
-		FinalGradientStops: finalGradientStops,
-		FinalGradientSteps: 12,
+		Width:               width,
+		Height:              height,
+		Text:                text,
+		RingColors:          ringColors,
+		RingGap:             0.1,                        // Like TTE default
+		SpinSpeedRange:      [2]float64{0.025, 0.075}, // Min-max range like TTE (0.25-1.0 mapped to radians)
+		SpinDuration:        200,                       // Frames per spin rotation
+		DisperseDuration:    200,                       // Frames in dispersed state
+		SpinDisperseCycles:  3,                         // 3 cycles like TTE default
+		TransitionFrames:    100,                       // Transition between states
+		StaticFrames:        100,                       // Initial static display
+		FinalGradientStops:  finalGradientStops,
+		FinalGradientSteps:  12,
 	}
 
 	ringText := animations.NewRingTextEffect(config)
