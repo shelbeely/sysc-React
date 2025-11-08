@@ -810,7 +810,7 @@ func runBlackhole(width, height int, theme string, file string, frames int) {
 		FinalGradientDir:    animations.GradientDiagonal,
 		StaticGradientStops: starColors,
 		StaticGradientDir:   animations.GradientHorizontal,
-		FormingFrames:       100,
+		FormingFrames:       10,
 		ConsumingFrames:     60,
 		CollapsingFrames:    50,
 		ExplodingFrames:     100,
