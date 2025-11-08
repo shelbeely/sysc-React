@@ -815,7 +815,7 @@ func runBlackhole(width, height int, theme string, file string, frames int) {
 		CollapsingFrames:    50,
 		ExplodingFrames:     100,
 		ReturningFrames:     120,
-		StaticFrames:        100,
+		StaticFrames:        30,
 	}
 
 	blackhole := animations.NewBlackholeEffect(config)
