@@ -93,7 +93,7 @@ func showHelp() {
 	fmt.Println("\nOptions:")
 	fmt.Println("  -effect string")
 	fmt.Println("        Animation effect (default: fire)")
-	fmt.Println("        Available: fire, matrix, rain, rain-art, fireworks, decrypt, pour, print, beams, beam-text, ring-text, blackhole, aquarium")
+	fmt.Println("        Available: fire, matrix, matrix-art, rain, rain-art, fireworks, decrypt, pour, print, beams, beam-text, ring-text, blackhole, aquarium")
 	fmt.Println()
 	fmt.Println("  -theme string")
 	fmt.Println("        Color theme (default: dracula)")
@@ -112,7 +112,7 @@ func showHelp() {
 	fmt.Println("        Duration in seconds (0 = infinite, default: 10)")
 	fmt.Println()
 	fmt.Println("  -file string")
-	fmt.Println("        Text file for text-based effects (decrypt, pour, print, beam-text, ring-text, blackhole, rain-art)")
+	fmt.Println("        Text file for text-based effects (decrypt, pour, print, beam-text, ring-text, blackhole, rain-art, matrix-art)")
 	fmt.Println()
 	fmt.Println("  -auto")
 	fmt.Println("        Auto-size canvas to fit text dimensions (beam-text effect only)")
@@ -134,6 +134,7 @@ func showHelp() {
 	fmt.Println("  syscgo -effect ring-text -theme dracula -file art.txt -duration 20")
 	fmt.Println("  syscgo -effect blackhole -theme tokyo-night -file logo.txt -duration 25")
 	fmt.Println("  syscgo -effect rain-art -theme nord -file logo.txt -duration 60")
+	fmt.Println("  syscgo -effect matrix-art -theme dracula -file logo.txt -duration 60")
 	fmt.Println("  syscgo -effect aquarium -theme nord -duration 0")
 	fmt.Println()
 }
@@ -178,6 +179,8 @@ func main() {
 		runFire(width, height, *theme, frames)
 	case "matrix":
 		runMatrix(width, height, *theme, frames)
+	case "matrix-art":
+		runMatrixArt(width, height, *theme, *file, frames)
 	case "fireworks":
 		runFireworks(width, height, *theme, frames)
 	case "rain":
@@ -233,6 +236,52 @@ func runMatrix(width, height int, theme string, frames int) {
 		output := matrix.Render()
 
 		fmt.Print("\033[H") // Move cursor to top
+		fmt.Print(output)
+		time.Sleep(50 * time.Millisecond)
+		frame++
+	}
+}
+
+func runMatrixArt(width, height int, theme string, file string, frames int) {
+	// Get theme palette for matrix
+	palette := animations.GetMatrixPalette(theme)
+
+	// Read text from file or use default (SYSC.txt)
+	text := `████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████▒▒▒▒▒▒▒▒████████ ████████        ████████  ████████▒▒▒▒▒▒▒▒████████ ████████▒▒▒▒▒▒▒▒████████
+████████        ████████ ████████        ████████  ████████        ████████ ████████        ████████
+████████        ▒▒▒▒▒▒▒▒ ████████        ████████  ████████        ▒▒▒▒▒▒▒▒ ████████        ▒▒▒▒▒▒▒▒
+████████                 ████████        ████████  ████████                 ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ▒▒▒▒▒▒▒▒████████▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ████████
+                ████████         ████████                          ████████ ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒         ▒▒▒▒▒▒▒▒          ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒`
+
+	if file != "" {
+		data, err := os.ReadFile(file)
+		if err == nil {
+			text = string(data)
+		} else {
+			fmt.Printf("Warning: Could not read file %s, using default text\n", file)
+			time.Sleep(2 * time.Second)
+		}
+	}
+
+	// Create matrix-art effect
+	matrixArt := animations.NewMatrixArtEffect(width, height, palette, text)
+
+	frame := 0
+	for frames == 0 || frame < frames {
+		matrixArt.Update()
+		output := matrixArt.Render()
+
+		fmt.Print("\033[H")
 		fmt.Print(output)
 		time.Sleep(50 * time.Millisecond)
 		frame++
