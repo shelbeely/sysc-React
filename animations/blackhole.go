@@ -428,9 +428,10 @@ func (e *BlackholeEffect) Update() {
 			e.borderChars[i].currentY = e.centerY + e.blackholeRadius*math.Sin(e.borderChars[i].angle)
 		}
 
-		// Consume characters with random delays for organic feel (matching TTE)
-		e.currentConsumeWait++
-		if e.currentConsumeWait >= e.nextConsumeDelay && e.consumeCounter < len(e.chars) {
+		// Consume multiple characters per frame for dramatic dissolution
+		// Start slow, accelerate as progress increases
+		charsPerFrame := 1 + int(progress*6) // 1-7 characters per frame
+		for i := 0; i < charsPerFrame && e.consumeCounter < len(e.chars); i++ {
 			// Find next character to consume
 			for j := range e.chars {
 				if e.chars[j].consumeOrder == e.consumeCounter && !e.chars[j].consumed {
@@ -439,8 +440,6 @@ func (e *BlackholeEffect) Update() {
 				}
 			}
 			e.consumeCounter++
-			e.currentConsumeWait = 0
-			e.nextConsumeDelay = e.rng.Intn(10) // Random delay 0-9 frames before next consumption
 		}
 
 		// Move consumed characters toward center with exponential easing
