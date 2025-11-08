@@ -680,13 +680,22 @@ func runRingText(width, height int, theme string, file string, frames int) {
 		finalGradientStops = []string{"#4A4A4A", "#00D1FF", "#FFFFFF"}
 	}
 
-	// Read text from file or use default
-	text := `  _____ _   _ ____  ____
- / ____| | | / ___||  _ \
-| (___ | |_| \___ \| |_) |
- \___ \|  _  |___) |  __/
- ____) | | | |____/| |
-|_____/|_| |_|     |_|`
+	// Read text from file or use default (SYSC.txt)
+	text := `████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████▒▒▒▒▒▒▒▒████████ ████████        ████████  ████████▒▒▒▒▒▒▒▒████████ ████████▒▒▒▒▒▒▒▒████████
+████████        ████████ ████████        ████████  ████████        ████████ ████████        ████████
+████████        ▒▒▒▒▒▒▒▒ ████████        ████████  ████████        ▒▒▒▒▒▒▒▒ ████████        ▒▒▒▒▒▒▒▒
+████████                 ████████        ████████  ████████                 ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ▒▒▒▒▒▒▒▒████████▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ████████
+                ████████         ████████                          ████████ ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒         ▒▒▒▒▒▒▒▒          ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒`
 
 	if file != "" {
 		data, err := os.ReadFile(file)
@@ -734,59 +743,57 @@ func runRingText(width, height int, theme string, file string, frames int) {
 func runBlackhole(width, height int, theme string, file string, frames int) {
 	// Get theme colors for blackhole effect
 	var starColors []string
-	var finalGradientStops []string
 	var blackholeColor string
 
 	switch theme {
 	case "dracula":
 		starColors = []string{"#bd93f9", "#ff79c6", "#f1fa8c", "#8be9fd", "#50fa7b", "#ffb86c"}
-		finalGradientStops = []string{"#6272a4", "#bd93f9", "#f8f8f2"}
 		blackholeColor = "#f8f8f2"
 	case "gruvbox":
 		starColors = []string{"#fabd2f", "#fe8019", "#b8bb26", "#83a598", "#d3869b", "#fb4934"}
-		finalGradientStops = []string{"#504945", "#fabd2f", "#ebdbb2"}
 		blackholeColor = "#ebdbb2"
 	case "nord":
 		starColors = []string{"#88c0d0", "#81a1c1", "#5e81ac", "#8fbcbb", "#b48ead", "#a3be8c"}
-		finalGradientStops = []string{"#434c5e", "#88c0d0", "#eceff4"}
 		blackholeColor = "#eceff4"
 	case "tokyo-night":
 		starColors = []string{"#7dcfff", "#bb9af7", "#9ece6a", "#7aa2f7", "#f7768e", "#e0af68"}
-		finalGradientStops = []string{"#414868", "#7aa2f7", "#c0caf5"}
 		blackholeColor = "#c0caf5"
 	case "catppuccin":
 		starColors = []string{"#cba6f7", "#f5c2e7", "#a6e3a1", "#89dceb", "#fab387", "#f38ba8"}
-		finalGradientStops = []string{"#45475a", "#cba6f7", "#cdd6f4"}
 		blackholeColor = "#cdd6f4"
 	case "material":
 		starColors = []string{"#bb86fc", "#03dac6", "#cf6679", "#89ddff", "#c3e88d", "#ffcb6b"}
-		finalGradientStops = []string{"#546e7a", "#89ddff", "#eceff1"}
 		blackholeColor = "#eceff1"
 	case "solarized":
 		starColors = []string{"#268bd2", "#2aa198", "#859900", "#cb4b16", "#6c71c4", "#b58900"}
-		finalGradientStops = []string{"#586e75", "#2aa198", "#fdf6e3"}
 		blackholeColor = "#fdf6e3"
 	case "monochrome":
 		starColors = []string{"#ffffff", "#c0c0c0", "#808080", "#9a9a9a", "#bababa", "#dadada"}
-		finalGradientStops = []string{"#3a3a3a", "#9a9a9a", "#ffffff"}
 		blackholeColor = "#ffffff"
 	case "transishardjob":
 		starColors = []string{"#55cdfc", "#f7a8b8", "#ffffff", "#f7a8b8", "#55cdfc", "#ffffff"}
-		finalGradientStops = []string{"#55cdfc", "#f7a8b8", "#ffffff"}
 		blackholeColor = "#ffffff"
 	default:
 		starColors = []string{"#ffffff", "#ffd700", "#ff6b6b", "#4ecdc4", "#95e1d3", "#f38181"}
-		finalGradientStops = []string{"#4A4A4A", "#00D1FF", "#FFFFFF"}
 		blackholeColor = "#ffffff"
 	}
 
-	// Read text from file or use default
-	text := `  _____ _   _ ____  ____
- / ____| | | / ___||  _ \
-| (___ | |_| \___ \| |_) |
- \___ \|  _  |___) |  __/
- ____) | | | |____/| |
-|_____/|_| |_|     |_|`
+	// Read text from file or use default (SYSC.txt)
+	text := `████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████▒▒▒▒▒▒▒▒████████ ████████        ████████  ████████▒▒▒▒▒▒▒▒████████ ████████▒▒▒▒▒▒▒▒████████
+████████        ████████ ████████        ████████  ████████        ████████ ████████        ████████
+████████        ▒▒▒▒▒▒▒▒ ████████        ████████  ████████        ▒▒▒▒▒▒▒▒ ████████        ▒▒▒▒▒▒▒▒
+████████                 ████████        ████████  ████████                 ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ▒▒▒▒▒▒▒▒████████▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ████████
+                ████████         ████████                          ████████ ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒         ▒▒▒▒▒▒▒▒          ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒`
 
 	if file != "" {
 		data, err := os.ReadFile(file)
@@ -805,9 +812,9 @@ func runBlackhole(width, height int, theme string, file string, frames int) {
 		Text:                text,
 		BlackholeColor:      blackholeColor,
 		StarColors:          starColors,
-		FinalGradientStops:  finalGradientStops,
+		FinalGradientStops:  starColors, // Use same gradient as start
 		FinalGradientSteps:  12,
-		FinalGradientDir:    animations.GradientDiagonal,
+		FinalGradientDir:    animations.GradientHorizontal, // Match start direction
 		StaticGradientStops: starColors,
 		StaticGradientDir:   animations.GradientHorizontal,
 		FormingFrames:       10,
