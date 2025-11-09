@@ -61,7 +61,7 @@ func NewMatrixArtEffect(width, height int, palette []string, text string) *Matri
 		artPositions: make(map[int]map[int]rune),
 		frozenChars:  make(map[int]map[int]*FrozenMatrixChar),
 		rng:          rand.New(rand.NewSource(time.Now().UnixNano())),
-		freezeChance: 0.95, // 95% chance to freeze when passing through art position (very fast crystallization)
+		freezeChance: 0.99, // 99% chance to freeze when passing through art position (extremely fast crystallization)
 	}
 
 	m.parseArt()
@@ -108,8 +108,8 @@ func (m *MatrixArtEffect) parseArt() {
 
 // init initializes matrix streaks
 func (m *MatrixArtEffect) init() {
-	// Create massive initial stream density for very fast crystallization
-	for i := 0; i < m.width*5; i++ {
+	// Create fixed pool of recycling streams (fewer needed with recycling + high freeze rate)
+	for i := 0; i < m.width*2; i++ {
 		streak := MatrixStreak{
 			X:       m.rng.Intn(m.width),
 			Y:       -m.rng.Intn(m.height),
@@ -203,39 +203,19 @@ func (m *MatrixArtEffect) Update() {
 			}
 		}
 
-		// Deactivate streak if it's completely off screen
+		// Recycle streak when it goes off screen (like rain-art)
 		if streak.Y-streak.Length > m.height {
-			streak.Active = false
-			continue
+			// Reset streak to top with new random properties
+			streak.Y = -m.rng.Intn(m.height)
+			streak.X = m.rng.Intn(m.width)
+			streak.Length = m.rng.Intn(15) + 5
+			streak.Speed = m.rng.Intn(3) + 1
+			streak.Counter = 0
 		}
 
 		activeStreaks = append(activeStreaks, streak)
 	}
 	m.streaks = activeStreaks
-
-	// Count active streaks only
-	activeCount := 0
-	for _, s := range m.streaks {
-		if s.Active {
-			activeCount++
-		}
-	}
-
-	// Keep spawning new streaks to maintain extremely high density - target 8x width
-	maxActiveStreaks := m.width * 8
-	for activeCount < maxActiveStreaks && m.rng.Float64() < 0.5 {
-		x := m.rng.Intn(m.width)
-		streak := MatrixStreak{
-			X:       x,
-			Y:       -m.rng.Intn(10),
-			Length:  m.rng.Intn(15) + 5,
-			Speed:   m.rng.Intn(3) + 1,
-			Counter: 0,
-			Active:  true,
-		}
-		m.streaks = append(m.streaks, streak)
-		activeCount++
-	}
 }
 
 // Render converts the matrix and frozen art to colored output
