@@ -8,7 +8,6 @@ Terminal animation library for Go. Pure Go animations ready to use in your TUI a
 - **Matrix Rain** - Classic Matrix digital rain
 - **Fireworks** - Particle-based fireworks display
 - **Fire Effect** - DOOM PSX-style fire animation
-- **Decrypt Effect** - Movie-style text decryption animation
 - **Pour Effect** - Characters pour into position from different directions
 - **Beams Effect** - Full-screen light beam background animation
 - **Beam Text Effect** - Text display with animated light beams and auto-sizing
@@ -61,9 +60,6 @@ syscgo -effect matrix -theme nord -duration 30
 
 # Fire effect with Dracula theme (infinite loop)
 syscgo -effect fire -theme dracula -duration 0
-
-# Decrypt effect with Catppuccin theme
-syscgo -effect decrypt -theme catppuccin -file message.txt -duration 15
 
 # Pour effect with Tokyo Night theme
 syscgo -effect pour -theme tokyo-night -duration 10

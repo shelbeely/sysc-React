@@ -93,7 +93,7 @@ func showHelp() {
 	fmt.Println("\nOptions:")
 	fmt.Println("  -effect string")
 	fmt.Println("        Animation effect (default: fire)")
-	fmt.Println("        Available: fire, matrix, matrix-art, rain, rain-art, fireworks, decrypt, pour, print, beams, beam-text, ring-text, blackhole, blackhole-particles, aquarium")
+	fmt.Println("        Available: fire, matrix, matrix-art, rain, rain-art, fireworks, pour, print, beams, beam-text, ring-text, blackhole, blackhole-particles, aquarium")
 	fmt.Println()
 	fmt.Println("  -theme string")
 	fmt.Println("        Color theme (default: dracula)")
@@ -115,7 +115,7 @@ func showHelp() {
 	fmt.Println("        Duration in seconds (0 = infinite, default: 10)")
 	fmt.Println()
 	fmt.Println("  -file string")
-	fmt.Println("        Text file for text-based effects (decrypt, pour, print, beam-text, ring-text, blackhole, rain-art, matrix-art)")
+	fmt.Println("        Text file for text-based effects (pour, print, beam-text, ring-text, blackhole, rain-art, matrix-art)")
 	fmt.Println()
 	fmt.Println("  -auto")
 	fmt.Println("        Auto-size canvas to fit text dimensions (beam-text effect only)")
@@ -127,7 +127,6 @@ func showHelp() {
 	fmt.Println("  syscgo -effect fire -theme dracula")
 	fmt.Println("  syscgo -effect matrix -theme nord -duration 30")
 	fmt.Println("  syscgo -effect fireworks -theme gruvbox -duration 0")
-	fmt.Println("  syscgo -effect decrypt -theme tokyo-night -file message.txt -duration 15")
 	fmt.Println("  syscgo -effect pour -theme catppuccin -duration 10")
 	fmt.Println("  syscgo -effect print -theme dracula -duration 15")
 	fmt.Println("  syscgo -effect beams -theme nord -duration 0")
@@ -190,8 +189,6 @@ func main() {
 		runRain(width, height, *theme, frames)
 	case "rain-art":
 		runRainArt(width, height, *theme, *file, frames)
-	case "decrypt":
-		runDecrypt(width, height, *theme, *file, frames)
 	case "pour":
 		runPour(width, height, *theme, *file, frames)
 	case "print":
@@ -205,12 +202,13 @@ func main() {
 	case "blackhole":
 		runBlackhole(width, height, *theme, *file, frames)
 	case "blackhole-particles":
-		runBlackholeParticles(width, height, *theme, frames)
+		// Blackhole particles uses same effect as blackhole text, just with no text file
+		runBlackhole(width, height, *theme, "", frames)
 	case "aquarium":
 		runAquarium(width, height, *theme, frames)
 	default:
 		fmt.Printf("Unknown effect: %s\n", *effect)
-		fmt.Println("Available: fire, matrix, rain, fireworks, decrypt, pour, print, beams, beam-text, ring-text, blackhole, blackhole-particles, aquarium")
+		fmt.Println("Available: fire, matrix, rain, fireworks, pour, print, beams, beam-text, ring-text, blackhole, blackhole-particles, aquarium")
 		os.Exit(1)
 	}
 }
@@ -697,93 +695,6 @@ func runBeamText(width, height int, theme string, file string, auto bool, displa
 	}
 }
 
-func runDecrypt(width, height int, theme string, file string, frames int) {
-	// Get theme colors for decrypt effect
-	var ciphertextColors []string
-	var gradientStops []string
-
-	switch theme {
-	case "dracula":
-		ciphertextColors = []string{"#008000", "#00cb00", "#00ff00"}
-		gradientStops = []string{"#ff79c6"}
-	case "gruvbox":
-		ciphertextColors = []string{"#008000", "#00cb00", "#00ff00"}
-		gradientStops = []string{"#fe8019"}
-	case "nord":
-		ciphertextColors = []string{"#008000", "#00cb00", "#00ff00"}
-		gradientStops = []string{"#88c0d0"}
-	case "tokyo-night":
-		ciphertextColors = []string{"#008000", "#00cb00", "#00ff00"}
-		gradientStops = []string{"#9ece6a"}
-	case "catppuccin":
-		ciphertextColors = []string{"#008000", "#00cb00", "#00ff00"}
-		gradientStops = []string{"#cba6f7"}
-	case "material":
-		ciphertextColors = []string{"#008000", "#00cb00", "#00ff00"}
-		gradientStops = []string{"#03dac6"}
-	case "solarized":
-		ciphertextColors = []string{"#008000", "#00cb00", "#00ff00"}
-		gradientStops = []string{"#268bd2"}
-	case "monochrome":
-		ciphertextColors = []string{"#808080", "#a0a0a0", "#c0c0c0"}
-		gradientStops = []string{"#ffffff"}
-	case "transishardjob":
-		ciphertextColors = []string{"#008000", "#00cb00", "#00ff00"}
-		gradientStops = []string{"#55cdfc"}
-	case "rama":
-		ciphertextColors = []string{"#008000", "#00cb00", "#00ff00"}
-		gradientStops = []string{"#ef233c"}
-	case "eldritch":
-		ciphertextColors = []string{"#008000", "#00cb00", "#00ff00"}
-		gradientStops = []string{"#37f499"}
-	case "dark":
-		ciphertextColors = []string{"#808080", "#a0a0a0", "#c0c0c0"}
-		gradientStops = []string{"#ffffff"}
-	default:
-		ciphertextColors = []string{"#008000", "#00cb00", "#00ff00"}
-		gradientStops = []string{"#eda000"}
-	}
-
-	// Read text from file or use default
-	text := "DECRYPT ME"
-	if file != "" {
-		data, err := os.ReadFile(file)
-		if err == nil {
-			text = string(data)
-		}
-	}
-	
-	// Wrap text to fit terminal width (leave margin for centering)
-	text = wrapText(text, width-10)
-
-	// Create decrypt effect with sample text centered in terminal
-	config := animations.DecryptConfig{
-		Width:                  width,
-		Height:                 height,
-		Text:                   text,
-		Palette:                []string{}, // Not used in decrypt effect
-		TypingSpeed:            2,          // Slower for better visibility
-		CiphertextColors:       ciphertextColors,
-		FinalGradientStops:     gradientStops,
-		FinalGradientSteps:     12,
-		FinalGradientDirection: "vertical",
-	}
-
-	decrypt := animations.NewDecryptEffect(config)
-
-	frame := 0
-	for frames == 0 || frame < frames {
-		decrypt.Update()
-		output := decrypt.Render()
-
-		fmt.Print("\033[H")
-		fmt.Print(output)
-		time.Sleep(50 * time.Millisecond)
-		frame++
-	}
-}
-
-
 func runRingText(width, height int, theme string, file string, frames int) {
 	// Get theme colors for ring text effect
 	var ringColors []string
@@ -938,8 +849,24 @@ func runBlackhole(width, height int, theme string, file string, frames int) {
 		blackholeColor = "#ffffff"
 	}
 
-	// Read text from file or use default (SYSC.txt)
-	text := `████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+	// Read text from file
+	// If file is empty string, use empty text (triggers particle generation)
+	// Otherwise read from file or use default SYSC text
+	var text string
+
+	if file == "" {
+		// Empty file means generate random particles (no text)
+		text = ""
+	} else {
+		// Try to read from file, or use default SYSC text
+		data, err := os.ReadFile(file)
+		if err == nil {
+			text = string(data)
+		} else {
+			// Default SYSC text
+			fmt.Printf("Warning: Could not read file %s, using default SYSC text\n", file)
+			time.Sleep(2 * time.Second)
+			text = `████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
 ████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
 ████████▒▒▒▒▒▒▒▒████████ ████████        ████████  ████████▒▒▒▒▒▒▒▒████████ ████████▒▒▒▒▒▒▒▒████████
 ████████        ████████ ████████        ████████  ████████        ████████ ████████        ████████
@@ -954,14 +881,6 @@ func runBlackhole(width, height int, theme string, file string, frames int) {
 ████████████████████████         ████████          ████████████████████████ ████████████████████████
 ████████████████████████         ████████          ████████████████████████ ████████████████████████
 ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒         ▒▒▒▒▒▒▒▒          ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒`
-
-	if file != "" {
-		data, err := os.ReadFile(file)
-		if err == nil {
-			text = string(data)
-		} else {
-			fmt.Printf("Warning: Could not read file %s, using default text\n", file)
-			time.Sleep(2 * time.Second)
 		}
 	}
 
@@ -977,87 +896,6 @@ func runBlackhole(width, height int, theme string, file string, frames int) {
 		FinalGradientDir:    animations.GradientHorizontal, // Match start direction
 		StaticGradientStops: starColors,
 		StaticGradientDir:   animations.GradientHorizontal,
-		FormingFrames:       10,
-		ConsumingFrames:     60,
-		CollapsingFrames:    50,
-		ExplodingFrames:     100,
-		ReturningFrames:     120,
-		StaticFrames:        30,
-	}
-
-	blackhole := animations.NewBlackholeEffect(config)
-
-	frame := 0
-	for frames == 0 || frame < frames {
-		blackhole.Update()
-		output := blackhole.Render()
-
-		fmt.Print("\033[H")
-		fmt.Print(output)
-		time.Sleep(50 * time.Millisecond)
-		frame++
-	}
-}
-
-func runBlackholeParticles(width, height int, theme string, frames int) {
-	// Get theme colors for blackhole particles effect
-	var starColors []string
-	var blackholeColor string
-
-	switch theme {
-	case "dracula":
-		starColors = []string{"#bd93f9", "#ff79c6", "#f1fa8c", "#8be9fd", "#50fa7b", "#ffb86c"}
-		blackholeColor = "#f8f8f2"
-	case "gruvbox":
-		starColors = []string{"#fabd2f", "#fe8019", "#b8bb26", "#83a598", "#d3869b", "#fb4934"}
-		blackholeColor = "#ebdbb2"
-	case "nord":
-		starColors = []string{"#88c0d0", "#81a1c1", "#5e81ac", "#8fbcbb", "#b48ead", "#a3be8c"}
-		blackholeColor = "#eceff4"
-	case "tokyo-night":
-		starColors = []string{"#7dcfff", "#bb9af7", "#9ece6a", "#7aa2f7", "#f7768e", "#e0af68"}
-		blackholeColor = "#c0caf5"
-	case "catppuccin":
-		starColors = []string{"#cba6f7", "#f5c2e7", "#a6e3a1", "#89dceb", "#fab387", "#f38ba8"}
-		blackholeColor = "#cdd6f4"
-	case "material":
-		starColors = []string{"#bb86fc", "#03dac6", "#cf6679", "#89ddff", "#c3e88d", "#ffcb6b"}
-		blackholeColor = "#eceff1"
-	case "solarized":
-		starColors = []string{"#268bd2", "#2aa198", "#859900", "#cb4b16", "#6c71c4", "#b58900"}
-		blackholeColor = "#fdf6e3"
-	case "monochrome":
-		starColors = []string{"#ffffff", "#c0c0c0", "#808080", "#9a9a9a", "#bababa", "#dadada"}
-		blackholeColor = "#ffffff"
-	case "transishardjob":
-		starColors = []string{"#55cdfc", "#f7a8b8", "#ffffff", "#f7a8b8", "#55cdfc", "#ffffff"}
-		blackholeColor = "#ffffff"
-	case "rama":
-		starColors = []string{"#ef233c", "#d90429", "#8d99ae", "#edf2f4", "#ef233c", "#d90429"}
-		blackholeColor = "#edf2f4"
-	case "eldritch":
-		starColors = []string{"#37f499", "#04d1f9", "#a48cf2", "#f265b5", "#f16c75", "#f7c67f"}
-		blackholeColor = "#ebfafa"
-	case "dark":
-		starColors = []string{"#ffffff", "#cccccc", "#999999", "#666666", "#999999", "#ffffff"}
-		blackholeColor = "#ffffff"
-	default:
-		starColors = []string{"#ffffff", "#ffd700", "#ff6b6b", "#4ecdc4", "#95e1d3", "#f38181"}
-		blackholeColor = "#ffffff"
-	}
-
-	// Create blackhole particles effect configuration (NO TEXT - pure particle animation)
-	config := animations.BlackholeConfig{
-		Width:               width,
-		Height:              height,
-		Text:                "", // Empty text triggers random particle generation
-		BlackholeColor:      blackholeColor,
-		StarColors:          starColors,
-		FinalGradientStops:  starColors,
-		FinalGradientSteps:  12,
-		FinalGradientDir:    animations.GradientRadial,
-		StaticGradientStops: starColors,
-		StaticGradientDir:   animations.GradientRadial,
 		FormingFrames:       10,
 		ConsumingFrames:     60,
 		CollapsingFrames:    50,
