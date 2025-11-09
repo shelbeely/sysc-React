@@ -172,20 +172,24 @@ func (e *BlackholeEffect) init() {
 	e.centerX = float64(e.width) / 2
 	e.centerY = float64(e.height) / 2
 
-	// Calculate blackhole radius (30% of smallest dimension, minimum 3)
+	// Calculate blackhole radius (60% of smallest dimension for dramatic effect, minimum 3)
 	smallestDim := float64(e.width)
 	if float64(e.height) < smallestDim {
 		smallestDim = float64(e.height)
 	}
-	e.blackholeRadius = math.Max(smallestDim*0.3, 3)
+	e.blackholeRadius = math.Max(smallestDim*0.6, 3)
 
 	// Create gradients
 	e.finalGradient = e.createGradient(e.finalGradientStops, e.finalGradientSteps)
 	e.staticGradient = e.createGradient(e.staticGradientStops, 100)
 	e.starGradient = e.createGradient(e.starColors, 100)
 
-	// Parse text and create characters
-	e.parseText()
+	// Parse text and create characters (or generate random particles if no text)
+	if e.text == "" {
+		e.generateRandomParticles()
+	} else {
+		e.parseText()
+	}
 
 	// Create border characters
 	e.createBorder()
@@ -247,6 +251,43 @@ func (e *BlackholeEffect) parseText() {
 	}
 	for order, idx := range indices {
 		e.chars[idx].consumeOrder = order
+	}
+}
+
+// generateRandomParticles creates random star particles across the screen for non-text mode
+func (e *BlackholeEffect) generateRandomParticles() {
+	// Generate 200-400 random star particles scattered across the screen
+	numParticles := 200 + e.rng.Intn(200)
+
+	// Star symbols to use for particles
+	starSymbols := []rune{'*', '·', '•', '∗', '⋆', '✦', '✧', '✨', '✶', '✷', '✸', '✹'}
+
+	e.chars = make([]BlackholeCharacter, 0, numParticles)
+
+	for i := 0; i < numParticles; i++ {
+		// Random position across entire screen
+		x := e.rng.Intn(e.width)
+		y := e.rng.Intn(e.height)
+
+		// Random star symbol
+		symbol := starSymbols[e.rng.Intn(len(starSymbols))]
+
+		// Random color from star gradient
+		color := e.staticGradient[e.rng.Intn(len(e.staticGradient))]
+
+		character := BlackholeCharacter{
+			original:     symbol,
+			x:            x,
+			y:            y,
+			currentX:     float64(x),
+			currentY:     float64(y),
+			visible:      true,
+			currentColor: color,
+			consumed:     false,
+			consumeOrder: i, // Sequential order for smooth consumption
+		}
+
+		e.chars = append(e.chars, character)
 	}
 }
 

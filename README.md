@@ -12,8 +12,13 @@ Terminal animation library for Go. Pure Go animations ready to use in your TUI a
 - **Pour Effect** - Characters pour into position from different directions
 - **Beams Effect** - Full-screen light beam background animation
 - **Beam Text Effect** - Text display with animated light beams and auto-sizing
+- **Ring Text Effect** - Text rotates and converges in spectacular ring animation
+- **Blackhole Effect** - Text gets consumed by a swirling blackhole and explodes
+- **Blackhole Particles** - Pure particle blackhole effect with random stars (no text)
 - **Aquarium** - Underwater scene with fish, diver, boat, and sea life
 - **Print Effect** - Typewriter-style text rendering
+- **Rain Art** - ASCII art with crystallizing rain effect
+- **Matrix Art** - ASCII art with Matrix-style digital streams
 
 ## Installation
 
@@ -76,9 +81,12 @@ syscgo -effect beam-text -theme nord -file message.txt -auto -display -duration 
 
 # Aquarium effect with Dracula theme (infinite)
 syscgo -effect aquarium -theme dracula -duration 0
+
+# Blackhole particles effect with Eldritch theme (dramatic full-screen particle animation)
+syscgo -effect blackhole-particles -theme eldritch -duration 0
 ```
 
-**Available themes:** dracula, gruvbox, nord, tokyo-night, catppuccin, material, solarized, monochrome, transishardjob
+**Available themes:** dracula, gruvbox, nord, tokyo-night, catppuccin, material, solarized, monochrome, transishardjob, rama, eldritch, dark
 
 ### Beam Text Special Flags
 
