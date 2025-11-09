@@ -111,25 +111,29 @@ func NewStyles() Styles {
 			Background(lipgloss.Color("#1E1E2E")),
 
 		Selector: lipgloss.NewStyle().
-			Border(lipgloss.NormalBorder()).
+			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color("#3B4252")).
-			Padding(0, 2).
-			MarginRight(1).
+			Padding(1, 2).
+			MarginRight(2).
+			Width(22).
 			Background(lipgloss.Color("#1E1E2E")),
 
 		SelectorFocused: lipgloss.NewStyle().
-			Border(lipgloss.DoubleBorder()).
+			Border(lipgloss.ThickBorder()).
 			BorderForeground(lipgloss.Color("#88C0D0")).
-			Padding(0, 2).
-			MarginRight(1).
+			Padding(1, 2).
+			MarginRight(2).
+			Width(22).
 			Background(lipgloss.Color("#2E3440")),
 
 		SelectorLabel: lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#88C0D0")).
-			Bold(true),
+			Bold(true).
+			Underline(true),
 
 		SelectorValue: lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#ECEFF4")),
+			Foreground(lipgloss.Color("#ECEFF4")).
+			Bold(false),
 
 		Help: lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#4C566A")).

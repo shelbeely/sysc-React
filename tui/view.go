@@ -73,7 +73,7 @@ func (m Model) renderWelcome() string {
  Terminal Animation Library - TUI
 
  Select animation settings below
- Press ENTER to preview
+ Press ENTER to start animation
 `
 	return welcome
 }
@@ -97,10 +97,24 @@ func (m Model) renderSelector(index int, label, value string) string {
 		style = m.styles.SelectorFocused
 	}
 
-	labelStr := m.styles.SelectorLabel.Render(label)
-	valueStr := m.styles.SelectorValue.Render(value)
+	// Calculate position indicator
+	var position string
+	switch index {
+	case 0: // Animation
+		position = fmt.Sprintf("(%d/%d)", m.selectedAnimation+1, len(m.animations))
+	case 1: // Theme
+		position = fmt.Sprintf("(%d/%d)", m.selectedTheme+1, len(m.themes))
+	case 2: // File
+		position = fmt.Sprintf("(%d/%d)", m.selectedFile+1, len(m.files))
+	case 3: // Duration
+		position = fmt.Sprintf("(%d/%d)", m.selectedDuration+1, len(m.durations))
+	}
 
-	content := fmt.Sprintf("%s\n%s", labelStr, valueStr)
+	labelStr := m.styles.SelectorLabel.Render(label + " ▼")
+	valueStr := m.styles.SelectorValue.Render(value)
+	positionStr := m.styles.Help.Render(position)
+
+	content := fmt.Sprintf("%s\n%s %s", labelStr, valueStr, positionStr)
 
 	// Add navigation hint for focused selector
 	if index == m.focusedSelector {
