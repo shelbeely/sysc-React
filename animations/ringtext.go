@@ -448,7 +448,7 @@ func (e *RingTextEffect) Update() {
 
 			// Check if we should cycle back to disperse or move to final phase
 			if e.currentCycle < e.spinDisperseCycles {
-				e.phase = "transition_to_disperse"
+				e.phase = "swirl_to_rings"
 				e.frameCount = 0
 			} else {
 				e.phase = "return_to_text"
