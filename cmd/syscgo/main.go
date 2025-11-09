@@ -792,8 +792,8 @@ func runRingText(width, height int, theme string, file string, frames int) {
 		SpinDuration:        200,                       // Frames per spin rotation
 		DisperseDuration:    200,                       // Frames in dispersed state
 		SpinDisperseCycles:  3,                         // 3 cycles like TTE default
-		TransitionFrames:    100,                       // Transition between states
-		StaticFrames:        100,                       // Initial static display
+		TransitionFrames:    60,                        // Transition between states (reduced for faster animation)
+		StaticFrames:        30,                        // Initial static display (reduced to start ring animation sooner)
 		FinalGradientStops:  finalGradientStops,
 		FinalGradientSteps:  12,
 		StaticGradientStops: ringColors,                // Use ring colors for static gradient

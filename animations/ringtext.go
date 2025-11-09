@@ -521,9 +521,10 @@ func (e *RingTextEffect) Render() string {
 		}
 	}
 
-	// Build output string
-	var output strings.Builder
+	// Build output (line-by-line like other effects)
+	var lines []string
 	for y := 0; y < e.height; y++ {
+		var line strings.Builder
 		for x := 0; x < e.width; x++ {
 			char := buffer[y][x]
 			color := colors[y][x]
@@ -532,17 +533,15 @@ func (e *RingTextEffect) Render() string {
 				styled := lipgloss.NewStyle().
 					Foreground(lipgloss.Color(color)).
 					Render(string(char))
-				output.WriteString(styled)
+				line.WriteString(styled)
 			} else {
-				output.WriteRune(char)
+				line.WriteRune(char)
 			}
 		}
-		if y < e.height-1 {
-			output.WriteString("\n")
-		}
+		lines = append(lines, line.String())
 	}
 
-	return output.String()
+	return strings.Join(lines, "\n")
 }
 
 // Reset restarts the animation
