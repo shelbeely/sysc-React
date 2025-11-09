@@ -350,10 +350,41 @@ func (e *RingTextEffect) Update() {
 		}
 
 	case "disperse":
-		// Characters stay scattered at random positions
+		// Characters swirl loosely while gradually being pulled toward ring positions
+		progress := float64(e.frameCount) / float64(e.disperseDuration)
+		if progress > 1.0 {
+			progress = 1.0
+		}
+
 		for i := range e.chars {
-			e.chars[i].currentX = e.chars[i].disperseX
-			e.chars[i].currentY = e.chars[i].disperseY
+			ring := &e.rings[e.chars[i].ringIndex]
+
+			// Calculate target position on ring
+			targetX := e.centerX + ring.radius*math.Cos(e.chars[i].angleOnRing)
+			targetY := e.centerY + ring.radius*math.Sin(e.chars[i].angleOnRing)
+
+			// Ease-out function for smooth pull toward rings
+			easedProgress := 1 - math.Pow(1-progress, 3) // cubic ease-out
+
+			// Interpolate from dispersed position toward ring (slow pull creating vortex effect)
+			e.chars[i].currentX = e.chars[i].disperseX + (targetX-e.chars[i].disperseX)*easedProgress*0.7
+			e.chars[i].currentY = e.chars[i].disperseY + (targetY-e.chars[i].disperseY)*easedProgress*0.7
+
+			// Add swirling motion (orbit around center while being pulled in)
+			swirlSpeed := e.chars[i].rotationSpeed * 0.5 // Half speed for loose swirl
+			if e.chars[i].clockwise {
+				e.chars[i].angleOnRing += swirlSpeed
+			} else {
+				e.chars[i].angleOnRing -= swirlSpeed
+			}
+
+			// Normalize angle
+			for e.chars[i].angleOnRing > 2*math.Pi {
+				e.chars[i].angleOnRing -= 2 * math.Pi
+			}
+			for e.chars[i].angleOnRing < 0 {
+				e.chars[i].angleOnRing += 2 * math.Pi
+			}
 		}
 
 		if e.frameCount >= e.disperseDuration {
