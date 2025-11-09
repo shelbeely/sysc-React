@@ -250,34 +250,30 @@ func runMatrixArt(width, height int, theme string, file string, frames int) {
 	// Get theme palette for matrix
 	palette := animations.GetMatrixPalette(theme)
 
-	// Read text from file or use default assets/SYSC.txt
-	var text string
+	// Read text from file or use default (SYSC.txt)
+	text := `████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████▒▒▒▒▒▒▒▒████████ ████████        ████████  ████████▒▒▒▒▒▒▒▒████████ ████████▒▒▒▒▒▒▒▒████████
+████████        ████████ ████████        ████████  ████████        ████████ ████████        ████████
+████████        ▒▒▒▒▒▒▒▒ ████████        ████████  ████████        ▒▒▒▒▒▒▒▒ ████████        ▒▒▒▒▒▒▒▒
+████████                 ████████        ████████  ████████                 ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ▒▒▒▒▒▒▒▒████████▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ████████
+                ████████         ████████                          ████████ ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒         ▒▒▒▒▒▒▒▒          ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒`
 
 	if file != "" {
-		// Try to read from provided file
-		data, readErr := os.ReadFile(file)
-		if readErr == nil {
+		data, err := os.ReadFile(file)
+		if err == nil {
 			text = string(data)
 		} else {
-			// Fall back to assets/SYSC.txt
-			data, readErr = os.ReadFile("assets/SYSC.txt")
-			if readErr == nil {
-				text = string(data)
-				fmt.Printf("Warning: Could not read %s, using assets/SYSC.txt\n", file)
-				time.Sleep(1 * time.Second)
-			} else {
-				fmt.Printf("Error: Could not read file %s or assets/SYSC.txt\n", file)
-				os.Exit(1)
-			}
-		}
-	} else {
-		// No file provided, use assets/SYSC.txt
-		data, readErr := os.ReadFile("assets/SYSC.txt")
-		if readErr == nil {
-			text = string(data)
-		} else {
-			fmt.Println("Error: Could not read assets/SYSC.txt")
-			os.Exit(1)
+			fmt.Printf("Warning: Could not read file %s, using default text\n", file)
+			time.Sleep(2 * time.Second)
 		}
 	}
 
@@ -332,34 +328,30 @@ func runRainArt(width, height int, theme string, file string, frames int) {
 	// Get theme palette for rain
 	palette := animations.GetRainPalette(theme)
 
-	// Read text from file or use default assets/SYSC.txt
-	var text string
+	// Read text from file or use default (SYSC.txt)
+	text := `████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████▒▒▒▒▒▒▒▒████████ ████████        ████████  ████████▒▒▒▒▒▒▒▒████████ ████████▒▒▒▒▒▒▒▒████████
+████████        ████████ ████████        ████████  ████████        ████████ ████████        ████████
+████████        ▒▒▒▒▒▒▒▒ ████████        ████████  ████████        ▒▒▒▒▒▒▒▒ ████████        ▒▒▒▒▒▒▒▒
+████████                 ████████        ████████  ████████                 ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ▒▒▒▒▒▒▒▒████████▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ████████
+                ████████         ████████                          ████████ ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒         ▒▒▒▒▒▒▒▒          ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒`
 
 	if file != "" {
-		// Try to read from provided file
-		data, readErr := os.ReadFile(file)
-		if readErr == nil {
+		data, err := os.ReadFile(file)
+		if err == nil {
 			text = string(data)
 		} else {
-			// Fall back to assets/SYSC.txt
-			data, readErr = os.ReadFile("assets/SYSC.txt")
-			if readErr == nil {
-				text = string(data)
-				fmt.Printf("Warning: Could not read %s, using assets/SYSC.txt\n", file)
-				time.Sleep(1 * time.Second)
-			} else {
-				fmt.Printf("Error: Could not read file %s or assets/SYSC.txt\n", file)
-				os.Exit(1)
-			}
-		}
-	} else {
-		// No file provided, use assets/SYSC.txt
-		data, readErr := os.ReadFile("assets/SYSC.txt")
-		if readErr == nil {
-			text = string(data)
-		} else {
-			fmt.Println("Error: Could not read assets/SYSC.txt")
-			os.Exit(1)
+			fmt.Printf("Warning: Could not read file %s, using default text\n", file)
+			time.Sleep(2 * time.Second)
 		}
 	}
 
@@ -751,34 +743,30 @@ func runRingText(width, height int, theme string, file string, frames int) {
 		finalGradientStops = []string{"#4A4A4A", "#00D1FF", "#FFFFFF"}
 	}
 
-	// Read text from file or use default assets/SYSC.txt
-	var text string
+	// Read text from file or use default (SYSC.txt)
+	text := `████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████▒▒▒▒▒▒▒▒████████ ████████        ████████  ████████▒▒▒▒▒▒▒▒████████ ████████▒▒▒▒▒▒▒▒████████
+████████        ████████ ████████        ████████  ████████        ████████ ████████        ████████
+████████        ▒▒▒▒▒▒▒▒ ████████        ████████  ████████        ▒▒▒▒▒▒▒▒ ████████        ▒▒▒▒▒▒▒▒
+████████                 ████████        ████████  ████████                 ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ▒▒▒▒▒▒▒▒████████▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ████████
+                ████████         ████████                          ████████ ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒         ▒▒▒▒▒▒▒▒          ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒`
 
 	if file != "" {
-		// Try to read from provided file
-		data, readErr := os.ReadFile(file)
-		if readErr == nil {
+		data, err := os.ReadFile(file)
+		if err == nil {
 			text = string(data)
 		} else {
-			// Fall back to assets/SYSC.txt
-			data, readErr = os.ReadFile("assets/SYSC.txt")
-			if readErr == nil {
-				text = string(data)
-				fmt.Printf("Warning: Could not read %s, using assets/SYSC.txt\n", file)
-				time.Sleep(1 * time.Second)
-			} else {
-				fmt.Printf("Error: Could not read file %s or assets/SYSC.txt\n", file)
-				os.Exit(1)
-			}
-		}
-	} else {
-		// No file provided, use assets/SYSC.txt
-		data, readErr := os.ReadFile("assets/SYSC.txt")
-		if readErr == nil {
-			text = string(data)
-		} else {
-			fmt.Println("Error: Could not read assets/SYSC.txt")
-			os.Exit(1)
+			fmt.Printf("Warning: Could not read file %s, using default text\n", file)
+			time.Sleep(2 * time.Second)
 		}
 	}
 
@@ -864,28 +852,36 @@ func runBlackhole(width, height int, theme string, file string, frames int) {
 
 	// Read text from file
 	// If file is empty string, use empty text (triggers particle generation)
-	// Otherwise read from file or use default assets/SYSC.txt
+	// Otherwise read from file or use default SYSC text
 	var text string
 
 	if file == "" {
 		// Empty file means generate random particles (no text)
 		text = ""
 	} else {
-		// Try to read from provided file
-		data, readErr := os.ReadFile(file)
-		if readErr == nil {
+		// Try to read from file, or use default SYSC text
+		data, err := os.ReadFile(file)
+		if err == nil {
 			text = string(data)
 		} else {
-			// Fall back to assets/SYSC.txt
-			data, readErr = os.ReadFile("assets/SYSC.txt")
-			if readErr == nil {
-				text = string(data)
-				fmt.Printf("Warning: Could not read %s, using assets/SYSC.txt\n", file)
-				time.Sleep(1 * time.Second)
-			} else {
-				fmt.Printf("Error: Could not read file %s or assets/SYSC.txt\n", file)
-				os.Exit(1)
-			}
+			// Default SYSC text
+			fmt.Printf("Warning: Could not read file %s, using default SYSC text\n", file)
+			time.Sleep(2 * time.Second)
+			text = `████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████████████████████ ████████        ████████  ████████████████████████ ████████████████████████
+████████▒▒▒▒▒▒▒▒████████ ████████        ████████  ████████▒▒▒▒▒▒▒▒████████ ████████▒▒▒▒▒▒▒▒████████
+████████        ████████ ████████        ████████  ████████        ████████ ████████        ████████
+████████        ▒▒▒▒▒▒▒▒ ████████        ████████  ████████        ▒▒▒▒▒▒▒▒ ████████        ▒▒▒▒▒▒▒▒
+████████                 ████████        ████████  ████████                 ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+████████████████████████ ████████████████████████  ████████████████████████ ████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ▒▒▒▒▒▒▒▒████████▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒████████ ████████
+                ████████         ████████                          ████████ ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████        ████████         ████████          ████████        ████████ ████████        ████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+████████████████████████         ████████          ████████████████████████ ████████████████████████
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒         ▒▒▒▒▒▒▒▒          ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒`
 		}
 	}
 
