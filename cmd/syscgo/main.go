@@ -135,6 +135,7 @@ func showHelp() {
 	fmt.Println("  syscgo -effect beam-text -theme nord -file text.txt -auto -display -duration 5")
 	fmt.Println("  syscgo -effect ring-text -theme dracula -file art.txt -duration 20")
 	fmt.Println("  syscgo -effect blackhole -theme tokyo-night -file logo.txt -duration 25")
+	fmt.Println("  syscgo -effect blackhole-particles -theme eldritch -duration 0")
 	fmt.Println("  syscgo -effect rain-art -theme nord -file logo.txt -duration 60")
 	fmt.Println("  syscgo -effect matrix-art -theme dracula -file logo.txt -duration 60")
 	fmt.Println("  syscgo -effect aquarium -theme nord -duration 0")
