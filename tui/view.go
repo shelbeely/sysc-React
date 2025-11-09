@@ -13,6 +13,11 @@ func (m Model) View() string {
 		return "Loading..."
 	}
 
+	// If in editor mode, render editor view
+	if m.editorMode {
+		return m.renderEditorView()
+	}
+
 	var sections []string
 
 	// Canvas area
@@ -128,4 +133,154 @@ func (m Model) renderSelector(index int, label, value string) string {
 func (m Model) renderHelp() string {
 	helpText := "↑/↓ or j/k Navigate • ←/→ or h/l Change selector • Enter Start animation • Esc Quit"
 	return m.styles.Help.Render(helpText)
+}
+
+// renderEditorView renders the ASCII text editor
+func (m Model) renderEditorView() string {
+	if m.showExportPrompt {
+		return m.renderExportPrompt()
+	}
+
+	if m.showSavePrompt {
+		return m.renderSavePrompt()
+	}
+
+	var sections []string
+
+	// Title
+	title := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#88C0D0")).
+		Padding(1, 0).
+		Render("ASCII Text Editor")
+	sections = append(sections, title)
+
+	// Textarea
+	textareaStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#88C0D0")).
+		Padding(1, 2).
+		Width(m.width - 6).
+		Background(lipgloss.Color("#1E1E2E"))
+
+	sections = append(sections, textareaStyle.Render(m.textarea.View()))
+
+	// Help text
+	helpText := "Type your ASCII art • Ctrl+S Save/Export • Esc Cancel"
+	helpStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#4C566A")).
+		Padding(1, 0)
+	sections = append(sections, helpStyle.Render(helpText))
+
+	return lipgloss.JoinVertical(lipgloss.Left, sections...)
+}
+
+// renderExportPrompt renders the export target selection dialog
+func (m Model) renderExportPrompt() string {
+	var sections []string
+
+	// Title
+	title := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#88C0D0")).
+		Padding(1, 0).
+		Render("Save/Export ASCII Art")
+	sections = append(sections, title)
+
+	// Instructions
+	instructions := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#ECEFF4")).
+		Padding(1, 0).
+		Render("Select where to save:")
+	sections = append(sections, instructions)
+
+	// Export options
+	exportOptions := []string{
+		"syscgo - Save to assets/ folder for animations",
+		"sysc-walls (WIP) - Save as wallpaper (coming soon)",
+	}
+
+	optionStyle := lipgloss.NewStyle().
+		Padding(0, 2).
+		Foreground(lipgloss.Color("#ECEFF4"))
+
+	selectedStyle := lipgloss.NewStyle().
+		Padding(0, 2).
+		Bold(true).
+		Foreground(lipgloss.Color("#88C0D0")).
+		Background(lipgloss.Color("#2E3440"))
+
+	var optionsRendered []string
+	for i, option := range exportOptions {
+		if i == m.exportTarget {
+			optionsRendered = append(optionsRendered, selectedStyle.Render("▸ "+option))
+		} else {
+			optionsRendered = append(optionsRendered, optionStyle.Render("  "+option))
+		}
+	}
+
+	optionsBox := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#88C0D0")).
+		Padding(1, 2).
+		Width(m.width - 6).
+		Background(lipgloss.Color("#1E1E2E"))
+
+	sections = append(sections, optionsBox.Render(lipgloss.JoinVertical(lipgloss.Left, optionsRendered...)))
+
+	// Help text
+	helpText := "↑/↓ Select • Enter Confirm • Esc Cancel"
+	helpStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#4C566A")).
+		Padding(1, 0)
+	sections = append(sections, helpStyle.Render(helpText))
+
+	return lipgloss.JoinVertical(lipgloss.Left, sections...)
+}
+
+// renderSavePrompt renders the save dialog
+func (m Model) renderSavePrompt() string {
+	var sections []string
+
+	// Title
+	title := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("#88C0D0")).
+		Padding(1, 0).
+		Render("Save ASCII Art")
+	sections = append(sections, title)
+
+	// Error message if any
+	if m.saveError != "" {
+		errorStyle := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#BF616A")).
+			Bold(true).
+			Padding(1, 0)
+		sections = append(sections, errorStyle.Render("⚠ "+m.saveError))
+	}
+
+	// Instructions
+	instructions := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#ECEFF4")).
+		Padding(1, 0).
+		Render("Enter filename (will be saved to assets/ folder):")
+	sections = append(sections, instructions)
+
+	// Filename input
+	inputStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#88C0D0")).
+		Padding(1, 2).
+		Width(m.width - 6).
+		Background(lipgloss.Color("#2E3440"))
+	sections = append(sections, inputStyle.Render(m.filenameInput.View()))
+
+	// Help text
+	helpText := "Enter Confirm • Esc Cancel"
+	helpStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#4C566A")).
+		Padding(1, 0)
+	sections = append(sections, helpStyle.Render(helpText))
+
+	return lipgloss.JoinVertical(lipgloss.Left, sections...)
 }

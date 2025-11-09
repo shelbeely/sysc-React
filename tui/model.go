@@ -3,6 +3,8 @@ package tui
 import (
 	"time"
 
+	"github.com/charmbracelet/bubbles/textarea"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -30,6 +32,16 @@ type Model struct {
 	// Which selector is focused (0=animation, 1=theme, 2=file, 3=duration)
 	focusedSelector int
 
+	// Editor mode for custom text creation
+	editorMode       bool
+	textarea         textarea.Model
+	filenameInput    textinput.Model
+	showSavePrompt   bool
+	showExportPrompt bool
+	exportTarget     int    // 0=syscgo, 1=sysc-walls
+	saveError        string // Error message from save operation
+	savingInProgress bool
+
 	// Styles
 	styles Styles
 }
@@ -51,6 +63,23 @@ func NewModel() Model {
 	if len(files) == 0 {
 		files = []string{"SYSC.txt"} // fallback
 	}
+	// Prepend "Custom text" option to files list
+	files = append([]string{"Custom text"}, files...)
+
+	// Initialize textarea for editor mode
+	ta := textarea.New()
+	ta.Placeholder = "Enter your ASCII art here..."
+	ta.Focus()
+	ta.CharLimit = 10000
+	ta.SetWidth(100)
+	ta.SetHeight(20)
+	ta.ShowLineNumbers = true
+
+	// Initialize filename input
+	fi := textinput.New()
+	fi.Placeholder = "filename.txt"
+	fi.CharLimit = 256
+	fi.Width = 40
 
 	return Model{
 		animations: []string{
@@ -96,6 +125,14 @@ func NewModel() Model {
 		selectedFile:      0,
 		selectedDuration:  4, // infinite by default
 		focusedSelector:   0,
+		editorMode:        false,
+		textarea:          ta,
+		filenameInput:     fi,
+		showSavePrompt:    false,
+		showExportPrompt:  false,
+		exportTarget:      0,
+		saveError:         "",
+		savingInProgress:  false,
 		styles:            NewStyles(),
 	}
 }
