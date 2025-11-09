@@ -161,8 +161,7 @@ go run .
 
 ## Documentation
 
-- [GUIDE.md](GUIDE.md) - Detailed usage guide for the syscgo CLI
-- [TUI.md](TUI.md) - Complete documentation for the interactive TUI
+See [GUIDE.md](GUIDE.md) for detailed CLI usage.
 
 ## Inspiration
 
