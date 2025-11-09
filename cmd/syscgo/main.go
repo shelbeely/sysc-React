@@ -916,7 +916,8 @@ func runBlackhole(width, height int, theme string, file string, frames int) {
 		blackhole.Update()
 		output := blackhole.Render()
 
-		fmt.Print("\033[H" + output)
+		fmt.Print("\033[H")
+		fmt.Print(output)
 		time.Sleep(50 * time.Millisecond)
 		frame++
 	}
