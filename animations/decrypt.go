@@ -183,9 +183,9 @@ func (d *DecryptEffect) prepareAnimations() {
 				color:  color,
 			})
 		}
-		
-		// Hold on final decrypted text for remaining duration
-		for j := 0; j < 50; j++ {
+
+		// Hold on final decrypted text for extended duration (10 seconds at 50ms/frame = 200 frames)
+		for j := 0; j < 200; j++ {
 			decryptAnimation = append(decryptAnimation, DecryptAnimationFrame{
 				symbol: char.original,
 				color:  finalColors[i],
@@ -363,6 +363,10 @@ func (d *DecryptEffect) Update() {
 	case "decrypting":
 		d.updateDecryptingPhase()
 	case "complete":
+		// Hold for 60 frames (3 seconds) then auto-reset for looping
+		if d.frameCount >= 60 {
+			d.Reset()
+		}
 		return
 	}
 }
@@ -446,6 +450,7 @@ func (d *DecryptEffect) updateDecryptingPhase() {
 	// Move to complete phase when all done
 	if allDone {
 		d.phase = "complete"
+		d.frameCount = 0 // Reset frame counter for hold phase
 	}
 }
 

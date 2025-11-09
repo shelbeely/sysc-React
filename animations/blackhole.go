@@ -172,20 +172,24 @@ func (e *BlackholeEffect) init() {
 	e.centerX = float64(e.width) / 2
 	e.centerY = float64(e.height) / 2
 
-	// Calculate blackhole radius (30% of smallest dimension, minimum 3)
+	// Calculate blackhole radius (60% of smallest dimension for dramatic effect, minimum 3)
 	smallestDim := float64(e.width)
 	if float64(e.height) < smallestDim {
 		smallestDim = float64(e.height)
 	}
-	e.blackholeRadius = math.Max(smallestDim*0.3, 3)
+	e.blackholeRadius = math.Max(smallestDim*0.6, 3)
 
 	// Create gradients
 	e.finalGradient = e.createGradient(e.finalGradientStops, e.finalGradientSteps)
 	e.staticGradient = e.createGradient(e.staticGradientStops, 100)
 	e.starGradient = e.createGradient(e.starColors, 100)
 
-	// Parse text and create characters
-	e.parseText()
+	// Parse text and create characters (or generate random particles if no text)
+	if e.text == "" {
+		e.generateRandomParticles()
+	} else {
+		e.parseText()
+	}
 
 	// Create border characters
 	e.createBorder()
@@ -247,6 +251,43 @@ func (e *BlackholeEffect) parseText() {
 	}
 	for order, idx := range indices {
 		e.chars[idx].consumeOrder = order
+	}
+}
+
+// generateRandomParticles creates random star particles across the screen for non-text mode
+func (e *BlackholeEffect) generateRandomParticles() {
+	// Generate 200-400 random star particles scattered across the screen
+	numParticles := 200 + e.rng.Intn(200)
+
+	// Star symbols to use for particles
+	starSymbols := []rune{'*', '·', '•', '∗', '⋆', '✦', '✧', '✨', '✶', '✷', '✸', '✹'}
+
+	e.chars = make([]BlackholeCharacter, 0, numParticles)
+
+	for i := 0; i < numParticles; i++ {
+		// Random position across entire screen
+		x := e.rng.Intn(e.width)
+		y := e.rng.Intn(e.height)
+
+		// Random star symbol
+		symbol := starSymbols[e.rng.Intn(len(starSymbols))]
+
+		// Random color from star gradient
+		color := e.staticGradient[e.rng.Intn(len(e.staticGradient))]
+
+		character := BlackholeCharacter{
+			original:     symbol,
+			x:            x,
+			y:            y,
+			currentX:     float64(x),
+			currentY:     float64(y),
+			visible:      true,
+			currentColor: color,
+			consumed:     false,
+			consumeOrder: i, // Sequential order for smooth consumption
+		}
+
+		e.chars = append(e.chars, character)
 	}
 }
 
@@ -429,8 +470,8 @@ func (e *BlackholeEffect) Update() {
 		}
 
 		// Consume multiple characters per frame for dramatic dissolution
-		// Start slow, accelerate as progress increases
-		charsPerFrame := 1 + int(progress*6) // 1-7 characters per frame
+		// Start slow, accelerate dramatically as progress increases
+		charsPerFrame := 1 + int(progress*progress*12) // 1-13 characters per frame (quadratic acceleration)
 		for i := 0; i < charsPerFrame && e.consumeCounter < len(e.chars); i++ {
 			// Find next character to consume
 			for j := range e.chars {
@@ -442,31 +483,41 @@ func (e *BlackholeEffect) Update() {
 			e.consumeCounter++
 		}
 
-		// Move consumed characters toward center with exponential easing
+		// Move consumed characters toward center with spiral/sucking motion
 		for i := range e.chars {
 			if e.chars[i].consumed {
-				// Exponential ease toward center (gravity effect)
-				easedProgress := e.easeInExpo(progress)
+				// Find when this character was consumed
+				consumeProgress := float64(e.chars[i].consumeOrder) / float64(len(e.chars))
+				timeConsumed := progress - consumeProgress
+				if timeConsumed < 0 {
+					timeConsumed = 0
+				}
+				if timeConsumed > 1 {
+					timeConsumed = 1
+				}
 
-				// Bézier curve toward center
+				// Super-exponential ease toward center (stronger gravity effect)
+				easedProgress := timeConsumed * timeConsumed * timeConsumed // Cubic for stronger pull
+
+				// Calculate spiral path toward center
 				startX := float64(e.chars[i].x)
 				startY := float64(e.chars[i].y)
 
-				// Control point for curve (offset perpendicular to direction)
-				dx := e.centerX - startX
-				dy := e.centerY - startY
-				controlX := startX + dx*0.5 + dy*0.3
-				controlY := startY + dy*0.5 - dx*0.3
+				// Add spiral/swirl motion as particle approaches center
+				angle := math.Atan2(e.centerY-startY, e.centerX-startX)
+				spiralAngle := angle + easedProgress*math.Pi*4 // 2 full rotations on the way in
 
-				// Quadratic Bézier curve
-				t := easedProgress
-				e.chars[i].currentX = (1-t)*(1-t)*startX + 2*(1-t)*t*controlX + t*t*e.centerX
-				e.chars[i].currentY = (1-t)*(1-t)*startY + 2*(1-t)*t*controlY + t*t*e.centerY
+				// Distance decreases with eased progress
+				currentDist := math.Sqrt(math.Pow(startX-e.centerX, 2)+math.Pow(startY-e.centerY, 2)) * (1 - easedProgress)
 
-				// Fade to black as approaching center
+				// Calculate position along spiral
+				e.chars[i].currentX = e.centerX + currentDist*math.Cos(spiralAngle)
+				e.chars[i].currentY = e.centerY + currentDist*math.Sin(spiralAngle)
+
+				// Fade to black as approaching center (more dramatic)
 				dist := math.Sqrt(math.Pow(e.chars[i].currentX-e.centerX, 2) + math.Pow(e.chars[i].currentY-e.centerY, 2))
 				brightness := dist / e.blackholeRadius
-				if brightness < 0.3 {
+				if brightness < 0.5 {
 					e.chars[i].visible = false
 				}
 			}
@@ -521,15 +572,35 @@ func (e *BlackholeEffect) Update() {
 			progress = 1.0
 		}
 
-		easedProgress := e.easeOutExpo(progress)
+		// Use easeOutQuart for more explosive/dramatic feel
+		easedProgress := e.easeOutQuart(progress)
 
 		for i := range e.chars {
-			// Scatter from center to scatter position
-			e.chars[i].currentX = e.centerX + (e.chars[i].scatterX-e.centerX)*easedProgress
-			e.chars[i].currentY = e.centerY + (e.chars[i].scatterY-e.centerY)*easedProgress
+			// Calculate scatter distance (particles fly further out - 150% of original scatter distance)
+			scatterMultiplier := 1.5
+			finalScatterX := e.centerX + (e.chars[i].scatterX-e.centerX)*scatterMultiplier
+			finalScatterY := e.centerY + (e.chars[i].scatterY-e.centerY)*scatterMultiplier
 
-			// Cycle through star colors
-			colorIndex := int((progress + float64(i)*0.1) * float64(len(e.starGradient)))
+			// Clamp to screen bounds
+			if finalScatterX < 0 {
+				finalScatterX = 0
+			}
+			if finalScatterX >= float64(e.width) {
+				finalScatterX = float64(e.width - 1)
+			}
+			if finalScatterY < 0 {
+				finalScatterY = 0
+			}
+			if finalScatterY >= float64(e.height) {
+				finalScatterY = float64(e.height - 1)
+			}
+
+			// Scatter from center to extended scatter position with explosive motion
+			e.chars[i].currentX = e.centerX + (finalScatterX-e.centerX)*easedProgress
+			e.chars[i].currentY = e.centerY + (finalScatterY-e.centerY)*easedProgress
+
+			// Rapid color cycling through star colors for explosive effect
+			colorIndex := int((progress*3 + float64(i)*0.1) * float64(len(e.starGradient)))
 			colorIndex = colorIndex % len(e.starGradient)
 			e.chars[i].currentColor = e.starGradient[colorIndex]
 		}
@@ -723,4 +794,8 @@ func (e *BlackholeEffect) easeInOutCubic(t float64) float64 {
 		return 4 * t * t * t
 	}
 	return 1 - math.Pow(-2*t+2, 3)/2
+}
+
+func (e *BlackholeEffect) easeOutQuart(t float64) float64 {
+	return 1 - math.Pow(1-t, 4)
 }

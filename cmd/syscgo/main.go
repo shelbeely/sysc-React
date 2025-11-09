@@ -93,7 +93,7 @@ func showHelp() {
 	fmt.Println("\nOptions:")
 	fmt.Println("  -effect string")
 	fmt.Println("        Animation effect (default: fire)")
-	fmt.Println("        Available: fire, matrix, matrix-art, rain, rain-art, fireworks, decrypt, pour, print, beams, beam-text, ring-text, blackhole, aquarium")
+	fmt.Println("        Available: fire, matrix, matrix-art, rain, rain-art, fireworks, decrypt, pour, print, beams, beam-text, ring-text, blackhole, blackhole-particles, aquarium")
 	fmt.Println()
 	fmt.Println("  -theme string")
 	fmt.Println("        Color theme (default: dracula)")
@@ -204,11 +204,13 @@ func main() {
 		runRingText(width, height, *theme, *file, frames)
 	case "blackhole":
 		runBlackhole(width, height, *theme, *file, frames)
+	case "blackhole-particles":
+		runBlackholeParticles(width, height, *theme, frames)
 	case "aquarium":
 		runAquarium(width, height, *theme, frames)
 	default:
 		fmt.Printf("Unknown effect: %s\n", *effect)
-		fmt.Println("Available: fire, matrix, rain, fireworks, decrypt, pour, print, beams, beam-text, ring-text, blackhole, aquarium")
+		fmt.Println("Available: fire, matrix, rain, fireworks, decrypt, pour, print, beams, beam-text, ring-text, blackhole, blackhole-particles, aquarium")
 		os.Exit(1)
 	}
 }
@@ -975,6 +977,87 @@ func runBlackhole(width, height int, theme string, file string, frames int) {
 		FinalGradientDir:    animations.GradientHorizontal, // Match start direction
 		StaticGradientStops: starColors,
 		StaticGradientDir:   animations.GradientHorizontal,
+		FormingFrames:       10,
+		ConsumingFrames:     60,
+		CollapsingFrames:    50,
+		ExplodingFrames:     100,
+		ReturningFrames:     120,
+		StaticFrames:        30,
+	}
+
+	blackhole := animations.NewBlackholeEffect(config)
+
+	frame := 0
+	for frames == 0 || frame < frames {
+		blackhole.Update()
+		output := blackhole.Render()
+
+		fmt.Print("\033[H")
+		fmt.Print(output)
+		time.Sleep(50 * time.Millisecond)
+		frame++
+	}
+}
+
+func runBlackholeParticles(width, height int, theme string, frames int) {
+	// Get theme colors for blackhole particles effect
+	var starColors []string
+	var blackholeColor string
+
+	switch theme {
+	case "dracula":
+		starColors = []string{"#bd93f9", "#ff79c6", "#f1fa8c", "#8be9fd", "#50fa7b", "#ffb86c"}
+		blackholeColor = "#f8f8f2"
+	case "gruvbox":
+		starColors = []string{"#fabd2f", "#fe8019", "#b8bb26", "#83a598", "#d3869b", "#fb4934"}
+		blackholeColor = "#ebdbb2"
+	case "nord":
+		starColors = []string{"#88c0d0", "#81a1c1", "#5e81ac", "#8fbcbb", "#b48ead", "#a3be8c"}
+		blackholeColor = "#eceff4"
+	case "tokyo-night":
+		starColors = []string{"#7dcfff", "#bb9af7", "#9ece6a", "#7aa2f7", "#f7768e", "#e0af68"}
+		blackholeColor = "#c0caf5"
+	case "catppuccin":
+		starColors = []string{"#cba6f7", "#f5c2e7", "#a6e3a1", "#89dceb", "#fab387", "#f38ba8"}
+		blackholeColor = "#cdd6f4"
+	case "material":
+		starColors = []string{"#bb86fc", "#03dac6", "#cf6679", "#89ddff", "#c3e88d", "#ffcb6b"}
+		blackholeColor = "#eceff1"
+	case "solarized":
+		starColors = []string{"#268bd2", "#2aa198", "#859900", "#cb4b16", "#6c71c4", "#b58900"}
+		blackholeColor = "#fdf6e3"
+	case "monochrome":
+		starColors = []string{"#ffffff", "#c0c0c0", "#808080", "#9a9a9a", "#bababa", "#dadada"}
+		blackholeColor = "#ffffff"
+	case "transishardjob":
+		starColors = []string{"#55cdfc", "#f7a8b8", "#ffffff", "#f7a8b8", "#55cdfc", "#ffffff"}
+		blackholeColor = "#ffffff"
+	case "rama":
+		starColors = []string{"#ef233c", "#d90429", "#8d99ae", "#edf2f4", "#ef233c", "#d90429"}
+		blackholeColor = "#edf2f4"
+	case "eldritch":
+		starColors = []string{"#37f499", "#04d1f9", "#a48cf2", "#f265b5", "#f16c75", "#f7c67f"}
+		blackholeColor = "#ebfafa"
+	case "dark":
+		starColors = []string{"#ffffff", "#cccccc", "#999999", "#666666", "#999999", "#ffffff"}
+		blackholeColor = "#ffffff"
+	default:
+		starColors = []string{"#ffffff", "#ffd700", "#ff6b6b", "#4ecdc4", "#95e1d3", "#f38181"}
+		blackholeColor = "#ffffff"
+	}
+
+	// Create blackhole particles effect configuration (NO TEXT - pure particle animation)
+	config := animations.BlackholeConfig{
+		Width:               width,
+		Height:              height,
+		Text:                "", // Empty text triggers random particle generation
+		BlackholeColor:      blackholeColor,
+		StarColors:          starColors,
+		FinalGradientStops:  starColors,
+		FinalGradientSteps:  12,
+		FinalGradientDir:    animations.GradientRadial,
+		StaticGradientStops: starColors,
+		StaticGradientDir:   animations.GradientRadial,
 		FormingFrames:       10,
 		ConsumingFrames:     60,
 		CollapsingFrames:    50,
