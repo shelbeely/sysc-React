@@ -298,35 +298,11 @@ func (e *RingTextEffect) generateDispersePositions() {
 		return
 	}
 
-	// Calculate disperse region size based on ring gap
-	smallestDim := float64(e.width)
-	if float64(e.height) < smallestDim {
-		smallestDim = float64(e.height)
-	}
-	disperseRadius := smallestDim * e.ringGap * 0.5 // Half of ring gap for scatter region
-
+	// Scatter characters across entire screen for dramatic disperse effect
 	for i := range e.chars {
-		// Random position within a rectangular region around center
-		// This mimics TTE's find_coords_in_rect behavior
-		offsetX := (e.rng.Float64()*2 - 1) * disperseRadius
-		offsetY := (e.rng.Float64()*2 - 1) * disperseRadius
-
-		e.chars[i].disperseX = e.centerX + offsetX
-		e.chars[i].disperseY = e.centerY + offsetY
-
-		// Clamp to canvas bounds
-		if e.chars[i].disperseX < 0 {
-			e.chars[i].disperseX = 0
-		}
-		if e.chars[i].disperseX >= float64(e.width) {
-			e.chars[i].disperseX = float64(e.width - 1)
-		}
-		if e.chars[i].disperseY < 0 {
-			e.chars[i].disperseY = 0
-		}
-		if e.chars[i].disperseY >= float64(e.height) {
-			e.chars[i].disperseY = float64(e.height - 1)
-		}
+		// Random position anywhere on screen (no rectangle compression)
+		e.chars[i].disperseX = e.rng.Float64() * float64(e.width)
+		e.chars[i].disperseY = e.rng.Float64() * float64(e.height)
 	}
 }
 
