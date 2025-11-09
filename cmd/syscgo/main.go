@@ -93,7 +93,7 @@ func showHelp() {
 	fmt.Println("\nOptions:")
 	fmt.Println("  -effect string")
 	fmt.Println("        Animation effect (default: fire)")
-	fmt.Println("        Available: fire, matrix, matrix-art, rain, rain-art, fireworks, pour, print, beams, beam-text, ring-text, blackhole, blackhole-particles, aquarium")
+	fmt.Println("        Available: fire, matrix, matrix-art, rain, rain-art, fireworks, pour, print, beams, beam-text, ring-text, blackhole, aquarium")
 	fmt.Println()
 	fmt.Println("  -theme string")
 	fmt.Println("        Color theme (default: dracula)")
@@ -135,7 +135,6 @@ func showHelp() {
 	fmt.Println("  syscgo -effect beam-text -theme nord -file text.txt -auto -display -duration 5")
 	fmt.Println("  syscgo -effect ring-text -theme dracula -file art.txt -duration 20")
 	fmt.Println("  syscgo -effect blackhole -theme tokyo-night -file logo.txt -duration 25")
-	fmt.Println("  syscgo -effect blackhole-particles -theme eldritch -duration 0")
 	fmt.Println("  syscgo -effect rain-art -theme nord -file logo.txt -duration 60")
 	fmt.Println("  syscgo -effect matrix-art -theme dracula -file logo.txt -duration 60")
 	fmt.Println("  syscgo -effect aquarium -theme nord -duration 0")
@@ -202,14 +201,14 @@ func main() {
 		runRingText(width, height, *theme, *file, frames)
 	case "blackhole":
 		runBlackhole(width, height, *theme, *file, frames)
-	case "blackhole-particles":
-		// Blackhole particles uses same effect as blackhole text, just with no text file
-		runBlackhole(width, height, *theme, "", frames)
+	// WIP: blackhole-particles is currently broken (terminal scrolling issue)
+	// case "blackhole-particles":
+	// 	runBlackhole(width, height, *theme, "", frames)
 	case "aquarium":
 		runAquarium(width, height, *theme, frames)
 	default:
 		fmt.Printf("Unknown effect: %s\n", *effect)
-		fmt.Println("Available: fire, matrix, rain, fireworks, pour, print, beams, beam-text, ring-text, blackhole, blackhole-particles, aquarium")
+		fmt.Println("Available: fire, matrix, rain, fireworks, pour, print, beams, beam-text, ring-text, blackhole, aquarium")
 		os.Exit(1)
 	}
 }
@@ -793,8 +792,8 @@ func runRingText(width, height int, theme string, file string, frames int) {
 		SpinDuration:        200,                       // Frames per spin rotation
 		DisperseDuration:    200,                       // Frames in dispersed state
 		SpinDisperseCycles:  3,                         // 3 cycles like TTE default
-		TransitionFrames:    100,                       // Transition between states
-		StaticFrames:        100,                       // Initial static display
+		TransitionFrames:    60,                        // Transition between states (reduced for faster animation)
+		StaticFrames:        30,                        // Initial static display (reduced to start ring animation sooner)
 		FinalGradientStops:  finalGradientStops,
 		FinalGradientSteps:  12,
 		StaticGradientStops: ringColors,                // Use ring colors for static gradient
