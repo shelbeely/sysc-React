@@ -710,43 +710,43 @@ func runRingText(width, height int, theme string, file string, frames int) {
 
 	switch theme {
 	case "dracula":
-		ringColors = []string{"#bd93f9", "#ff79c6", "#f1fa8c"}
+		ringColors = []string{"#bd93f9", "#ff79c6", "#f1fa8c", "#8be9fd", "#50fa7b", "#ffb86c"}
 		finalGradientStops = []string{"#6272a4", "#bd93f9", "#f8f8f2"}
 	case "gruvbox":
-		ringColors = []string{"#fabd2f", "#fe8019", "#b8bb26"}
+		ringColors = []string{"#fabd2f", "#fe8019", "#b8bb26", "#83a598", "#d3869b", "#fb4934"}
 		finalGradientStops = []string{"#504945", "#fabd2f", "#ebdbb2"}
 	case "nord":
-		ringColors = []string{"#88c0d0", "#81a1c1", "#5e81ac"}
+		ringColors = []string{"#88c0d0", "#81a1c1", "#5e81ac", "#8fbcbb", "#b48ead", "#a3be8c"}
 		finalGradientStops = []string{"#434c5e", "#88c0d0", "#eceff4"}
 	case "tokyo-night":
-		ringColors = []string{"#7dcfff", "#bb9af7", "#9ece6a"}
+		ringColors = []string{"#7dcfff", "#bb9af7", "#9ece6a", "#7aa2f7", "#ff9e64", "#f7768e"}
 		finalGradientStops = []string{"#414868", "#7aa2f7", "#c0caf5"}
 	case "catppuccin":
-		ringColors = []string{"#cba6f7", "#f5c2e7", "#a6e3a1"}
+		ringColors = []string{"#cba6f7", "#f5c2e7", "#a6e3a1", "#89b4fa", "#f38ba8", "#fab387"}
 		finalGradientStops = []string{"#45475a", "#cba6f7", "#cdd6f4"}
 	case "material":
-		ringColors = []string{"#bb86fc", "#03dac6", "#cf6679"}
+		ringColors = []string{"#bb86fc", "#03dac6", "#cf6679", "#89ddff", "#ffcb6b", "#c3e88d"}
 		finalGradientStops = []string{"#546e7a", "#89ddff", "#eceff1"}
 	case "solarized":
-		ringColors = []string{"#268bd2", "#2aa198", "#859900"}
+		ringColors = []string{"#268bd2", "#2aa198", "#859900", "#cb4b16", "#d33682", "#6c71c4"}
 		finalGradientStops = []string{"#586e75", "#2aa198", "#fdf6e3"}
 	case "monochrome":
-		ringColors = []string{"#c0c0c0", "#808080", "#606060"}
+		ringColors = []string{"#ffffff", "#e0e0e0", "#c0c0c0", "#a0a0a0", "#808080", "#606060"}
 		finalGradientStops = []string{"#3a3a3a", "#9a9a9a", "#ffffff"}
 	case "transishardjob":
-		ringColors = []string{"#55cdfc", "#f7a8b8", "#ffffff"}
+		ringColors = []string{"#55cdfc", "#f7a8b8", "#ffffff", "#f7a8b8", "#55cdfc", "#ffffff"}
 		finalGradientStops = []string{"#55cdfc", "#f7a8b8", "#ffffff"}
 	case "rama":
-		ringColors = []string{"#ef233c", "#d90429", "#8d99ae"}
+		ringColors = []string{"#ef233c", "#d90429", "#8d99ae", "#edf2f4", "#ef233c", "#d90429"}
 		finalGradientStops = []string{"#8d99ae", "#ef233c", "#edf2f4"}
 	case "eldritch":
-		ringColors = []string{"#37f499", "#04d1f9", "#a48cf2"}
+		ringColors = []string{"#37f499", "#04d1f9", "#a48cf2", "#f265b5", "#f16c75", "#f7c67f"}
 		finalGradientStops = []string{"#7081d0", "#37f499", "#ebfafa"}
 	case "dark":
-		ringColors = []string{"#ffffff", "#cccccc", "#999999"}
+		ringColors = []string{"#ffffff", "#cccccc", "#999999", "#666666", "#999999", "#ffffff"}
 		finalGradientStops = []string{"#333333", "#ffffff", "#ffffff"}
 	default:
-		ringColors = []string{"#bd93f9", "#ff79c6", "#f1fa8c"}
+		ringColors = []string{"#bd93f9", "#ff79c6", "#f1fa8c", "#8be9fd", "#50fa7b", "#ffb86c"}
 		finalGradientStops = []string{"#4A4A4A", "#00D1FF", "#FFFFFF"}
 	}
 

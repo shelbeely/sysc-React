@@ -313,76 +313,110 @@ func (e *RingTextEffect) Update() {
 	switch e.phase {
 	case "static":
 		if e.frameCount >= e.staticFrames {
-			e.phase = "transition_to_disperse"
+			e.phase = "swirl_to_rings"
 			e.frameCount = 0
 		}
 
-	case "transition_to_disperse":
-		progress := float64(e.frameCount) / float64(e.transitionFrames)
+	case "swirl_to_rings":
+		// Continuous smooth animation: scatter → swirl → tighten into rings
+		// Total duration: disperseDuration + 2*transitionFrames (320 frames default)
+		totalDuration := float64(e.disperseDuration + e.transitionFrames*2)
+		progress := float64(e.frameCount) / totalDuration
 		if progress > 1.0 {
 			progress = 1.0
 		}
 
-		// Ease-in-out function for smooth transition
-		easedProgress := e.easeInOutCubic(progress)
-
-		for i := range e.chars {
-			ringGradient := e.ringGradients[e.chars[i].ringIndex]
-
-			// Interpolate from current position to disperse position
-			startX := float64(e.chars[i].x)
-			startY := float64(e.chars[i].y)
-
-			e.chars[i].currentX = startX + (e.chars[i].disperseX-startX)*easedProgress
-			e.chars[i].currentY = startY + (e.chars[i].disperseY-startY)*easedProgress
-
-			// 8-step gradient transition to ring color
-			gradientIndex := int(easedProgress * float64(len(ringGradient)-1))
-			if gradientIndex >= len(ringGradient) {
-				gradientIndex = len(ringGradient) - 1
-			}
-			e.chars[i].currentColor = ringGradient[gradientIndex]
-		}
-
-		if e.frameCount >= e.transitionFrames {
-			e.phase = "disperse"
-			e.frameCount = 0
-		}
-
-	case "disperse":
-		// Characters stay scattered at random positions
-		for i := range e.chars {
-			e.chars[i].currentX = e.chars[i].disperseX
-			e.chars[i].currentY = e.chars[i].disperseY
-		}
-
-		if e.frameCount >= e.disperseDuration {
-			e.phase = "transition_to_spin"
-			e.frameCount = 0
-		}
-
-	case "transition_to_spin":
-		progress := float64(e.frameCount) / float64(e.transitionFrames)
-		if progress > 1.0 {
-			progress = 1.0
-		}
-
-		// Ease-in-out function for smooth transition
-		easedProgress := e.easeInOutCubic(progress)
+		// Phase 1 (0-0.2): Rapid scatter from ASCII to dispersed positions
+		// Phase 2 (0.2-0.8): Loose swirling while being pulled toward rings
+		// Phase 3 (0.8-1.0): Final tightening into perfect ring positions
 
 		for i := range e.chars {
 			ring := &e.rings[e.chars[i].ringIndex]
+			ringGradient := e.ringGradients[e.chars[i].ringIndex]
+			startX := float64(e.chars[i].x)
+			startY := float64(e.chars[i].y)
 
-			// Calculate target position on ring
+			// Calculate target ring position
 			targetX := e.centerX + ring.radius*math.Cos(e.chars[i].angleOnRing)
 			targetY := e.centerY + ring.radius*math.Sin(e.chars[i].angleOnRing)
 
-			// Interpolate from disperse position to ring position
-			e.chars[i].currentX = e.chars[i].disperseX + (targetX-e.chars[i].disperseX)*easedProgress
-			e.chars[i].currentY = e.chars[i].disperseY + (targetY-e.chars[i].disperseY)*easedProgress
+			var currentX, currentY float64
+			var colorIdx int
+
+			if progress < 0.2 {
+				// Phase 1: Quick scatter (0-20% of animation)
+				scatterProgress := progress / 0.2
+				easedScatter := e.easeInOutCubic(scatterProgress)
+				currentX = startX + (e.chars[i].disperseX-startX)*easedScatter
+				currentY = startY + (e.chars[i].disperseY-startY)*easedScatter
+				colorIdx = int(easedScatter * float64(len(ringGradient)-1))
+			} else if progress < 0.8 {
+				// Phase 2: Swirl while pulling toward rings (20-80% of animation)
+				swirlProgress := (progress - 0.2) / 0.6
+				easedSwirl := 1 - math.Pow(1-swirlProgress, 2) // quadratic ease-out
+
+				// Interpolate from dispersed to ring position (partial, creates swirl effect)
+				currentX = e.chars[i].disperseX + (targetX-e.chars[i].disperseX)*easedSwirl*0.6
+				currentY = e.chars[i].disperseY + (targetY-e.chars[i].disperseY)*easedSwirl*0.6
+
+				colorIdx = len(ringGradient) - 1 // Full ring color during swirl
+			} else {
+				// Phase 3: Final tightening into perfect rings (80-100% of animation)
+				tightenProgress := (progress - 0.8) / 0.2
+				easedTighten := e.easeInOutCubic(tightenProgress)
+
+				// Calculate where we were at 80% mark
+				swirl80X := e.chars[i].disperseX + (targetX-e.chars[i].disperseX)*0.6*0.6
+				swirl80Y := e.chars[i].disperseY + (targetY-e.chars[i].disperseY)*0.6*0.6
+
+				// Tighten from swirl position to exact ring position
+				currentX = swirl80X + (targetX-swirl80X)*easedTighten
+				currentY = swirl80Y + (targetY-swirl80Y)*easedTighten
+
+				colorIdx = len(ringGradient) - 1
+			}
+
+			// Apply calculated position
+			e.chars[i].currentX = currentX
+			e.chars[i].currentY = currentY
+
+			// Apply color gradient
+			if colorIdx >= len(ringGradient) {
+				colorIdx = len(ringGradient) - 1
+			}
+			if colorIdx < 0 {
+				colorIdx = 0
+			}
+			e.chars[i].currentColor = ringGradient[colorIdx]
+
+			// Continuous swirling rotation throughout all phases
+			// Speed varies: slow initially, faster during swirl phase, slow again when tightening
+			var rotationMultiplier float64
+			if progress < 0.2 {
+				rotationMultiplier = progress / 0.2 * 0.3 // Ramp up to 30% speed
+			} else if progress < 0.8 {
+				rotationMultiplier = 0.3 + ((progress-0.2)/0.6)*0.7 // Ramp from 30% to 100% speed
+			} else {
+				rotationMultiplier = 1.0 - ((progress-0.8)/0.2)*0.5 // Slow down to 50% speed
+			}
+
+			swirlSpeed := e.chars[i].rotationSpeed * rotationMultiplier
+			if e.chars[i].clockwise {
+				e.chars[i].angleOnRing += swirlSpeed
+			} else {
+				e.chars[i].angleOnRing -= swirlSpeed
+			}
+
+			// Normalize angle
+			for e.chars[i].angleOnRing > 2*math.Pi {
+				e.chars[i].angleOnRing -= 2 * math.Pi
+			}
+			for e.chars[i].angleOnRing < 0 {
+				e.chars[i].angleOnRing += 2 * math.Pi
+			}
 		}
 
-		if e.frameCount >= e.transitionFrames {
+		if progress >= 1.0 {
 			e.phase = "spin"
 			e.frameCount = 0
 		}
