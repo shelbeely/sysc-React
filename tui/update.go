@@ -29,12 +29,6 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 
 	case "esc":
-		// If showing preview, go back to selection
-		if m.showPreview {
-			m.showPreview = false
-			return m, nil
-		}
-		// Otherwise quit
 		return m, tea.Quit
 
 	case "up", "k":
@@ -126,19 +120,14 @@ func (m Model) startAnimation() (Model, tea.Cmd) {
 	fileName := m.files[m.selectedFile]
 	duration := m.durations[m.selectedDuration]
 
-	// If preview is already shown, launch the animation
-	if m.showPreview {
-		// Launch animation in CLI and quit TUI
-		filePath := getAssetPath(fileName)
-		LaunchAnimation(animName, theme, filePath, duration)
-		return m, tea.Quit
-	}
-
-	// Show preview
-	m.showPreview = true
-	canvasWidth := m.width - 8
-	canvasHeight := m.canvasHeight
-	m.previewContent = CreateAnimationPreview(animName, theme, fileName, canvasWidth, canvasHeight)
-
-	return m, nil
+	// Launch animation immediately and quit TUI
+	// This returns user to normal terminal where animation runs
+	return m, tea.Sequence(
+		tea.Quit,
+		func() tea.Msg {
+			// Launch animation after TUI quits
+			LaunchAnimation(animName, theme, fileName, duration)
+			return nil
+		},
+	)
 }

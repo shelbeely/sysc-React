@@ -18,18 +18,11 @@ An interactive Terminal User Interface for browsing and launching sysc-go animat
 
 ## Controls
 
-### Main Selection Screen
-
-- `↑/↓` or `k/j`: Navigate within current selector
+- `↑/↓` or `k/j`: Navigate within current selector (change selected value)
 - `←/→` or `h/l`: Switch between selectors (Animation, Theme, File, Duration)
-- `Enter`: Show preview of selected configuration
-- `Esc` or `q`: Quit
-
-### Preview Screen
-
-- `Enter`: Launch animation (exits TUI)
-- `Esc`: Go back to selection screen
-- `Ctrl+C` or `q`: Quit
+- `Enter`: Launch animation immediately (exits TUI and starts animation)
+- `Esc` or `q`: Quit TUI
+- `Ctrl+C`: Force quit
 
 ## Selectors
 
@@ -65,11 +58,20 @@ tui/
   └── files.go             # Asset file discovery
 ```
 
+## Implementation Details
+
+The TUI launches animations by:
+1. Finding the `syscgo` binary (checks current dir, parent dir, PATH, system locations)
+2. Building command with selected parameters
+3. Executing `syscgo` with proper flags
+4. Exiting TUI to return terminal control to the animation
+
 ## Future Enhancements
 
-- [ ] Live animation preview in canvas (currently shows static config)
-- [ ] Animation launching via os.Exec
+- [ ] Live animation preview in canvas
 - [ ] Custom duration input
 - [ ] Recent/favorite animations
-- [ ] Animation descriptions/help
-- [ ] Save/load presets
+- [ ] Animation descriptions/help text
+- [ ] Save/load animation presets
+- [ ] Search/filter animations
+- [ ] Keybindings customization

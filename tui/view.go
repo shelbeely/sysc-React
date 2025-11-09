@@ -35,13 +35,8 @@ func (m Model) renderCanvas() string {
 
 	canvasWidth := m.width - 8 // Account for borders and padding
 
-	var content string
-	if m.showPreview {
-		content = m.previewContent
-	} else {
-		// Show welcome screen
-		content = m.renderWelcome()
-	}
+	// Always show welcome screen (no preview mode since we launch immediately)
+	content := m.renderWelcome()
 
 	// Pad content to fill canvas height
 	lines := strings.Split(content, "\n")
@@ -117,11 +112,6 @@ func (m Model) renderSelector(index int, label, value string) string {
 
 // renderHelp renders the help text
 func (m Model) renderHelp() string {
-	var helpText string
-	if m.showPreview {
-		helpText = "Enter Launch animation • Esc Go back • Ctrl+C Quit"
-	} else {
-		helpText = "↑/↓ Navigate • ←/→ Change selector • Enter Preview • Esc Quit"
-	}
+	helpText := "↑/↓ or j/k Navigate • ←/→ or h/l Change selector • Enter Start animation • Esc Quit"
 	return m.styles.Help.Render(helpText)
 }

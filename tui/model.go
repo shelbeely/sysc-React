@@ -30,10 +30,6 @@ type Model struct {
 	// Which selector is focused (0=animation, 1=theme, 2=file, 3=duration)
 	focusedSelector int
 
-	// Animation state
-	showPreview bool
-	previewContent string
-
 	// Styles
 	styles Styles
 }
@@ -100,7 +96,6 @@ func NewModel() Model {
 		selectedFile:      0,
 		selectedDuration:  4, // infinite by default
 		focusedSelector:   0,
-		showPreview:       false,
 		styles:            NewStyles(),
 	}
 }

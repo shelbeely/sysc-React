@@ -2,6 +2,9 @@ package tui
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -76,12 +79,64 @@ func stripANSI(text string) string {
 
 // LaunchAnimation launches the actual animation in the CLI
 func LaunchAnimation(animName, theme, file, duration string) error {
-	// For the MVP, we just return - the animation parameters are set
-	// The user will see the TUI quit and can manually run syscgo if needed
-	// TODO: Actually exec syscgo with the selected parameters using os/exec
-	// This would require:
-	// 1. Finding the syscgo binary
-	// 2. Building the command with proper flags
-	// 3. Executing it with os.Exec or similar
-	return nil
+	// Find syscgo binary
+	syscgoPath := findSyscgoBinary()
+	if syscgoPath == "" {
+		return fmt.Errorf("could not find syscgo binary")
+	}
+
+	// Build command arguments
+	args := []string{
+		"-effect", animName,
+		"-theme", theme,
+	}
+
+	// Add file if it's for a text-based animation
+	needsFile := []string{"matrix-art", "rain-art", "print", "pour", "beam-text", "ring-text", "blackhole-text", "fireworks"}
+	for _, effect := range needsFile {
+		if animName == effect {
+			filePath := getAssetPath(file)
+			args = append(args, "-file", filePath)
+			break
+		}
+	}
+
+	// Add duration
+	if duration != "infinite" {
+		args = append(args, "-duration", duration)
+	}
+
+	// Create command
+	cmd := exec.Command(syscgoPath, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	// Run animation
+	return cmd.Run()
+}
+
+// findSyscgoBinary locates the syscgo binary
+func findSyscgoBinary() string {
+	// Try multiple locations
+	locations := []string{
+		"./syscgo",                          // Current directory
+		"../syscgo",                         // Parent directory
+		"/usr/local/bin/syscgo",             // System install
+		"/usr/bin/syscgo",                   // System install
+		filepath.Join(os.Getenv("HOME"), "sysc-Go", "syscgo"), // Home directory
+	}
+
+	for _, loc := range locations {
+		if _, err := os.Stat(loc); err == nil {
+			return loc
+		}
+	}
+
+	// Try PATH
+	if path, err := exec.LookPath("syscgo"); err == nil {
+		return path
+	}
+
+	return ""
 }
