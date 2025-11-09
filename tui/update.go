@@ -13,8 +13,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		// Canvas takes up most of the screen, leave room for selectors and help
-		m.canvasHeight = m.height - 12
+		// Canvas takes up most of the screen, leave room for selectors (6 lines) + help (2 lines) + margins (8 lines)
+		m.canvasHeight = m.height - 16
+		if m.canvasHeight < 10 {
+			m.canvasHeight = 10 // Minimum height
+		}
 		// Update textarea size if in editor mode
 		if m.editorMode {
 			m.textarea.SetWidth(m.width - 10)

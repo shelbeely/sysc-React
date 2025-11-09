@@ -87,6 +87,42 @@ func wrapText(text string, width int) string {
 	return strings.Join(wrappedLines, "\n")
 }
 
+// setupKeyboardInterrupt sets up a goroutine to listen for ESC, Q, or Ctrl+C
+// Returns a channel that will receive true when user wants to exit
+func setupKeyboardInterrupt() chan bool {
+	quit := make(chan bool, 1)
+
+	// Set terminal to raw mode for immediate key detection
+	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+	if err != nil {
+		// If we can't set raw mode, just return a channel that never closes
+		return quit
+	}
+
+	go func() {
+		defer term.Restore(int(os.Stdin.Fd()), oldState)
+
+		buf := make([]byte, 3)
+		for {
+			n, err := os.Stdin.Read(buf)
+			if err != nil {
+				return
+			}
+
+			// Check for ESC (27), Q (113/81), or Ctrl+C (3)
+			if n > 0 {
+				key := buf[0]
+				if key == 27 || key == 113 || key == 81 || key == 3 {
+					quit <- true
+					return
+				}
+			}
+		}
+	}()
+
+	return quit
+}
+
 func showHelp() {
 	fmt.Print(banner)
 	fmt.Println("Usage: syscgo [options]")
@@ -196,8 +232,18 @@ func runFire(width, height int, theme string, frames int) {
 	palette := animations.GetFirePalette(theme)
 	fire := animations.NewFireEffect(width, height, palette)
 
+	quit := setupKeyboardInterrupt()
+	defer close(quit)
+
 	frame := 0
 	for frames == 0 || frame < frames {
+		// Check for user exit
+		select {
+		case <-quit:
+			return
+		default:
+		}
+
 		fire.Update()
 		output := fire.Render()
 
@@ -212,8 +258,18 @@ func runMatrix(width, height int, theme string, frames int) {
 	palette := animations.GetMatrixPalette(theme)
 	matrix := animations.NewMatrixEffect(width, height, palette)
 
+	quit := setupKeyboardInterrupt()
+	defer close(quit)
+
 	frame := 0
 	for frames == 0 || frame < frames {
+		// Check for user exit
+		select {
+		case <-quit:
+			return
+		default:
+		}
+
 		matrix.Update()
 		output := matrix.Render()
 
@@ -262,8 +318,18 @@ func runMatrixArt(width, height int, theme string, file string, frames int) {
 	// Create matrix-art effect
 	matrixArt := animations.NewMatrixArtEffect(width, height, palette, text)
 
+	quit := setupKeyboardInterrupt()
+	defer close(quit)
+
 	frame := 0
 	for frames == 0 || frame < frames {
+		// Check for user exit
+		select {
+		case <-quit:
+			return
+		default:
+		}
+
 		matrixArt.Update()
 		output := matrixArt.Render()
 
@@ -278,8 +344,18 @@ func runFireworks(width, height int, theme string, frames int) {
 	palette := animations.GetFireworksPalette(theme)
 	fireworks := animations.NewFireworksEffect(width, height, palette)
 
+	quit := setupKeyboardInterrupt()
+	defer close(quit)
+
 	frame := 0
 	for frames == 0 || frame < frames {
+		// Check for user exit
+		select {
+		case <-quit:
+			return
+		default:
+		}
+
 		fireworks.Update()
 		output := fireworks.Render()
 
@@ -294,8 +370,18 @@ func runRain(width, height int, theme string, frames int) {
 	palette := animations.GetRainPalette(theme)
 	rain := animations.NewRainEffect(width, height, palette)
 
+	quit := setupKeyboardInterrupt()
+	defer close(quit)
+
 	frame := 0
 	for frames == 0 || frame < frames {
+		// Check for user exit
+		select {
+		case <-quit:
+			return
+		default:
+		}
+
 		rain.Update()
 		output := rain.Render()
 
@@ -344,8 +430,18 @@ func runRainArt(width, height int, theme string, file string, frames int) {
 	// Create rain-art effect
 	rainArt := animations.NewRainArtEffect(width, height, palette, text)
 
+	quit := setupKeyboardInterrupt()
+	defer close(quit)
+
 	frame := 0
 	for frames == 0 || frame < frames {
+		// Check for user exit
+		select {
+		case <-quit:
+			return
+		default:
+		}
+
 		rainArt.Update()
 		output := rainArt.Render()
 
@@ -419,8 +515,18 @@ func runPour(width, height int, theme string, file string, frames int) {
 	
 	pour := animations.NewPourEffect(config)
 
+	quit := setupKeyboardInterrupt()
+	defer close(quit)
+
 	frame := 0
 	for frames == 0 || frame < frames {
+		// Check for user exit
+		select {
+		case <-quit:
+			return
+		default:
+		}
+
 		pour.Update()
 		output := pour.Render()
 
@@ -490,8 +596,18 @@ func runPrint(width, height int, theme string, file string, frames int) {
 	
 	print := animations.NewPrintEffect(config)
 
+	quit := setupKeyboardInterrupt()
+	defer close(quit)
+
 	frame := 0
 	for frames == 0 || frame < frames {
+		// Check for user exit
+		select {
+		case <-quit:
+			return
+		default:
+		}
+
 		print.Update()
 		output := print.Render()
 
@@ -569,8 +685,18 @@ func runBeams(width, height int, theme string, frames int) {
 
 	beams := animations.NewBeamsEffect(config)
 
+	quit := setupKeyboardInterrupt()
+	defer close(quit)
+
 	frame := 0
 	for frames == 0 || frame < frames {
+		// Check for user exit
+		select {
+		case <-quit:
+			return
+		default:
+		}
+
 		beams.Update()
 		output := beams.Render()
 
@@ -670,8 +796,18 @@ func runBeamText(width, height int, theme string, file string, auto bool, displa
 
 	beamText := animations.NewBeamTextEffect(config)
 
+	quit := setupKeyboardInterrupt()
+	defer close(quit)
+
 	frame := 0
 	for frames == 0 || frame < frames {
+		// Check for user exit
+		select {
+		case <-quit:
+			return
+		default:
+		}
+
 		beamText.Update()
 		output := beamText.Render()
 
@@ -781,8 +917,18 @@ func runRingText(width, height int, theme string, file string, frames int) {
 
 	ringText := animations.NewRingTextEffect(config)
 
+	quit := setupKeyboardInterrupt()
+	defer close(quit)
+
 	frame := 0
 	for frames == 0 || frame < frames {
+		// Check for user exit
+		select {
+		case <-quit:
+			return
+		default:
+		}
+
 		ringText.Update()
 		output := ringText.Render()
 
@@ -889,8 +1035,18 @@ func runBlackhole(width, height int, theme string, file string, frames int) {
 
 	blackhole := animations.NewBlackholeEffect(config)
 
+	quit := setupKeyboardInterrupt()
+	defer close(quit)
+
 	frame := 0
 	for frames == 0 || frame < frames {
+		// Check for user exit
+		select {
+		case <-quit:
+			return
+		default:
+		}
+
 		blackhole.Update()
 		output := blackhole.Render()
 
@@ -1047,8 +1203,18 @@ func runAquarium(width, height int, theme string, frames int) {
 
 	aquarium := animations.NewAquariumEffect(config)
 
+	quit := setupKeyboardInterrupt()
+	defer close(quit)
+
 	frame := 0
 	for frames == 0 || frame < frames {
+		// Check for user exit
+		select {
+		case <-quit:
+			return
+		default:
+		}
+
 		aquarium.Update()
 		output := aquarium.Render()
 

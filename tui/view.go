@@ -29,7 +29,12 @@ func (m Model) View() string {
 	// Help text
 	sections = append(sections, m.renderHelp())
 
-	return lipgloss.JoinVertical(lipgloss.Left, sections...)
+	// Join all sections and apply background
+	content := lipgloss.JoinVertical(lipgloss.Left, sections...)
+	return m.styles.Background.
+		Width(m.width).
+		Height(m.height).
+		Render(content)
 }
 
 // renderCanvas renders the animation preview canvas
@@ -67,19 +72,15 @@ func (m Model) renderCanvas() string {
 
 // renderWelcome renders the welcome screen
 func (m Model) renderWelcome() string {
-	welcome := `
- ███████╗██╗   ██╗███████╗ ██████╗
- ██╔════╝╚██╗ ██╔╝██╔════╝██╔════╝
- ███████╗ ╚████╔╝ ███████╗██║
- ╚════██║  ╚██╔╝  ╚════██║██║
- ███████║   ██║   ███████║╚██████╗
- ╚══════╝   ╚═╝   ╚══════╝ ╚═════╝
+	welcome := `▄▀▀▀▀ █   █ ▄▀▀▀▀ ▄▀▀▀▀       ▄▀▀▀▀ ▄▀▀▀▄    ▄▀    ▄▀
+ ▀▀▀▄ ▀▀▀▀█  ▀▀▀▄ █     ▀▀▀▀▀ █ ▀▀█ █   █  ▄▀    ▄▀
+▀▀▀▀  ▀▀▀▀▀ ▀▀▀▀   ▀▀▀▀        ▀▀▀   ▀▀▀  ▀     ▀
+             /// SEE YOU SPACE COWBOY//
 
- Terminal Animation Library - TUI
+Terminal Animation Library - Interactive TUI
 
- Select animation settings below
- Press ENTER to start animation
-`
+Select animation settings below
+Press ENTER to start animation`
 	return welcome
 }
 
@@ -102,6 +103,18 @@ func (m Model) renderSelector(index int, label, value string) string {
 		style = m.styles.SelectorFocused
 	}
 
+	// Check if this is the File selector and current animation doesn't need a file
+	isFileSelector := (index == 2)
+	animName := m.animations[m.selectedAnimation]
+	needsFile := animName == "matrix-art" || animName == "rain-art" || animName == "pour" ||
+		animName == "print" || animName == "beam-text" || animName == "ring-text" || animName == "blackhole-text"
+
+	// Disable file selector for non-text animations
+	if isFileSelector && !needsFile {
+		style = m.styles.Selector.Faint(true)
+		value = "(disabled)"
+	}
+
 	// Calculate position indicator
 	var position string
 	switch index {
@@ -115,16 +128,16 @@ func (m Model) renderSelector(index int, label, value string) string {
 		position = fmt.Sprintf("(%d/%d)", m.selectedDuration+1, len(m.durations))
 	}
 
-	labelStr := m.styles.SelectorLabel.Render(label + " ▼")
+	labelStr := m.styles.SelectorLabel.Render(label)
 	valueStr := m.styles.SelectorValue.Render(value)
-	positionStr := m.styles.Help.Render(position)
 
-	content := fmt.Sprintf("%s\n%s %s", labelStr, valueStr, positionStr)
+	// Position indicator with smaller styling
+	positionStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#4C566A")).
+		Faint(true)
+	positionStr := positionStyle.Render(position)
 
-	// Add navigation hint for focused selector
-	if index == m.focusedSelector {
-		content += "\n" + m.styles.Help.Render("↑↓")
-	}
+	content := fmt.Sprintf("%s\n%s\n%s", labelStr, valueStr, positionStr)
 
 	return style.Render(content)
 }
@@ -172,7 +185,12 @@ func (m Model) renderEditorView() string {
 		Padding(1, 0)
 	sections = append(sections, helpStyle.Render(helpText))
 
-	return lipgloss.JoinVertical(lipgloss.Left, sections...)
+	// Apply full background to entire editor view
+	content := lipgloss.JoinVertical(lipgloss.Left, sections...)
+	return m.styles.Background.
+		Width(m.width).
+		Height(m.height).
+		Render(content)
 }
 
 // renderExportPrompt renders the export target selection dialog
@@ -235,7 +253,12 @@ func (m Model) renderExportPrompt() string {
 		Padding(1, 0)
 	sections = append(sections, helpStyle.Render(helpText))
 
-	return lipgloss.JoinVertical(lipgloss.Left, sections...)
+	// Apply full background to entire prompt view
+	content := lipgloss.JoinVertical(lipgloss.Left, sections...)
+	return m.styles.Background.
+		Width(m.width).
+		Height(m.height).
+		Render(content)
 }
 
 // renderSavePrompt renders the save dialog
@@ -282,5 +305,10 @@ func (m Model) renderSavePrompt() string {
 		Padding(1, 0)
 	sections = append(sections, helpStyle.Render(helpText))
 
-	return lipgloss.JoinVertical(lipgloss.Left, sections...)
+	// Apply full background to entire save prompt view
+	content := lipgloss.JoinVertical(lipgloss.Left, sections...)
+	return m.styles.Background.
+		Width(m.width).
+		Height(m.height).
+		Render(content)
 }

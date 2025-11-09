@@ -48,12 +48,13 @@ type Model struct {
 
 // Styles holds lipgloss styles for the TUI
 type Styles struct {
-	Canvas         lipgloss.Style
-	Selector       lipgloss.Style
+	Canvas          lipgloss.Style
+	Selector        lipgloss.Style
 	SelectorFocused lipgloss.Style
-	SelectorLabel  lipgloss.Style
-	SelectorValue  lipgloss.Style
-	Help           lipgloss.Style
+	SelectorLabel   lipgloss.Style
+	SelectorValue   lipgloss.Style
+	Help            lipgloss.Style
+	Background      lipgloss.Style
 }
 
 // NewModel creates a new TUI model with default values
@@ -122,7 +123,7 @@ func NewModel() Model {
 		},
 		selectedAnimation: 0,
 		selectedTheme:     0,
-		selectedFile:      0,
+		selectedFile:      1, // Default to SYSC.txt (index 1 after prepending "Custom text")
 		selectedDuration:  4, // infinite by default
 		focusedSelector:   0,
 		editorMode:        false,
@@ -150,31 +151,40 @@ func NewStyles() Styles {
 		Selector: lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color("#3B4252")).
-			Padding(1, 2).
-			MarginRight(2).
-			Width(22).
+			Padding(0, 1).
+			MarginRight(1).
+			Width(16).
 			Background(lipgloss.Color("#1E1E2E")),
 
 		SelectorFocused: lipgloss.NewStyle().
 			Border(lipgloss.ThickBorder()).
 			BorderForeground(lipgloss.Color("#88C0D0")).
-			Padding(1, 2).
-			MarginRight(2).
-			Width(22).
+			Padding(0, 1).
+			MarginRight(1).
+			Width(16).
 			Background(lipgloss.Color("#2E3440")),
 
 		SelectorLabel: lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#88C0D0")).
 			Bold(true).
-			Underline(true),
+			Border(lipgloss.NormalBorder(), false, false, true, false).
+			BorderForeground(lipgloss.Color("#3B4252")).
+			PaddingBottom(0).
+			MarginBottom(0),
 
 		SelectorValue: lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#ECEFF4")).
-			Bold(false),
+			Bold(false).
+			PaddingTop(0).
+			MarginTop(0),
 
 		Help: lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#4C566A")).
-			MarginTop(1),
+			Background(lipgloss.Color("#1E1E2E")).
+			Padding(1, 2),
+
+		Background: lipgloss.NewStyle().
+			Background(lipgloss.Color("#1E1E2E")),
 	}
 }
 
