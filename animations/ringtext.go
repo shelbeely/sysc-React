@@ -78,19 +78,19 @@ type RingTextEffect struct {
 
 // RingTextCharacter represents a single character in the animation
 type RingTextCharacter struct {
-	original      rune
-	x             int     // Original position
-	y             int     // Original position
-	currentX      float64 // Current animated position
-	currentY      float64 // Current animated position
-	disperseX     float64 // Random disperse position X
-	disperseY     float64 // Random disperse position Y
-	visible       bool
-	currentColor  string
-	ringIndex     int     // Which ring this character belongs to
-	angleOnRing   float64 // Current angle on the ring (in radians)
-	rotationSpeed float64 // Individual rotation speed
-	clockwise     bool    // Rotation direction
+	original       rune
+	x              int     // Original position
+	y              int     // Original position
+	currentX       float64 // Current animated position
+	currentY       float64 // Current animated position
+	disperseRadius float64 // Radius for circular disperse position (larger circles)
+	disperseAngle  float64 // Angle for circular disperse position
+	visible        bool
+	currentColor   string
+	ringIndex      int     // Which ring this character belongs to
+	angleOnRing    float64 // Current angle on the ring (in radians)
+	rotationSpeed  float64 // Individual rotation speed
+	clockwise      bool    // Rotation direction
 }
 
 // Ring represents a circular ring of positions
@@ -292,17 +292,25 @@ func (e *RingTextEffect) createRings() {
 	}
 }
 
-// generateDispersePositions creates random scatter positions within ring gaps
+// generateDispersePositions creates circular scatter positions (larger circles)
 func (e *RingTextEffect) generateDispersePositions() {
 	if len(e.rings) == 0 {
 		return
 	}
 
-	// Scatter characters across entire screen for dramatic disperse effect
+	// Instead of rectangular scatter, place characters on larger circles
+	// This creates a circular vortex effect instead of box explosion
 	for i := range e.chars {
-		// Random position anywhere on screen (no rectangle compression)
-		e.chars[i].disperseX = e.rng.Float64() * float64(e.width)
-		e.chars[i].disperseY = e.rng.Float64() * float64(e.height)
+		ring := &e.rings[e.chars[i].ringIndex]
+
+		// Scatter radius: 2-3x the final ring radius (creates expanding/contracting vortex)
+		scatterRadiusMultiplier := 2.0 + e.rng.Float64() // 2.0x to 3.0x final radius
+		e.chars[i].disperseRadius = ring.radius * scatterRadiusMultiplier
+
+		// Use the character's ring angle, but add some randomness
+		// This spreads characters around the circle while maintaining circular shape
+		angleVariation := (e.rng.Float64() - 0.5) * math.Pi / 4 // ±45 degrees
+		e.chars[i].disperseAngle = e.chars[i].angleOnRing + angleVariation
 	}
 }
 
@@ -318,67 +326,107 @@ func (e *RingTextEffect) Update() {
 		}
 
 	case "swirl_to_rings":
-		// Continuous smooth animation: scatter → swirl → tighten into rings
-		// Total duration: disperseDuration + 2*transitionFrames (320 frames default)
+		// CIRCULAR VORTEX MOTION - no linear interpolation, only orbital motion
+		// Characters spiral from ASCII → outer circles → inner ring positions
+		// All motion is calculated using polar coordinates (radius + angle)
+
 		totalDuration := float64(e.disperseDuration + e.transitionFrames*2)
 		progress := float64(e.frameCount) / totalDuration
 		if progress > 1.0 {
 			progress = 1.0
 		}
 
-		// Phase 1 (0-0.2): Rapid scatter from ASCII to dispersed positions
-		// Phase 2 (0.2-0.8): Loose swirling while being pulled toward rings
-		// Phase 3 (0.8-1.0): Final tightening into perfect ring positions
-
 		for i := range e.chars {
 			ring := &e.rings[e.chars[i].ringIndex]
 			ringGradient := e.ringGradients[e.chars[i].ringIndex]
+
+			// Start position (ASCII)
 			startX := float64(e.chars[i].x)
 			startY := float64(e.chars[i].y)
 
-			// Calculate target ring position
-			targetX := e.centerX + ring.radius*math.Cos(e.chars[i].angleOnRing)
-			targetY := e.centerY + ring.radius*math.Sin(e.chars[i].angleOnRing)
+			// Calculate radius from ASCII position to center
+			startDeltaX := startX - e.centerX
+			startDeltaY := startY - e.centerY
+			startRadius := math.Sqrt(startDeltaX*startDeltaX + startDeltaY*startDeltaY)
+			if startRadius < 0.1 {
+				startRadius = 0.1 // Avoid division by zero
+			}
+			startAngle := math.Atan2(startDeltaY, startDeltaX)
 
-			var currentX, currentY float64
+			// Target is the final ring position
+			targetRadius := ring.radius
+			targetAngle := e.chars[i].angleOnRing
+
+			// Disperse position is on a larger circle
+			disperseRadius := e.chars[i].disperseRadius
+			disperseAngle := e.chars[i].disperseAngle
+
+			var currentRadius float64
+			var currentAngle float64
 			var colorIdx int
 
-			if progress < 0.2 {
-				// Phase 1: Quick scatter (0-20% of animation)
-				scatterProgress := progress / 0.2
-				easedScatter := e.easeInOutCubic(scatterProgress)
-				currentX = startX + (e.chars[i].disperseX-startX)*easedScatter
-				currentY = startY + (e.chars[i].disperseY-startY)*easedScatter
-				colorIdx = int(easedScatter * float64(len(ringGradient)-1))
-			} else if progress < 0.8 {
-				// Phase 2: Swirl while pulling toward rings (20-80% of animation)
-				swirlProgress := (progress - 0.2) / 0.6
+			// PHASE 1 (0-0.25): Spiral outward from ASCII to outer circles
+			// PHASE 2 (0.25-0.75): Swirl on outer circles while contracting
+			// PHASE 3 (0.75-1.0): Final spiral inward to exact ring positions
+
+			if progress < 0.25 {
+				// Expanding vortex: ASCII → outer circles
+				expandProgress := progress / 0.25
+				easedExpand := e.easeInOutCubic(expandProgress)
+
+				// Radius expands from start to disperse
+				currentRadius = startRadius + (disperseRadius-startRadius)*easedExpand
+
+				// Angle spirals from start to disperse (creates vortex motion)
+				currentAngle = startAngle + (disperseAngle-startAngle)*easedExpand
+
+				colorIdx = int(easedExpand * float64(len(ringGradient)-1))
+
+			} else if progress < 0.75 {
+				// Swirling vortex: orbit on large circles while contracting toward rings
+				swirlProgress := (progress - 0.25) / 0.5
 				easedSwirl := 1 - math.Pow(1-swirlProgress, 2) // quadratic ease-out
 
-				// Interpolate from dispersed to ring position (partial, creates swirl effect)
-				currentX = e.chars[i].disperseX + (targetX-e.chars[i].disperseX)*easedSwirl*0.6
-				currentY = e.chars[i].disperseY + (targetY-e.chars[i].disperseY)*easedSwirl*0.6
+				// Radius contracts from disperse to target
+				currentRadius = disperseRadius + (targetRadius-disperseRadius)*easedSwirl
 
-				colorIdx = len(ringGradient) - 1 // Full ring color during swirl
+				// Angle continues rotating (continuous swirl)
+				// Use disperseAngle as base and add continuous rotation
+				rotationAmount := swirlProgress * math.Pi * 2 // Full rotation during swirl
+				if e.chars[i].clockwise {
+					currentAngle = disperseAngle + rotationAmount
+				} else {
+					currentAngle = disperseAngle - rotationAmount
+				}
+
+				colorIdx = len(ringGradient) - 1
+
 			} else {
-				// Phase 3: Final tightening into perfect rings (80-100% of animation)
-				tightenProgress := (progress - 0.8) / 0.2
+				// Contracting vortex: final spiral to exact ring positions
+				tightenProgress := (progress - 0.75) / 0.25
 				easedTighten := e.easeInOutCubic(tightenProgress)
 
-				// Calculate where we were at 80% mark
-				swirl80X := e.chars[i].disperseX + (targetX-e.chars[i].disperseX)*0.6*0.6
-				swirl80Y := e.chars[i].disperseY + (targetY-e.chars[i].disperseY)*0.6*0.6
+				// Calculate where we were at 75% mark
+				radius75 := disperseRadius + (targetRadius-disperseRadius)*0.99 // Almost at target
+				angle75Progress := 0.5
+				rotationAmount75 := angle75Progress * math.Pi * 2
+				var angle75 float64
+				if e.chars[i].clockwise {
+					angle75 = disperseAngle + rotationAmount75
+				} else {
+					angle75 = disperseAngle - rotationAmount75
+				}
 
-				// Tighten from swirl position to exact ring position
-				currentX = swirl80X + (targetX-swirl80X)*easedTighten
-				currentY = swirl80Y + (targetY-swirl80Y)*easedTighten
+				// Final tighten to exact positions
+				currentRadius = radius75 + (targetRadius-radius75)*easedTighten
+				currentAngle = angle75 + (targetAngle-angle75)*easedTighten
 
 				colorIdx = len(ringGradient) - 1
 			}
 
-			// Apply calculated position
-			e.chars[i].currentX = currentX
-			e.chars[i].currentY = currentY
+			// Convert polar coordinates (radius, angle) to Cartesian (x, y)
+			e.chars[i].currentX = e.centerX + currentRadius*math.Cos(currentAngle)
+			e.chars[i].currentY = e.centerY + currentRadius*math.Sin(currentAngle)
 
 			// Apply color gradient
 			if colorIdx >= len(ringGradient) {
@@ -389,31 +437,8 @@ func (e *RingTextEffect) Update() {
 			}
 			e.chars[i].currentColor = ringGradient[colorIdx]
 
-			// Continuous swirling rotation throughout all phases
-			// Speed varies: slow initially, faster during swirl phase, slow again when tightening
-			var rotationMultiplier float64
-			if progress < 0.2 {
-				rotationMultiplier = progress / 0.2 * 0.3 // Ramp up to 30% speed
-			} else if progress < 0.8 {
-				rotationMultiplier = 0.3 + ((progress-0.2)/0.6)*0.7 // Ramp from 30% to 100% speed
-			} else {
-				rotationMultiplier = 1.0 - ((progress-0.8)/0.2)*0.5 // Slow down to 50% speed
-			}
-
-			swirlSpeed := e.chars[i].rotationSpeed * rotationMultiplier
-			if e.chars[i].clockwise {
-				e.chars[i].angleOnRing += swirlSpeed
-			} else {
-				e.chars[i].angleOnRing -= swirlSpeed
-			}
-
-			// Normalize angle
-			for e.chars[i].angleOnRing > 2*math.Pi {
-				e.chars[i].angleOnRing -= 2 * math.Pi
-			}
-			for e.chars[i].angleOnRing < 0 {
-				e.chars[i].angleOnRing += 2 * math.Pi
-			}
+			// Update the angle for next iteration
+			e.chars[i].angleOnRing = currentAngle
 		}
 
 		if progress >= 1.0 {
