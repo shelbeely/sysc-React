@@ -21,11 +21,17 @@ Terminal animation library for Go. Pure Go animations ready to use in your TUI a
 
 ## Installation
 
-### CLI Tool
+### CLI Tools
 
-**Via interactive installer (recommended):**
+**Via one-line installer (fastest):**
+```bash
+curl -fsSL https://raw.githubusercontent.com/Nomadcxx/sysc-Go/master/install.sh | sudo bash
+```
+
+**Via interactive installer:**
 ```bash
 # Clone and run the TUI installer (requires sudo for system-wide installation)
+# Installs both syscgo and syscgo-tui binaries
 git clone https://github.com/Nomadcxx/sysc-Go.git
 cd sysc-Go
 sudo go run ./cmd/installer/
@@ -39,6 +45,7 @@ yay -S syscgo
 **Via Go:**
 ```bash
 go install github.com/Nomadcxx/sysc-Go/cmd/syscgo@latest
+go install github.com/Nomadcxx/sysc-Go/cmd/syscgo-tui@latest
 ```
 
 ### As Library
@@ -48,6 +55,24 @@ go get github.com/Nomadcxx/sysc-Go
 ```
 
 ## Quick Start
+
+### Interactive TUI
+
+The easiest way to browse and select animations is through the interactive TUI:
+
+```bash
+syscgo-tui
+```
+
+Features:
+- Browse all animations, themes, and files visually
+- Select duration and launch animations with one keypress
+- **Custom Text Editor** - Create ASCII art directly in the TUI with Ctrl+S
+- Auto-refreshing file list - newly created art appears instantly
+- Position indicators showing where you are in each selector
+- Keyboard navigation (↑↓←→ or hjkl)
+
+### Command Line
 
 Run any animation directly from command line:
 
@@ -136,7 +161,8 @@ go run .
 
 ## Documentation
 
-See [GUIDE.md](GUIDE.md) for detailed usage.
+- [GUIDE.md](GUIDE.md) - Detailed usage guide for the syscgo CLI
+- [TUI.md](TUI.md) - Complete documentation for the interactive TUI
 
 ## Inspiration
 
