@@ -195,19 +195,14 @@ func (m model) View() string {
 
 	var content strings.Builder
 
-	// ASCII Header - exact spacing from sysc.txt, all padded to same width
-	headerLines := []string{
-		"▄▀▀▀▀ █   █ ▄▀▀▀▀ ▄▀▀▀▀       ▄▀▀▀▀ ▄▀▀▀▄    ▄▀    ▄▀ ",
-		" ▀▀▀▄ ▀▀▀▀█  ▀▀▀▄ █     ▀▀▀▀▀ █ ▀▀█ █   █  ▄▀    ▄▀  ",
-		"▀▀▀▀  ▀▀▀▀▀ ▀▀▀▀   ▀▀▀▀        ▀▀▀   ▀▀▀  ▀     ▀    ",
-		"             /// SEE YOU SPACE COWBOY//               ",
-	}
+	// ASCII Header - render as a single block to avoid lipgloss line-by-line padding issues
+	header := `▄▀▀▀▀ █   █ ▄▀▀▀▀ ▄▀▀▀▀       ▄▀▀▀▀ ▄▀▀▀▄    ▄▀    ▄▀
+ ▀▀▀▄ ▀▀▀▀█  ▀▀▀▄ █     ▀▀▀▀▀ █ ▀▀█ █   █  ▄▀    ▄▀
+▀▀▀▀  ▀▀▀▀▀ ▀▀▀▀   ▀▀▀▀        ▀▀▀   ▀▀▀  ▀     ▀
+             /// SEE YOU SPACE COWBOY//               `
 
-	for _, line := range headerLines {
-		content.WriteString(headerStyle.Render(line))
-		content.WriteString("\n")
-	}
-	content.WriteString("\n")
+	content.WriteString(headerStyle.Render(header))
+	content.WriteString("\n\n")
 
 	// Main content based on step
 	var mainContent string
