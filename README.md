@@ -24,17 +24,12 @@ Terminal animation library for Go. Pure Go animations ready to use in your TUI a
 
 ### CLI Tool
 
-**One-line install (requires Go):**
+**Via interactive installer (recommended):**
 ```bash
-curl -sSL https://raw.githubusercontent.com/Nomadcxx/sysc-Go/master/install.sh | bash
-```
-
-**Via interactive installer:**
-```bash
-# Clone and run the TUI installer
+# Clone and run the TUI installer (requires sudo for system-wide installation)
 git clone https://github.com/Nomadcxx/sysc-Go.git
 cd sysc-Go
-go run ./cmd/installer/
+sudo go run ./cmd/installer/
 ```
 
 **Via AUR (Arch Linux):**
@@ -146,6 +141,10 @@ go run .
 ## Documentation
 
 See [GUIDE.md](GUIDE.md) for detailed usage.
+
+## Inspiration
+
+This project was inspired by [terminaltexteffects](https://github.com/ChrisBuilds/terminaltexteffects) - an amazing Python library for terminal visual effects. sysc-Go brings similar visual effects to the Go ecosystem with a focus on performance and easy integration into Go TUI applications.
 
 ## License
 
