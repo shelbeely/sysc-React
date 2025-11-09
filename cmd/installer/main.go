@@ -174,13 +174,16 @@ func (m *model) initTasks() {
 	if m.uninstallMode {
 		m.tasks = []installTask{
 			{name: "Check privileges", description: "Checking root access", execute: checkPrivileges, status: statusPending},
-			{name: "Remove binary", description: "Removing /usr/local/bin/syscgo", execute: removeBinary, status: statusPending},
+			{name: "Remove syscgo", description: "Removing /usr/local/bin/syscgo", execute: removeSyscgoBinary, status: statusPending},
+			{name: "Remove syscgo-tui", description: "Removing /usr/local/bin/syscgo-tui", execute: removeTuiBinary, status: statusPending},
 		}
 	} else {
 		m.tasks = []installTask{
 			{name: "Check privileges", description: "Checking root access", execute: checkPrivileges, status: statusPending},
-			{name: "Build binary", description: "Building syscgo", execute: buildBinary, status: statusPending},
-			{name: "Install binary", description: "Installing to /usr/local/bin", execute: installBinary, status: statusPending},
+			{name: "Build syscgo", description: "Building syscgo binary", execute: buildBinary, status: statusPending},
+			{name: "Build syscgo-tui", description: "Building syscgo-tui binary", execute: buildTuiBinary, status: statusPending},
+			{name: "Install syscgo", description: "Installing syscgo to /usr/local/bin", execute: installBinary, status: statusPending},
+			{name: "Install syscgo-tui", description: "Installing syscgo-tui to /usr/local/bin", execute: installTuiBinary, status: statusPending},
 		}
 	}
 }
@@ -328,19 +331,25 @@ func (m model) renderComplete() string {
 		if m.uninstallMode {
 			b.WriteString(lipgloss.NewStyle().Foreground(Accent).Bold(true).Render("✓ Uninstallation complete!"))
 			b.WriteString("\n\n")
-			b.WriteString(lipgloss.NewStyle().Foreground(FgSecondary).Render("syscgo has been removed from your system."))
+			b.WriteString(lipgloss.NewStyle().Foreground(FgSecondary).Render("syscgo and syscgo-tui have been removed from your system."))
 		} else {
 			b.WriteString(lipgloss.NewStyle().Foreground(Accent).Bold(true).Render("✓ Installation complete!"))
 			b.WriteString("\n\n")
-			b.WriteString(lipgloss.NewStyle().Foreground(FgSecondary).Render("syscgo is now installed at /usr/local/bin/syscgo"))
+			b.WriteString(lipgloss.NewStyle().Foreground(FgSecondary).Render("Installed binaries:"))
+			b.WriteString("\n")
+			b.WriteString(lipgloss.NewStyle().Foreground(Accent).Render("  • /usr/local/bin/syscgo"))
+			b.WriteString("\n")
+			b.WriteString(lipgloss.NewStyle().Foreground(Accent).Render("  • /usr/local/bin/syscgo-tui"))
 			b.WriteString("\n\n")
-			b.WriteString(lipgloss.NewStyle().Foreground(FgSecondary).Render("Try it out:"))
+			b.WriteString(lipgloss.NewStyle().Foreground(FgSecondary).Render("Try them out:"))
 			b.WriteString("\n")
 			b.WriteString(lipgloss.NewStyle().Foreground(Accent).Render("  syscgo -effect fire -theme dracula"))
 			b.WriteString("\n")
 			b.WriteString(lipgloss.NewStyle().Foreground(Accent).Render("  syscgo -effect aquarium -theme nord"))
 			b.WriteString("\n")
-			b.WriteString(lipgloss.NewStyle().Foreground(Accent).Render("  syscgo -effect matrix -theme catppuccin"))
+			b.WriteString(lipgloss.NewStyle().Foreground(Accent).Render("  syscgo-tui"))
+			b.WriteString("\n\n")
+			b.WriteString(lipgloss.NewStyle().Foreground(FgMuted).Render("Launch syscgo-tui for an interactive TUI to browse and select animations!"))
 		}
 	}
 
@@ -399,6 +408,16 @@ func buildBinary(m *model) error {
 	return nil
 }
 
+func buildTuiBinary(m *model) error {
+	cmd := exec.Command("go", "build", "-o", "syscgo-tui", "./cmd/syscgo-tui")
+	cmd.Dir = getProjectRoot()
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("build failed: %s", string(output))
+	}
+	return nil
+}
+
 func installBinary(m *model) error {
 	projectRoot := getProjectRoot()
 	srcPath := filepath.Join(projectRoot, "syscgo")
@@ -419,8 +438,36 @@ func installBinary(m *model) error {
 	return nil
 }
 
-func removeBinary(m *model) error {
+func installTuiBinary(m *model) error {
+	projectRoot := getProjectRoot()
+	srcPath := filepath.Join(projectRoot, "syscgo-tui")
+	dstPath := "/usr/local/bin/syscgo-tui"
+
+	// Read the source file
+	data, err := os.ReadFile(srcPath)
+	if err != nil {
+		return fmt.Errorf("failed to read binary: %v", err)
+	}
+
+	// Write to destination
+	err = os.WriteFile(dstPath, data, 0755)
+	if err != nil {
+		return fmt.Errorf("failed to install binary: %v", err)
+	}
+
+	return nil
+}
+
+func removeSyscgoBinary(m *model) error {
 	err := os.Remove("/usr/local/bin/syscgo")
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to remove binary: %v", err)
+	}
+	return nil
+}
+
+func removeTuiBinary(m *model) error {
+	err := os.Remove("/usr/local/bin/syscgo-tui")
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("failed to remove binary: %v", err)
 	}
