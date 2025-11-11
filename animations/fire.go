@@ -1,10 +1,9 @@
 package animations
 
 import (
+	"fmt"
 	"math/rand"
 	"strings"
-
-	"github.com/charmbracelet/lipgloss/v2"
 )
 
 // FireEffect - hybrid doom fire combining Ly, SCRFIRE, and optimization
@@ -50,30 +49,7 @@ func (f *FireEffect) Resize(width, height int) {
 	}
 }
 
-// spreadFire propagates heat upward with random spread and decay
-func (f *FireEffect) spreadFire(from int) {
-	// Random horizontal offset (-1 to +2) for natural flame movement
-	offset := rand.Intn(4) - 1
-	to := from - f.width + offset
-
-	// Bounds check
-	if to < 0 || to >= len(f.buffer) {
-		return
-	}
-
-	// Random decay (0 or 1) - Ly style
-	decay := rand.Intn(2)
-
-	// Apply decay
-	newHeat := f.buffer[from] - decay
-	if newHeat < 0 {
-		newHeat = 0
-	}
-
-	f.buffer[to] = newHeat
-}
-
-// Update advances fire simulation - bottom-to-top heat propagation
+// Update advances fire simulation - top-to-bottom pulling heat from below
 func (f *FireEffect) Update() {
 	// Randomly re-ignite bottom row
 	for x := 0; x < f.width; x++ {
@@ -82,25 +58,55 @@ func (f *FireEffect) Update() {
 		}
 	}
 
-	// Propagate fire from bottom to top
-	for y := f.height - 1; y > 0; y-- {
+	// Process top-to-bottom, each pixel PULLS heat from below
+	for y := 0; y < f.height-1; y++ {
 		for x := 0; x < f.width; x++ {
-			index := y*f.width + x
-			f.spreadFire(index)
+			// Random horizontal offset to pull from
+			offset := rand.Intn(3) - 1 // -1, 0, or 1
+			sourceX := x + offset
+
+			// Bounds check
+			if sourceX < 0 || sourceX >= f.width {
+				sourceX = x // Fall back to directly below
+			}
+
+			// Pull heat from pixel below with decay
+			sourceIndex := (y + 1) * f.width + sourceX
+			destIndex := y * f.width + x
+
+			decay := rand.Intn(2)
+			newHeat := f.buffer[sourceIndex] - decay
+			if newHeat < 0 {
+				newHeat = 0
+			}
+
+			f.buffer[destIndex] = newHeat
 		}
 	}
 }
 
-// Render converts fire to colored block output with batched styling
+// hexToRGB converts hex color to RGB values
+func hexToRGB(hex string) (int, int, int) {
+	// Remove # if present
+	if len(hex) > 0 && hex[0] == '#' {
+		hex = hex[1:]
+	}
+
+	// Parse RGB
+	var r, g, b int
+	if len(hex) == 6 {
+		fmt.Sscanf(hex, "%02x%02x%02x", &r, &g, &b)
+	}
+	return r, g, b
+}
+
+// Render converts fire to colored block output with batched raw ANSI codes
 func (f *FireEffect) Render() string {
-	var lines []string
+	var output strings.Builder
 
 	for y := 0; y < f.height; y++ {
-		var line strings.Builder
-
-		// Batch consecutive chars with same color
+		var currentColor string
 		var batchChars strings.Builder
-		var batchColor string
 
 		for x := 0; x < f.width; x++ {
 			intensity := f.buffer[y*f.width+x]
@@ -109,14 +115,12 @@ func (f *FireEffect) Render() string {
 			if intensity < 5 {
 				// Flush any pending batch
 				if batchChars.Len() > 0 {
-					styled := lipgloss.NewStyle().
-						Foreground(lipgloss.Color(batchColor)).
-						Render(batchChars.String())
-					line.WriteString(styled)
+					r, g, b := hexToRGB(currentColor)
+					fmt.Fprintf(&output, "\033[38;2;%d;%d;%dm%s\033[0m", r, g, b, batchChars.String())
 					batchChars.Reset()
+					currentColor = ""
 				}
-				line.WriteRune(' ')
-				batchColor = ""
+				output.WriteRune(' ')
 				continue
 			}
 
@@ -134,30 +138,29 @@ func (f *FireEffect) Render() string {
 			}
 			color := f.palette[colorIndex]
 
-			// If color changed, flush current batch and start new one
-			if color != batchColor && batchChars.Len() > 0 {
-				styled := lipgloss.NewStyle().
-					Foreground(lipgloss.Color(batchColor)).
-					Render(batchChars.String())
-				line.WriteString(styled)
+			// If color changed, flush current batch
+			if color != currentColor && batchChars.Len() > 0 {
+				r, g, b := hexToRGB(currentColor)
+				fmt.Fprintf(&output, "\033[38;2;%d;%d;%dm%s\033[0m", r, g, b, batchChars.String())
 				batchChars.Reset()
 			}
 
 			// Add char to batch
-			batchColor = color
+			currentColor = color
 			batchChars.WriteRune(char)
 		}
 
-		// Flush final batch
+		// Flush final batch for this row
 		if batchChars.Len() > 0 {
-			styled := lipgloss.NewStyle().
-				Foreground(lipgloss.Color(batchColor)).
-				Render(batchChars.String())
-			line.WriteString(styled)
+			r, g, b := hexToRGB(currentColor)
+			fmt.Fprintf(&output, "\033[38;2;%d;%d;%dm%s\033[0m", r, g, b, batchChars.String())
 		}
 
-		lines = append(lines, line.String())
+		// Add newline at end of row (but not after last row)
+		if y < f.height-1 {
+			output.WriteRune('\n')
+		}
 	}
 
-	return strings.Join(lines, "\n")
+	return output.String()
 }
