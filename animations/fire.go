@@ -50,45 +50,43 @@ func (f *FireEffect) Resize(width, height int) {
 	}
 }
 
-// Update advances fire simulation - hybrid SCRFIRE averaging + Ly decay
+// spreadFire propagates heat upward with random spread and decay
+func (f *FireEffect) spreadFire(from int) {
+	// Random horizontal offset (-1 to +2) for natural flame movement
+	offset := rand.Intn(4) - 1
+	to := from - f.width + offset
+
+	// Bounds check
+	if to < 0 || to >= len(f.buffer) {
+		return
+	}
+
+	// Random decay (0 or 1) - Ly style
+	decay := rand.Intn(2)
+
+	// Apply decay
+	newHeat := f.buffer[from] - decay
+	if newHeat < 0 {
+		newHeat = 0
+	}
+
+	f.buffer[to] = newHeat
+}
+
+// Update advances fire simulation - bottom-to-top heat propagation
 func (f *FireEffect) Update() {
-	// Randomly ignite bottom row (SCRFIRE style)
+	// Randomly re-ignite bottom row
 	for x := 0; x < f.width; x++ {
 		if rand.Float64() < 0.5 {
 			f.buffer[(f.height-1)*f.width+x] = 65
 		}
 	}
 
-	// Diffuse fire using averaging (SCRFIRE) with decay
-	for y := 0; y < f.height-1; y++ {
+	// Propagate fire from bottom to top
+	for y := f.height - 1; y > 0; y-- {
 		for x := 0; x < f.width; x++ {
-			i := y*f.width + x
-
-			// Get neighbor values for averaging
-			current := f.buffer[i]
-			right := 0
-			below := 0
-			diagBelow := 0
-
-			if x+1 < f.width {
-				right = f.buffer[i+1]
-			}
-			if y+1 < f.height {
-				below = f.buffer[i+f.width]
-			}
-			if x+1 < f.width && y+1 < f.height {
-				diagBelow = f.buffer[i+f.width+1]
-			}
-
-			// Average with neighbors and decay (SCRFIRE diffusion)
-			avg := (current + right + below + diagBelow) / 4
-
-			// Apply probabilistic decay (Ly style)
-			if rand.Float64() < 0.2 && avg > 0 {
-				avg--
-			}
-
-			f.buffer[i] = avg
+			index := y*f.width + x
+			f.spreadFire(index)
 		}
 	}
 }
