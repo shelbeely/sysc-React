@@ -1,293 +1,173 @@
 package tui
 
-import (
-	"strings"
-
-	"github.com/charmbracelet/lipgloss"
-)
-
-// Alignment constants
+// Gradient direction constants for TUI usage
 const (
-	AlignLeft = iota
-	AlignCenter
-	AlignRight
+	GradientUpDown = iota
+	GradientDownUp
+	GradientLeftRight
+	GradientRightLeft
 )
 
-// RenderOptions holds all configuration for rendering text
-type RenderOptions struct {
-	Font         *BitFont
-	Text         string
-	Alignment    int
-	Color        string
-	Scale        float64
-	Shadow       bool
-	CharSpacing  int
-	LineSpacing  int
-	MaxWidth     int // Canvas width for alignment
+// Shadow style constants for TUI usage
+const (
+	ShadowLight = iota
+	ShadowMedium
+	ShadowDark
+)
+
+// TUIRenderOptions holds simplified configuration for rendering text in the TUI
+// This is our wrapper around BIT's RenderOptions
+type TUIRenderOptions struct {
+	Font          *BitFont
+	Text          string
+	Alignment     int
+	Color         string
+	Scale         float64
+	Shadow        bool
+	ShadowOffsetX int
+	ShadowOffsetY int
+	ShadowStyle   int
+	CharSpacing   int
+	WordSpacing   int
+	LineSpacing   int
+	UseGradient   bool
+	GradientColor string
+	GradientDir   int
+	MaxWidth      int // Canvas width for alignment
 }
 
-// RenderBitText renders text using a bitmap font with all styling options
-func RenderBitText(opts RenderOptions) []string {
+// RenderOptions is BIT's full rendering options structure
+type RenderOptions struct {
+	CharSpacing            int
+	WordSpacing            int
+	LineSpacing            int
+	Alignment              TextAlignment
+	TextColor              string
+	GradientColor          string
+	GradientDirection      GradientDirection
+	UseGradient            bool
+	ScaleFactor            float64
+	ShadowEnabled          bool
+	ShadowHorizontalOffset int
+	ShadowVerticalOffset   int
+	ShadowStyle            ShadowStyle
+	TextLines              []string
+}
+
+// RenderBitText renders text using a bitmap font with styling options
+// This wraps BIT's proven rendering engine
+func RenderBitText(opts TUIRenderOptions) []string {
 	if opts.Font == nil || opts.Text == "" {
 		return []string{}
 	}
 
-	// Default scale
-	if opts.Scale <= 0 {
-		opts.Scale = 1.0
+	// Convert our simplified options to BIT's RenderOptions format
+	bitOpts := convertToBITOptions(opts)
+
+	// Use BIT's rendering engine
+	fontData := FontData{
+		Name:       opts.Font.Name,
+		Author:     opts.Font.Author,
+		License:    opts.Font.License,
+		Characters: opts.Font.Characters,
 	}
 
-	// Step 1: Render base text using font
-	lines := opts.Font.RenderText(opts.Text)
-	if len(lines) == 0 {
-		return lines
-	}
-
-	// Step 2: Apply character spacing
-	if opts.CharSpacing > 0 {
-		lines = applyCharacterSpacing(lines, opts.CharSpacing)
-	}
-
-	// Step 3: Apply line spacing
-	if opts.LineSpacing > 0 {
-		lines = applyLineSpacing(lines, opts.LineSpacing, opts.Font.GetHeight())
-	}
-
-	// Step 4: Apply scale
-	if opts.Scale != 1.0 {
-		lines = applyScale(lines, opts.Scale)
-	}
-
-	// Step 5: Apply shadow
-	if opts.Shadow {
-		lines = applyShadow(lines)
-	}
-
-	// Step 6: Apply alignment
-	if opts.MaxWidth > 0 {
-		lines = applyAlignment(lines, opts.MaxWidth, opts.Alignment)
-	}
-
-	// Step 7: Apply color
-	if opts.Color != "" {
-		lines = applyColor(lines, opts.Color)
-	}
-
-	return lines
+	return RenderTextWithFont(opts.Text, fontData, bitOpts)
 }
 
-// applyCharacterSpacing adds extra spaces between characters
-func applyCharacterSpacing(lines []string, spacing int) []string {
-	if spacing <= 0 {
-		return lines
+// convertToBITOptions converts our TUIRenderOptions to BIT's RenderOptions format
+func convertToBITOptions(opts TUIRenderOptions) RenderOptions {
+	bitOpts := RenderOptions{
+		CharSpacing:            opts.CharSpacing,
+		WordSpacing:            opts.WordSpacing,
+		LineSpacing:            opts.LineSpacing,
+		TextColor:              opts.Color,
+		ScaleFactor:            opts.Scale,
+		ShadowEnabled:          opts.Shadow,
+		ShadowHorizontalOffset: opts.ShadowOffsetX,
+		ShadowVerticalOffset:   opts.ShadowOffsetY,
+		UseGradient:            opts.UseGradient,
+		GradientColor:          opts.GradientColor,
 	}
 
-	spacer := strings.Repeat(" ", spacing)
-	result := make([]string, len(lines))
-
-	for i, line := range lines {
-		// Add spacing after each non-space character
-		var newLine strings.Builder
-		runes := []rune(line)
-		for j, r := range runes {
-			newLine.WriteRune(r)
-			// Add spacer after each character except the last
-			if j < len(runes)-1 && r != ' ' {
-				newLine.WriteString(spacer)
-			}
-		}
-		result[i] = newLine.String()
+	// Default values
+	if bitOpts.ScaleFactor == 0 {
+		bitOpts.ScaleFactor = 1.0
+	}
+	if bitOpts.TextColor == "" {
+		bitOpts.TextColor = "#FFFFFF"
 	}
 
-	return result
+	// Convert alignment (use the actual BIT alignment constants from alignment.go)
+	bitOpts.Alignment = TextAlignment(opts.Alignment)
+
+	// Convert gradient direction
+	switch opts.GradientDir {
+	case GradientUpDown:
+		bitOpts.GradientDirection = UpDown
+	case GradientDownUp:
+		bitOpts.GradientDirection = DownUp
+	case GradientLeftRight:
+		bitOpts.GradientDirection = LeftRight
+	case GradientRightLeft:
+		bitOpts.GradientDirection = RightLeft
+	default:
+		bitOpts.GradientDirection = UpDown
+	}
+
+	// Convert shadow style
+	switch opts.ShadowStyle {
+	case ShadowLight:
+		bitOpts.ShadowStyle = LightShade
+	case ShadowMedium:
+		bitOpts.ShadowStyle = MediumShade
+	case ShadowDark:
+		bitOpts.ShadowStyle = DarkShade
+	default:
+		bitOpts.ShadowStyle = LightShade
+	}
+
+	return bitOpts
 }
 
-// applyLineSpacing adds extra blank lines between text rows
-func applyLineSpacing(lines []string, spacing, charHeight int) []string {
-	if spacing <= 0 || charHeight <= 0 {
-		return lines
-	}
-
-	var result []string
-	blankLine := ""
-
-	// Calculate number of text blocks (each is charHeight lines)
-	numBlocks := (len(lines) + charHeight - 1) / charHeight
-
-	for blockIdx := 0; blockIdx < numBlocks; blockIdx++ {
-		start := blockIdx * charHeight
-		end := start + charHeight
-		if end > len(lines) {
-			end = len(lines)
-		}
-
-		// Add the block of lines
-		result = append(result, lines[start:end]...)
-
-		// Add spacing lines (except after last block)
-		if blockIdx < numBlocks-1 {
-			// Get line width from first line of block
-			if start < len(lines) && len(lines[start]) > 0 {
-				blankLine = strings.Repeat(" ", len([]rune(lines[start])))
-			}
-			for i := 0; i < spacing; i++ {
-				result = append(result, blankLine)
-			}
-		}
-	}
-
-	return result
+// FontData represents BIT's font structure
+type FontData struct {
+	Name       string
+	Author     string
+	License    string
+	Characters map[string][]string
 }
 
-// applyScale scales the text by the given factor
-func applyScale(lines []string, scale float64) []string {
-	if scale == 1.0 {
-		return lines
-	}
+// TextAlignment from BIT - using the same values as HorizontalAlignment
+type TextAlignment int
 
-	// For simplicity, we support integer scales for now
-	// TODO: Implement fractional scaling (0.5x) using character selection
-	intScale := int(scale)
-	if intScale < 1 {
-		intScale = 1
-	}
+const (
+	LeftAlign TextAlignment = iota
+	CenterAlign
+	RightAlign
+)
 
-	var result []string
+// GradientDirection from BIT
+type GradientDirection int
 
-	// Scale vertically (repeat each line)
-	for _, line := range lines {
-		// Scale horizontally (repeat each character)
-		var scaledLine strings.Builder
-		for _, r := range line {
-			for i := 0; i < intScale; i++ {
-				scaledLine.WriteRune(r)
-			}
-		}
-		scaledLineStr := scaledLine.String()
+const (
+	UpDown GradientDirection = iota
+	DownUp
+	LeftRight
+	RightLeft
+)
 
-		// Repeat line vertically
-		for i := 0; i < intScale; i++ {
-			result = append(result, scaledLineStr)
-		}
-	}
+// ShadowStyle from BIT
+type ShadowStyle int
 
-	return result
-}
-
-// applyShadow adds a drop shadow effect
-func applyShadow(lines []string) []string {
-	if len(lines) == 0 {
-		return lines
-	}
-
-	// Find max width
-	maxWidth := 0
-	for _, line := range lines {
-		width := len([]rune(line))
-		if width > maxWidth {
-			maxWidth = width
-		}
-	}
-
-	// Create shadow offset (1 right, 1 down)
-	shadowChar := '░' // Light shade for shadow
-	result := make([]string, len(lines)+1)
-
-	// First line has no shadow (nothing above it)
-	result[0] = lines[0]
-
-	// Subsequent lines
-	for i := 1; i < len(lines); i++ {
-		runes := []rune(lines[i])
-		prevRunes := []rune(lines[i-1])
-
-		var newLine strings.Builder
-
-		for j := 0; j < maxWidth; j++ {
-			var currentChar rune = ' '
-			if j < len(runes) {
-				currentChar = runes[j]
-			}
-
-			// Check if shadow should be drawn here
-			// Shadow appears if: current position is space AND previous line had character to the left
-			if currentChar == ' ' && j > 0 && j-1 < len(prevRunes) && prevRunes[j-1] != ' ' {
-				newLine.WriteRune(shadowChar)
-			} else {
-				newLine.WriteRune(currentChar)
-			}
-		}
-
-		result[i] = newLine.String()
-	}
-
-	// Add shadow line at bottom
-	var shadowLine strings.Builder
-	lastRunes := []rune(lines[len(lines)-1])
-	for j := 0; j < maxWidth; j++ {
-		if j > 0 && j-1 < len(lastRunes) && lastRunes[j-1] != ' ' {
-			shadowLine.WriteRune(shadowChar)
-		} else {
-			shadowLine.WriteRune(' ')
-		}
-	}
-	result[len(lines)] = shadowLine.String()
-
-	return result
-}
-
-// applyAlignment aligns text within a given width
-func applyAlignment(lines []string, maxWidth, alignment int) []string {
-	result := make([]string, len(lines))
-
-	for i, line := range lines {
-		lineWidth := len([]rune(line))
-
-		if lineWidth >= maxWidth {
-			// Line is too wide, don't modify
-			result[i] = line
-			continue
-		}
-
-		padding := maxWidth - lineWidth
-
-		switch alignment {
-		case AlignLeft:
-			// No change needed
-			result[i] = line + strings.Repeat(" ", padding)
-
-		case AlignCenter:
-			leftPad := padding / 2
-			rightPad := padding - leftPad
-			result[i] = strings.Repeat(" ", leftPad) + line + strings.Repeat(" ", rightPad)
-
-		case AlignRight:
-			result[i] = strings.Repeat(" ", padding) + line
-
-		default:
-			result[i] = line
-		}
-	}
-
-	return result
-}
-
-// applyColor applies a color to all non-space characters using lipgloss
-func applyColor(lines []string, hexColor string) []string {
-	style := lipgloss.NewStyle().Foreground(lipgloss.Color(hexColor))
-
-	result := make([]string, len(lines))
-	for i, line := range lines {
-		// Apply color to entire line for now
-		// In a more sophisticated implementation, we could color character-by-character
-		result[i] = style.Render(line)
-	}
-
-	return result
-}
+const (
+	LightShade ShadowStyle = iota
+	MediumShade
+	DarkShade
+)
 
 // GetRenderedDimensions calculates the final dimensions of rendered text
-func GetRenderedDimensions(opts RenderOptions) (width, height int) {
+func GetRenderedDimensions(opts TUIRenderOptions) (width, height int) {
 	lines := RenderBitText(opts)
 	if len(lines) == 0 {
 		return 0, 0
@@ -295,7 +175,9 @@ func GetRenderedDimensions(opts RenderOptions) (width, height int) {
 
 	height = len(lines)
 	for _, line := range lines {
-		w := len([]rune(line))
+		// Strip ANSI codes for accurate width
+		plainLine := stripANSI(line)
+		w := len([]rune(plainLine))
 		if w > width {
 			width = w
 		}
@@ -303,3 +185,5 @@ func GetRenderedDimensions(opts RenderOptions) (width, height int) {
 
 	return width, height
 }
+
+// stripANSI is already defined in animation.go
