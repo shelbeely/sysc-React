@@ -7,141 +7,129 @@ import (
 	"github.com/charmbracelet/lipgloss/v2"
 )
 
-// FireEffect implements PSX DOOM-style fire algorithm
+// FireEffect - hybrid doom fire combining Ly, SCRFIRE, and optimization
 type FireEffect struct {
-	width   int      // Terminal width
-	height  int      // Terminal height
-	buffer  []int    // Heat values (0-35), size = width * height
-	palette []string // Hex color codes from theme
-	chars   []rune   // Fire characters for density
+	width   int
+	height  int
+	buffer  []int    // Intensity values (0-65)
+	palette []string
+	chars   []rune
 }
 
-const (
-	fireSteps     = 36 // Fire intensity levels (0-35)
-	fireSpread    = 3  // Maximum horizontal spread distance
-	fireDecayRate = 7  // Decay rate out of 10 (higher = faster decay)
-)
-
-// NewFireEffect creates a new fire effect with given dimensions and theme palette
+// NewFireEffect creates a new fire effect
 func NewFireEffect(width, height int, palette []string) *FireEffect {
 	f := &FireEffect{
 		width:   width,
 		height:  height,
 		palette: palette,
-		// Block characters with increasing density for fire intensity
-		chars:   []rune{'░', '▒', '▓', '█', '▓', '█', '█', '█'},
+		chars:   []rune{'░', '▒', '▓', '█'},
+		buffer:  make([]int, width*height),
 	}
-	f.init()
+
+	// Initialize fire source at bottom
+	for x := 0; x < width; x++ {
+		f.buffer[(height-1)*width+x] = 65
+	}
+
 	return f
 }
 
-// Initialize fire buffer with bottom row as heat source
-func (f *FireEffect) init() {
-	f.buffer = make([]int, f.width*f.height)
-
-	// Set bottom row to maximum heat with some randomness (fire source)
-	for i := 0; i < f.width; i++ {
-		f.buffer[(f.height-1)*f.width+i] = fireSteps - 1 - rand.Intn(4)
-	}
-}
-
-// UpdatePalette changes the fire color palette (for theme switching)
+// UpdatePalette changes the color palette
 func (f *FireEffect) UpdatePalette(palette []string) {
 	f.palette = palette
 }
 
-// Resize reinitializes the fire effect with new dimensions
+// Resize reinitializes with new dimensions
 func (f *FireEffect) Resize(width, height int) {
 	f.width = width
 	f.height = height
-	f.init()
+	f.buffer = make([]int, width*height)
+
+	for x := 0; x < width; x++ {
+		f.buffer[(height-1)*width+x] = 65
+	}
 }
 
-// spreadFire propagates heat upward with doom-style random decay
-func (f *FireEffect) spreadFire(from int) {
-	// Random horizontal spread (-fireSpread to +fireSpread)
-	randSpread := rand.Intn(fireSpread*2+1) - fireSpread
-	to := from - f.width + randSpread
-
-	// Bounds check
-	if to < 0 || to >= len(f.buffer) {
-		return
-	}
-
-	// Random decay: fireDecayRate out of 10 chance to decay
-	// This creates the characteristic flickering doom fire effect
-	decay := 0
-	if rand.Intn(10) < fireDecayRate {
-		decay = 1
-	}
-
-	newHeat := f.buffer[from] - decay
-	if newHeat < 0 {
-		newHeat = 0
-	}
-
-	f.buffer[to] = newHeat
-}
-
-// Update advances the fire simulation by one frame
+// Update advances fire simulation - hybrid SCRFIRE averaging + Ly decay
 func (f *FireEffect) Update() {
-	// Randomly ignite bottom row (fire source) with varying intensity
-	for i := 0; i < f.width/8; i++ {
-		pos := rand.Intn(f.width)
-		f.buffer[(f.height-1)*f.width+pos] = fireSteps - 1 - rand.Intn(8)
+	// Randomly ignite bottom row (SCRFIRE style)
+	for x := 0; x < f.width; x++ {
+		if rand.Float64() < 0.5 {
+			f.buffer[(f.height-1)*f.width+x] = 65
+		}
 	}
 
-	// Process all pixels from bottom to top
-	// (Fire spreads upward, must process bottom row first)
-	for y := f.height - 1; y > 0; y-- {
+	// Diffuse fire using averaging (SCRFIRE) with decay
+	for y := 0; y < f.height-1; y++ {
 		for x := 0; x < f.width; x++ {
-			index := y*f.width + x
-			f.spreadFire(index)
+			i := y*f.width + x
+
+			// Get neighbor values for averaging
+			current := f.buffer[i]
+			right := 0
+			below := 0
+			diagBelow := 0
+
+			if x+1 < f.width {
+				right = f.buffer[i+1]
+			}
+			if y+1 < f.height {
+				below = f.buffer[i+f.width]
+			}
+			if x+1 < f.width && y+1 < f.height {
+				diagBelow = f.buffer[i+f.width+1]
+			}
+
+			// Average with neighbors and decay (SCRFIRE diffusion)
+			avg := (current + right + below + diagBelow) / 4
+
+			// Apply probabilistic decay (Ly style)
+			if rand.Float64() < 0.2 && avg > 0 {
+				avg--
+			}
+
+			f.buffer[i] = avg
 		}
 	}
 }
 
-// Render converts the fire buffer to colored text output
+// Render converts fire to colored block output
 func (f *FireEffect) Render() string {
 	var lines []string
 
 	for y := 0; y < f.height; y++ {
 		var line strings.Builder
-		for x := 0; x < f.width; x++ {
-			heat := f.buffer[y*f.width+x]
 
-			// Skip zero/very low heat (natural fade to background)
-			if heat < 2 {
+		for x := 0; x < f.width; x++ {
+			intensity := f.buffer[y*f.width+x]
+
+			// Skip zero intensity
+			if intensity < 5 {
 				line.WriteRune(' ')
 				continue
 			}
 
-			// Map heat to character (0-35 heat → block density)
-			charIndex := (heat * (len(f.chars) - 1)) / (fireSteps - 1)
+			// Map intensity to block character (0-65 → 4 blocks)
+			charIndex := (intensity * (len(f.chars) - 1)) / 65
 			if charIndex >= len(f.chars) {
 				charIndex = len(f.chars) - 1
 			}
 			char := f.chars[charIndex]
 
-			// Skip styling if character is a space (save massive amounts of ANSI codes)
-			if char == ' ' {
-				line.WriteRune(' ')
-				continue
-			}
-
-			// Map heat to color from palette
-			colorIndex := (heat * (len(f.palette) - 1)) / (fireSteps - 1)
+			// Map intensity to color
+			colorIndex := (intensity * (len(f.palette) - 1)) / 65
 			if colorIndex >= len(f.palette) {
 				colorIndex = len(f.palette) - 1
 			}
-			colorHex := f.palette[colorIndex]
+			color := f.palette[colorIndex]
 
-			// Render colored character
+			// Render colored block
 			styled := lipgloss.NewStyle().
-				Foreground(lipgloss.Color(colorHex)).
+				Foreground(lipgloss.Color(color)).
 				Render(string(char))
 			line.WriteString(styled)
 		}
+
 		lines = append(lines, line.String())
 	}
 
