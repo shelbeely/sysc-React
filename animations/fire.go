@@ -111,7 +111,7 @@ func (f *FireEffect) Render() string {
 
 			// Skip zero/very low heat (natural fade to background)
 			if heat < 2 {
-				line.WriteString(" ")
+				line.WriteRune(' ')
 				continue
 			}
 
@@ -121,6 +121,12 @@ func (f *FireEffect) Render() string {
 				charIndex = len(f.chars) - 1
 			}
 			char := f.chars[charIndex]
+
+			// Skip styling if character is a space (save massive amounts of ANSI codes)
+			if char == ' ' {
+				line.WriteRune(' ')
+				continue
+			}
 
 			// Map heat to color from palette
 			colorIndex := (heat * (len(f.palette) - 1)) / (fireSteps - 1)
