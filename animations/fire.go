@@ -17,9 +17,9 @@ type FireEffect struct {
 }
 
 const (
-	fireSteps      = 36 // Fire intensity levels (0-35)
-	fireSpread     = 3  // Maximum horizontal spread distance
-	fireDecayProb  = 3  // Decay probability (higher = faster decay)
+	fireSteps     = 36 // Fire intensity levels (0-35)
+	fireSpread    = 3  // Maximum horizontal spread distance
+	fireDecayRate = 7  // Decay rate out of 10 (higher = faster decay)
 )
 
 // NewFireEffect creates a new fire effect with given dimensions and theme palette
@@ -67,10 +67,10 @@ func (f *FireEffect) spreadFire(from int) {
 		return
 	}
 
-	// Random decay: decrement if random value exceeds threshold
+	// Random decay: fireDecayRate out of 10 chance to decay
 	// This creates the characteristic flickering doom fire effect
 	decay := 0
-	if rand.Intn(fireDecayProb+6) >= fireDecayProb {
+	if rand.Intn(10) < fireDecayRate {
 		decay = 1
 	}
 
