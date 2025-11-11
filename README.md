@@ -2,7 +2,7 @@
 
 Terminal animation library for Go. Pure Go animations ready to use in your TUI applications.
 
-## Features
+## Effects
 
 - **Rain Effect** - ASCII character rain effect
 - **Matrix Rain** - Classic Matrix digital rain
@@ -64,13 +64,7 @@ The easiest way to browse and select animations is through the interactive TUI:
 syscgo-tui
 ```
 
-Features:
-- Browse all animations, themes, and files visually
-- Select duration and launch animations with one keypress
-- **Custom Text Editor** - Create ASCII art directly in the TUI with Ctrl+S
-- Auto-refreshing file list - newly created art appears instantly
-- Position indicators showing where you are in each selector
-- Keyboard navigation (↑↓←→ or hjkl)
+Visual selector for animations, themes, and durations. Built-in ASCII art editor with live preview (Ctrl+S). Navigate with arrows or vim keys.
 
 ### Command Line
 
@@ -92,7 +86,7 @@ syscgo -effect pour -theme tokyo-night -duration 10
 # Beams effect with Nord theme (full-screen background)
 syscgo -effect beams -theme nord -duration 0
 
-# Beam text effect with auto-sizing and display mode (perfect for .zshrc)
+# Beam text effect with auto-sizing and display mode
 syscgo -effect beam-text -theme nord -file message.txt -auto -display -duration 5
 
 # Aquarium effect with Dracula theme (infinite)
@@ -109,14 +103,12 @@ syscgo -effect blackhole-particles -theme eldritch -duration 0
 The `beam-text` effect supports two special flags:
 
 - **`-auto`** - Automatically sizes the canvas to fit text dimensions exactly
-- **`-display`** - Completes animation once and holds at final bright state (perfect for `.zshrc`)
+- **`-display`** - Completes animation once and holds at final bright state
 
-Example for `.zshrc` startup animation:
+Example:
 ```bash
 syscgo -effect beam-text -file ~/header.txt -auto -display -theme nord -duration 5
 ```
-
-This will animate your text, complete the full beam animation cycle, and hold at the final bright state before continuing shell startup.
 
 ## Effect Showcase
 
