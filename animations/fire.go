@@ -1,166 +1,127 @@
 package animations
 
 import (
-	"fmt"
 	"math/rand"
 	"strings"
+
+	"github.com/charmbracelet/lipgloss/v2"
 )
 
-// FireEffect - hybrid doom fire combining Ly, SCRFIRE, and optimization
+// FireEffect implements PSX DOOM-style fire algorithm
 type FireEffect struct {
-	width   int
-	height  int
-	buffer  []int    // Intensity values (0-65)
-	palette []string
-	chars   []rune
+	width   int      // Terminal width
+	height  int      // Terminal height
+	buffer  []int    // Heat values (0-36), size = width * height
+	palette []string // Hex color codes from theme
+	chars   []rune   // Fire characters for density
 }
 
-// NewFireEffect creates a new fire effect
+// NewFireEffect creates a new fire effect with given dimensions and theme palette
 func NewFireEffect(width, height int, palette []string) *FireEffect {
 	f := &FireEffect{
 		width:   width,
 		height:  height,
 		palette: palette,
-		chars:   []rune{'░', '▒', '▓', '█'},
-		buffer:  make([]int, width*height),
+		chars:   []rune{' ', '░', '▒', '▓', '█'},
 	}
-
-	// Initialize fire source at bottom
-	for x := 0; x < width; x++ {
-		f.buffer[(height-1)*width+x] = 65
-	}
-
+	f.init()
 	return f
 }
 
-// UpdatePalette changes the color palette
+// Initialize fire buffer with bottom row as heat source
+func (f *FireEffect) init() {
+	f.buffer = make([]int, f.width*f.height)
+
+	// Set bottom row to maximum heat (fire source)
+	for i := 0; i < f.width; i++ {
+		f.buffer[(f.height-1)*f.width+i] = 36
+	}
+}
+
+// UpdatePalette changes the fire color palette (for theme switching)
 func (f *FireEffect) UpdatePalette(palette []string) {
 	f.palette = palette
 }
 
-// Resize reinitializes with new dimensions
+// Resize reinitializes the fire effect with new dimensions
 func (f *FireEffect) Resize(width, height int) {
 	f.width = width
 	f.height = height
-	f.buffer = make([]int, width*height)
-
-	for x := 0; x < width; x++ {
-		f.buffer[(height-1)*width+x] = 65
-	}
+	f.init()
 }
 
-// Update advances fire simulation - top-to-bottom pulling heat from below
+// spreadFire propagates heat upward with random decay
+func (f *FireEffect) spreadFire(from int) {
+	// Random horizontal offset (0-3) for chaos
+	offset := rand.Intn(4)
+	to := from - f.width - offset + 1
+
+	// Bounds check
+	if to < 0 || to >= len(f.buffer) {
+		return
+	}
+
+	// Random decay (0 or 1)
+	decay := rand.Intn(2)
+
+	newHeat := f.buffer[from] - decay
+	if newHeat < 0 {
+		newHeat = 0
+	}
+
+	f.buffer[to] = newHeat
+}
+
+// Update advances the fire simulation by one frame
 func (f *FireEffect) Update() {
-	// Randomly re-ignite bottom row
-	for x := 0; x < f.width; x++ {
-		if rand.Float64() < 0.5 {
-			f.buffer[(f.height-1)*f.width+x] = 65
-		}
-	}
-
-	// Process top-to-bottom, each pixel PULLS heat from below
-	for y := 0; y < f.height-1; y++ {
+	// Process all pixels from bottom to top
+	// (Fire spreads upward, must process bottom row first)
+	for y := f.height - 1; y > 0; y-- {
 		for x := 0; x < f.width; x++ {
-			// Random horizontal offset to pull from
-			offset := rand.Intn(3) - 1 // -1, 0, or 1
-			sourceX := x + offset
-
-			// Bounds check
-			if sourceX < 0 || sourceX >= f.width {
-				sourceX = x // Fall back to directly below
-			}
-
-			// Pull heat from pixel below with decay
-			sourceIndex := (y + 1) * f.width + sourceX
-			destIndex := y * f.width + x
-
-			decay := rand.Intn(2)
-			newHeat := f.buffer[sourceIndex] - decay
-			if newHeat < 0 {
-				newHeat = 0
-			}
-
-			f.buffer[destIndex] = newHeat
+			index := y*f.width + x
+			f.spreadFire(index)
 		}
 	}
 }
 
-// hexToRGB converts hex color to RGB values
-func hexToRGB(hex string) (int, int, int) {
-	// Remove # if present
-	if len(hex) > 0 && hex[0] == '#' {
-		hex = hex[1:]
-	}
-
-	// Parse RGB
-	var r, g, b int
-	if len(hex) == 6 {
-		fmt.Sscanf(hex, "%02x%02x%02x", &r, &g, &b)
-	}
-	return r, g, b
-}
-
-// Render converts fire to colored block output with batched raw ANSI codes
+// Render converts the fire buffer to colored text output
 func (f *FireEffect) Render() string {
-	var output strings.Builder
+	var lines []string
 
+	// Render across full height - low heat at top will naturally fade to black/background
 	for y := 0; y < f.height; y++ {
-		var currentColor string
-		var batchChars strings.Builder
-
+		var line strings.Builder
 		for x := 0; x < f.width; x++ {
-			intensity := f.buffer[y*f.width+x]
+			heat := f.buffer[y*f.width+x]
 
-			// Handle low intensity (spaces)
-			if intensity < 5 {
-				// Flush any pending batch
-				if batchChars.Len() > 0 {
-					r, g, b := hexToRGB(currentColor)
-					fmt.Fprintf(&output, "\033[38;2;%d;%d;%dm%s\033[0m", r, g, b, batchChars.String())
-					batchChars.Reset()
-					currentColor = ""
-				}
-				output.WriteRune(' ')
+			// Skip very low heat (natural fade to background)
+			if heat < 3 {
+				line.WriteString(" ")
 				continue
 			}
 
-			// Map intensity to block character (0-65 → 4 blocks)
-			charIndex := (intensity * (len(f.chars) - 1)) / 65
+			// Map heat to character (0-36 heat → 5 chars)
+			charIndex := heat / 7
 			if charIndex >= len(f.chars) {
 				charIndex = len(f.chars) - 1
 			}
 			char := f.chars[charIndex]
 
-			// Map intensity to color
-			colorIndex := (intensity * (len(f.palette) - 1)) / 65
+			// Map heat to color from palette
+			colorIndex := heat * (len(f.palette) - 1) / 36
 			if colorIndex >= len(f.palette) {
 				colorIndex = len(f.palette) - 1
 			}
-			color := f.palette[colorIndex]
+			colorHex := f.palette[colorIndex]
 
-			// If color changed, flush current batch
-			if color != currentColor && batchChars.Len() > 0 {
-				r, g, b := hexToRGB(currentColor)
-				fmt.Fprintf(&output, "\033[38;2;%d;%d;%dm%s\033[0m", r, g, b, batchChars.String())
-				batchChars.Reset()
-			}
-
-			// Add char to batch
-			currentColor = color
-			batchChars.WriteRune(char)
+			// Render colored character
+			styled := lipgloss.NewStyle().
+				Foreground(lipgloss.Color(colorHex)).
+				Render(string(char))
+			line.WriteString(styled)
 		}
-
-		// Flush final batch for this row
-		if batchChars.Len() > 0 {
-			r, g, b := hexToRGB(currentColor)
-			fmt.Fprintf(&output, "\033[38;2;%d;%d;%dm%s\033[0m", r, g, b, batchChars.String())
-		}
-
-		// Add newline at end of row (but not after last row)
-		if y < f.height-1 {
-			output.WriteRune('\n')
-		}
+		lines = append(lines, line.String())
 	}
 
-	return output.String()
+	return strings.Join(lines, "\n")
 }
