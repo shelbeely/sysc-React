@@ -13,6 +13,11 @@ func (m Model) View() string {
 		return "Loading..."
 	}
 
+	// If in BIT editor mode, render BIT editor view
+	if m.bitEditorMode {
+		return m.renderBitEditorView()
+	}
+
 	// If in editor mode, render editor view
 	if m.editorMode {
 		return m.renderEditorView()

@@ -32,6 +32,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // handleKeyPress processes keyboard input
 func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// Handle BIT editor mode separately
+	if m.bitEditorMode {
+		return m.handleBitEditorKeyPress(msg)
+	}
+
 	// Handle editor mode separately
 	if m.editorMode {
 		return m.handleEditorKeyPress(msg)
@@ -132,6 +137,13 @@ func (m Model) startAnimation() (Model, tea.Cmd) {
 	theme := m.themes[m.selectedTheme]
 	fileName := m.files[m.selectedFile]
 	duration := m.durations[m.selectedDuration]
+
+	// Check if "BIT Text Editor" is selected - enter BIT editor mode instead
+	if fileName == "BIT Text Editor" {
+		m.bitEditorMode = true
+		m.bitTextInput.Focus()
+		return m, nil
+	}
 
 	// Check if "Custom text" is selected - enter editor mode instead
 	if fileName == "Custom text" {
