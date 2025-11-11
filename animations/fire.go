@@ -91,19 +91,32 @@ func (f *FireEffect) Update() {
 	}
 }
 
-// Render converts fire to colored block output
+// Render converts fire to colored block output with batched styling
 func (f *FireEffect) Render() string {
 	var lines []string
 
 	for y := 0; y < f.height; y++ {
 		var line strings.Builder
 
+		// Batch consecutive chars with same color
+		var batchChars strings.Builder
+		var batchColor string
+
 		for x := 0; x < f.width; x++ {
 			intensity := f.buffer[y*f.width+x]
 
-			// Skip zero intensity
+			// Handle low intensity (spaces)
 			if intensity < 5 {
+				// Flush any pending batch
+				if batchChars.Len() > 0 {
+					styled := lipgloss.NewStyle().
+						Foreground(lipgloss.Color(batchColor)).
+						Render(batchChars.String())
+					line.WriteString(styled)
+					batchChars.Reset()
+				}
 				line.WriteRune(' ')
+				batchColor = ""
 				continue
 			}
 
@@ -121,10 +134,25 @@ func (f *FireEffect) Render() string {
 			}
 			color := f.palette[colorIndex]
 
-			// Render colored block
+			// If color changed, flush current batch and start new one
+			if color != batchColor && batchChars.Len() > 0 {
+				styled := lipgloss.NewStyle().
+					Foreground(lipgloss.Color(batchColor)).
+					Render(batchChars.String())
+				line.WriteString(styled)
+				batchChars.Reset()
+			}
+
+			// Add char to batch
+			batchColor = color
+			batchChars.WriteRune(char)
+		}
+
+		// Flush final batch
+		if batchChars.Len() > 0 {
 			styled := lipgloss.NewStyle().
-				Foreground(lipgloss.Color(color)).
-				Render(string(char))
+				Foreground(lipgloss.Color(batchColor)).
+				Render(batchChars.String())
 			line.WriteString(styled)
 		}
 
