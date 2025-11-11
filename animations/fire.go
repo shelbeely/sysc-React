@@ -11,10 +11,16 @@ import (
 type FireEffect struct {
 	width   int      // Terminal width
 	height  int      // Terminal height
-	buffer  []int    // Heat values (0-36), size = width * height
+	buffer  []int    // Heat values (0-35), size = width * height
 	palette []string // Hex color codes from theme
 	chars   []rune   // Fire characters for density
 }
+
+const (
+	fireSteps      = 36 // Fire intensity levels (0-35)
+	fireSpread     = 3  // Maximum horizontal spread distance
+	fireDecayProb  = 3  // Decay probability (higher = faster decay)
+)
 
 // NewFireEffect creates a new fire effect with given dimensions and theme palette
 func NewFireEffect(width, height int, palette []string) *FireEffect {
@@ -22,7 +28,7 @@ func NewFireEffect(width, height int, palette []string) *FireEffect {
 		width:   width,
 		height:  height,
 		palette: palette,
-		chars:   []rune{' ', '░', '▒', '▓', '█'},
+		chars:   []rune{' ', '.', ':', '*', 's', 'S', '#', '█'},
 	}
 	f.init()
 	return f
@@ -32,9 +38,9 @@ func NewFireEffect(width, height int, palette []string) *FireEffect {
 func (f *FireEffect) init() {
 	f.buffer = make([]int, f.width*f.height)
 
-	// Set bottom row to maximum heat (fire source)
+	// Set bottom row to maximum heat with some randomness (fire source)
 	for i := 0; i < f.width; i++ {
-		f.buffer[(f.height-1)*f.width+i] = 36
+		f.buffer[(f.height-1)*f.width+i] = fireSteps - 1 - rand.Intn(4)
 	}
 }
 
@@ -50,34 +56,22 @@ func (f *FireEffect) Resize(width, height int) {
 	f.init()
 }
 
-// spreadFire propagates heat upward with random decay
+// spreadFire propagates heat upward with doom-style random decay
 func (f *FireEffect) spreadFire(from int) {
-	// Random horizontal offset (0-3) for chaos
-	offset := rand.Intn(4)
-	to := from - f.width - offset + 1
+	// Random horizontal spread (-fireSpread to +fireSpread)
+	randSpread := rand.Intn(fireSpread*2+1) - fireSpread
+	to := from - f.width + randSpread
 
 	// Bounds check
 	if to < 0 || to >= len(f.buffer) {
 		return
 	}
 
-	// Calculate target row
-	toY := to / f.width
-	hardLimit := f.height / 10          // Top 10% - absolute no-go zone
-	fadeZoneStart := (f.height * 4) / 5 // Top 80% - start heavy decay
-
-	// Hard limit - no propagation into top 10%
-	if toY < hardLimit {
-		return
-	}
-
-	// Random decay (0 or 1)
-	decay := rand.Intn(2)
-
-	// Aggressive decay in fade zone (between 10% and 80% from top)
-	if toY < fadeZoneStart {
-		// Add 2-6 extra decay for smooth gradient fade
-		decay += rand.Intn(5) + 2
+	// Random decay: decrement if random value exceeds threshold
+	// This creates the characteristic flickering doom fire effect
+	decay := 0
+	if rand.Intn(fireDecayProb+6) >= fireDecayProb {
+		decay = 1
 	}
 
 	newHeat := f.buffer[from] - decay
@@ -90,6 +84,12 @@ func (f *FireEffect) spreadFire(from int) {
 
 // Update advances the fire simulation by one frame
 func (f *FireEffect) Update() {
+	// Randomly ignite bottom row (fire source) with varying intensity
+	for i := 0; i < f.width/8; i++ {
+		pos := rand.Intn(f.width)
+		f.buffer[(f.height-1)*f.width+pos] = fireSteps - 1 - rand.Intn(8)
+	}
+
 	// Process all pixels from bottom to top
 	// (Fire spreads upward, must process bottom row first)
 	for y := f.height - 1; y > 0; y-- {
@@ -104,27 +104,26 @@ func (f *FireEffect) Update() {
 func (f *FireEffect) Render() string {
 	var lines []string
 
-	// Render across full height - low heat at top will naturally fade to black/background
 	for y := 0; y < f.height; y++ {
 		var line strings.Builder
 		for x := 0; x < f.width; x++ {
 			heat := f.buffer[y*f.width+x]
 
-			// Skip very low heat (natural fade to background)
-			if heat < 3 {
+			// Skip zero/very low heat (natural fade to background)
+			if heat < 2 {
 				line.WriteString(" ")
 				continue
 			}
 
-			// Map heat to character (0-36 heat → 5 chars)
-			charIndex := heat / 7
+			// Map heat to character (0-35 heat → 8 chars)
+			charIndex := (heat * (len(f.chars) - 1)) / (fireSteps - 1)
 			if charIndex >= len(f.chars) {
 				charIndex = len(f.chars) - 1
 			}
 			char := f.chars[charIndex]
 
 			// Map heat to color from palette
-			colorIndex := heat * (len(f.palette) - 1) / 36
+			colorIndex := (heat * (len(f.palette) - 1)) / (fireSteps - 1)
 			if colorIndex >= len(f.palette) {
 				colorIndex = len(f.palette) - 1
 			}
