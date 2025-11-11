@@ -28,7 +28,8 @@ func NewFireEffect(width, height int, palette []string) *FireEffect {
 		width:   width,
 		height:  height,
 		palette: palette,
-		chars:   []rune{'░', '▒', '▓', '█'},
+		// Block characters with increasing density for fire intensity
+		chars:   []rune{'░', '▒', '▓', '█', '▓', '█', '█', '█'},
 	}
 	f.init()
 	return f
@@ -115,7 +116,7 @@ func (f *FireEffect) Render() string {
 				continue
 			}
 
-			// Map heat to character (0-35 heat → 8 chars)
+			// Map heat to character (0-35 heat → block density)
 			charIndex := (heat * (len(f.chars) - 1)) / (fireSteps - 1)
 			if charIndex >= len(f.chars) {
 				charIndex = len(f.chars) - 1
