@@ -28,7 +28,7 @@ func NewFireEffect(width, height int, palette []string) *FireEffect {
 		width:   width,
 		height:  height,
 		palette: palette,
-		chars:   []rune{' ', '.', ':', '*', 's', 'S', '#', '█'},
+		chars:   []rune{'░', '▒', '▓', '█'},
 	}
 	f.init()
 	return f
