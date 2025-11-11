@@ -136,10 +136,11 @@ func NewBeamsEffect(config BeamsConfig) *BeamsEffect {
 		config.FinalWipeSpeed = 3 // Activate multiple diagonal groups per frame
 	}
 
-	// Background mode: much faster, denser beams
-	rowSpeedRange := [2]int{40, 120}
-	colSpeedRange := [2]int{30, 60}
-	beamDelay := 1
+	// Background mode: optimized for performance
+	// Reduced speeds and increased delays for fewer active beams
+	rowSpeedRange := [2]int{30, 80}
+	colSpeedRange := [2]int{20, 50}
+	beamDelay := 3 // Increased delay between beam activations
 	gradientSteps := 3
 
 	b := &BeamsEffect{
@@ -187,16 +188,19 @@ func (b *BeamsEffect) init() {
 	b.createDiagonalGroups()
 }
 
-// initBackgroundMode initializes full-screen background mode
+// initBackgroundMode initializes full-screen background mode with sparse sampling
 func (b *BeamsEffect) initBackgroundMode() {
 	// Create beam gradients
 	beamGradient := b.createGradient(b.beamGradientStops, b.beamGradientSteps)
 	fadeGradient := b.createFadeGradient(beamGradient[len(beamGradient)-1], 3)
 
-	// Fill terminal with dense distribution for glowing effect
-	// Every position for maximum density
-	for y := 0; y < b.height; y++ {
-		for x := 0; x < b.width; x++ {
+	// OPTIMIZATION: Use sparse sampling to drastically reduce character count
+	// Only create characters at intervals for performance
+	// This gives us the beam effect without 12,000+ character allocations
+	spacing := 3 // Only create 1 character per 3x3 grid
+
+	for y := 0; y < b.height; y += spacing {
+		for x := 0; x < b.width; x += spacing {
 			b.chars = append(b.chars, BeamCharacter{
 				original:         ' ',
 				x:                x,
@@ -415,8 +419,8 @@ func (b *BeamsEffect) updateBeamsPhase() {
 		return
 	}
 
-	// Activate next group(s)
-	groupsToActivate := b.rng.Intn(5) + 1
+	// Activate next group(s) - reduced for performance
+	groupsToActivate := b.rng.Intn(2) + 1 // 1-2 groups instead of 1-5
 	activated := false
 
 	for i := 0; i < groupsToActivate; i++ {
