@@ -1,10 +1,9 @@
 package animations
 
 import (
+	"fmt"
 	"math/rand"
 	"strings"
-
-	"github.com/charmbracelet/lipgloss/v2"
 )
 
 // FireEffect implements PSX DOOM-style fire algorithm
@@ -84,19 +83,42 @@ func (f *FireEffect) Update() {
 	}
 }
 
-// Render converts the fire buffer to colored text output
-func (f *FireEffect) Render() string {
-	var lines []string
+// hexToRGB converts hex color to RGB values
+func hexToRGB(hex string) (int, int, int) {
+	// Remove # if present
+	if len(hex) > 0 && hex[0] == '#' {
+		hex = hex[1:]
+	}
 
-	// Render across full height - low heat at top will naturally fade to black/background
+	// Parse RGB
+	var r, g, b int
+	if len(hex) == 6 {
+		fmt.Sscanf(hex, "%02x%02x%02x", &r, &g, &b)
+	}
+	return r, g, b
+}
+
+// Render converts fire to colored block output with batched raw ANSI codes
+func (f *FireEffect) Render() string {
+	var output strings.Builder
+
 	for y := 0; y < f.height; y++ {
-		var line strings.Builder
+		var currentColor string
+		var batchChars strings.Builder
+
 		for x := 0; x < f.width; x++ {
 			heat := f.buffer[y*f.width+x]
 
 			// Skip very low heat (natural fade to background)
 			if heat < 3 {
-				line.WriteString(" ")
+				// Flush any pending batch
+				if batchChars.Len() > 0 {
+					r, g, b := hexToRGB(currentColor)
+					fmt.Fprintf(&output, "\033[38;2;%d;%d;%dm%s\033[0m", r, g, b, batchChars.String())
+					batchChars.Reset()
+					currentColor = ""
+				}
+				output.WriteRune(' ')
 				continue
 			}
 
@@ -112,16 +134,31 @@ func (f *FireEffect) Render() string {
 			if colorIndex >= len(f.palette) {
 				colorIndex = len(f.palette) - 1
 			}
-			colorHex := f.palette[colorIndex]
+			color := f.palette[colorIndex]
 
-			// Render colored character
-			styled := lipgloss.NewStyle().
-				Foreground(lipgloss.Color(colorHex)).
-				Render(string(char))
-			line.WriteString(styled)
+			// If color changed, flush current batch
+			if color != currentColor && batchChars.Len() > 0 {
+				r, g, b := hexToRGB(currentColor)
+				fmt.Fprintf(&output, "\033[38;2;%d;%d;%dm%s\033[0m", r, g, b, batchChars.String())
+				batchChars.Reset()
+			}
+
+			// Add char to batch
+			currentColor = color
+			batchChars.WriteRune(char)
 		}
-		lines = append(lines, line.String())
+
+		// Flush final batch for this row
+		if batchChars.Len() > 0 {
+			r, g, b := hexToRGB(currentColor)
+			fmt.Fprintf(&output, "\033[38;2;%d;%d;%dm%s\033[0m", r, g, b, batchChars.String())
+		}
+
+		// Add newline at end of row (but not after last row)
+		if y < f.height-1 {
+			output.WriteRune('\n')
+		}
 	}
 
-	return strings.Join(lines, "\n")
+	return output.String()
 }
