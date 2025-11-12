@@ -27,11 +27,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		// Canvas takes up most of the screen, leave minimal room for UI elements
-		// Guidance box should be compact (2-3 lines max)
-		m.canvasHeight = m.height - 15  // Reduced from 20 to give more space to viewport
-		if m.canvasHeight < 15 {
-			m.canvasHeight = 15 // Minimum viewport height
+		// Canvas takes up maximum available screen space
+		// UI elements (selectors, guidance, help) are now compact, leaving ~10 lines overhead
+		m.canvasHeight = m.height - 10  // Maximized viewport - only leave room for compact UI
+		if m.canvasHeight < 20 {
+			m.canvasHeight = 20 // Minimum viewport height
 		}
 		// Update textarea size if in editor mode
 		if m.editorMode {
