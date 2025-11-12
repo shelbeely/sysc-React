@@ -118,7 +118,10 @@ func hexToRGB(hex string) (int, int, int) {
 func (f *FireEffect) Render() string {
 	var output strings.Builder
 
-	for y := 0; y < f.height; y++ {
+	// Start from hardLimit since rows above it are always empty
+	hardLimit := (f.height * 3) / 10
+
+	for y := hardLimit; y < f.height; y++ {
 		var currentColor string
 		var batchChars strings.Builder
 
