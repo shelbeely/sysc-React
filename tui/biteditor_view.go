@@ -62,12 +62,17 @@ func (m Model) renderBitPreview() string {
 		// Render all preview lines - no truncation, let terminal handle scrolling
 		preview = strings.Join(m.bitPreviewLines, "\n")
 	} else {
-		// Show placeholder (minimal styling for placeholder only)
+		// Show placeholder
 		preview = "Preview will appear here... Type text below to see it rendered."
 	}
 
-	// Return raw preview - NO lipgloss styling that distorts ASCII art
-	return preview
+	// Wrap raw preview in a styled box WITHOUT transforming the content itself
+	// Pattern from sysc-greet: border provides structure, content stays raw
+	return lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#88C0D0")).
+		Padding(1).
+		Render(preview)
 }
 
 // renderBitTextInput renders the text input field
