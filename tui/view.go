@@ -67,10 +67,11 @@ func (m Model) renderCanvas() string {
 
 	// Wrap raw content in a styled box WITHOUT transforming the content itself
 	// Pattern from sysc-greet: border provides structure, content stays raw
+	// Minimal padding to maximize viewport space
 	return lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("#88C0D0")).
-		Padding(1).
+		Padding(0, 1).
 		Render(content)
 }
 
@@ -103,11 +104,6 @@ func (m Model) renderSelectors() string {
 
 // renderSelector renders a single selector
 func (m Model) renderSelector(index int, label, value string) string {
-	style := m.styles.Selector
-	if index == m.focusedSelector {
-		style = m.styles.SelectorFocused
-	}
-
 	// Check if this is the File selector and current animation doesn't need a file
 	isFileSelector := (index == 2)
 	animName := m.animations[m.selectedAnimation]
@@ -116,35 +112,57 @@ func (m Model) renderSelector(index int, label, value string) string {
 
 	// Disable file selector for non-text animations
 	if isFileSelector && !needsFile {
-		style = m.styles.Selector.Faint(true)
 		value = "(disabled)"
 	}
 
-	// Calculate position indicator
-	var position string
-	switch index {
-	case 0: // Animation
-		position = fmt.Sprintf("(%d/%d)", m.selectedAnimation+1, len(m.animations))
-	case 1: // Theme
-		position = fmt.Sprintf("(%d/%d)", m.selectedTheme+1, len(m.themes))
-	case 2: // File
-		position = fmt.Sprintf("(%d/%d)", m.selectedFile+1, len(m.files))
-	case 3: // Duration
-		position = fmt.Sprintf("(%d/%d)", m.selectedDuration+1, len(m.durations))
+	// Truncate long values
+	maxValueLen := 14
+	if len(value) > maxValueLen {
+		value = value[:maxValueLen-2] + ".."
 	}
 
-	labelStr := m.styles.SelectorLabel.Render(label)
-	valueStr := m.styles.SelectorValue.Render(value)
+	// Title style - with border, bold, and focus background
+	titleStyle := lipgloss.NewStyle().
+		Bold(true).
+		Padding(0, 1).
+		Align(lipgloss.Center)
 
-	// Position indicator with smaller styling
-	positionStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#4C566A")).
-		Faint(true)
-	positionStr := positionStyle.Render(position)
+	// When focused: solid border + filled background
+	focused := index == m.focusedSelector
+	if focused {
+		titleStyle = titleStyle.
+			Border(lipgloss.NormalBorder()).
+			BorderForeground(lipgloss.Color("#88C0D0")).
+			Background(lipgloss.Color("#88C0D0")).
+			Foreground(lipgloss.Color("#2E3440"))
+	} else {
+		// Not focused: just border, no fill
+		titleStyle = titleStyle.
+			Border(lipgloss.NormalBorder()).
+			BorderForeground(lipgloss.Color("#4C566A")).
+			Foreground(lipgloss.Color("#88C0D0"))
+	}
 
-	content := fmt.Sprintf("%s\n%s\n%s", labelStr, valueStr, positionStr)
+	// Value style - simple text
+	valueStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#ECEFF4")).
+		Align(lipgloss.Center)
 
-	return style.Render(content)
+	if isFileSelector && !needsFile {
+		valueStyle = valueStyle.Faint(true)
+	}
+
+	// Render title and value separately, then join vertically
+	title := titleStyle.Render(label)
+	val := valueStyle.Render(value)
+
+	// Outer container - minimal styling, just width constraint
+	container := lipgloss.NewStyle().
+		Width(20).
+		Align(lipgloss.Center, lipgloss.Top)
+
+	content := lipgloss.JoinVertical(lipgloss.Center, title, val)
+	return container.Render(content)
 }
 
 // renderHelp renders the help text
