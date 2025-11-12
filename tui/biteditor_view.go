@@ -57,30 +57,21 @@ func (m Model) renderBitEditorView() string {
 
 // renderBitPreview renders the live preview canvas
 func (m Model) renderBitPreview() string {
-	canvasWidth := m.width - 8
-	canvasHeight := m.height - 25 // Leave room for controls
-	if canvasHeight < 10 {
-		canvasHeight = 10
-	}
-
 	var preview string
 	if len(m.bitPreviewLines) > 0 {
-		// Take first N lines that fit
-		displayLines := m.bitPreviewLines
-		if len(displayLines) > canvasHeight {
-			displayLines = displayLines[:canvasHeight]
-		}
-		preview = strings.Join(displayLines, "\n")
+		// Render all preview lines - no truncation, let terminal handle scrolling
+		preview = strings.Join(m.bitPreviewLines, "\n")
 	} else {
 		// Show placeholder
-		preview = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#4C566A")).
-			Render("Preview will appear here... Type text below to see it rendered.")
+		preview = "Preview will appear here... Type text below to see it rendered."
 	}
 
-	return m.styles.Canvas.
-		Width(canvasWidth).
-		Height(canvasHeight).
+	// Wrap raw preview in a styled box WITHOUT transforming the content itself
+	// Pattern from sysc-greet: border provides structure, content stays raw
+	return lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#88C0D0")).
+		Padding(1).
 		Render(preview)
 }
 

@@ -103,24 +103,9 @@ func hexToRGB(hex string) (int, int, int) {
 func (f *FireEffect) Render() string {
 	var output strings.Builder
 
-	// Find first row with actual fire (heat >= 5)
-	firstFireRow := f.height - 1
+	// Always render full viewport height to anchor fire at bottom
+	// This prevents jumping as fire spreads upward
 	for y := 0; y < f.height; y++ {
-		hasFireInRow := false
-		for x := 0; x < f.width; x++ {
-			if f.buffer[y*f.width+x] >= 5 {
-				hasFireInRow = true
-				break
-			}
-		}
-		if hasFireInRow {
-			firstFireRow = y
-			break
-		}
-	}
-
-	// Render only rows with actual fire
-	for y := firstFireRow; y < f.height; y++ {
 		var currentColor string
 		var batchChars strings.Builder
 

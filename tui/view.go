@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -11,6 +10,22 @@ import (
 func (m Model) View() string {
 	if m.width == 0 {
 		return "Loading..."
+	}
+
+	// Check if terminal is too small
+	if m.width < 100 || m.height < 30 {
+		warning := fmt.Sprintf(
+			"Terminal too small!\n\n"+
+				"Current: %dx%d\n"+
+				"Minimum: 100x30\n\n"+
+				"Please resize your terminal to at least full screen.\n"+
+				"Press Q to quit.",
+			m.width, m.height,
+		)
+		return m.styles.Background.
+			Width(m.width).
+			Height(m.height).
+			Render(warning)
 	}
 
 	// If in BIT editor mode, render BIT editor view
@@ -47,46 +62,22 @@ func (m Model) View() string {
 
 // renderCanvas renders the animation preview viewport
 func (m Model) renderCanvas() string {
-	if m.canvasHeight <= 0 {
-		m.canvasHeight = 20 // fallback
-	}
-
-	canvasWidth := m.width - 8 // Account for borders and padding
-
 	var content string
 	if m.animationRunning && m.currentAnim != nil {
-		// Render actual animation frame
+		// Render actual animation frame (raw content)
 		content = m.currentAnim.Render()
 	} else {
 		// Show welcome/instructions
 		content = m.renderWelcome()
 	}
 
-	// Pad content to fill canvas
-	lines := strings.Split(content, "\n")
-
-	// Truncate or pad lines to match canvas height
-	for len(lines) < m.canvasHeight {
-		lines = append(lines, "")
-	}
-	if len(lines) > m.canvasHeight {
-		lines = lines[:m.canvasHeight]
-	}
-
-	// Pad each line to canvas width (center if possible)
-	for i, line := range lines {
-		plainLen := len(stripANSI(line))
-		if plainLen < canvasWidth {
-			// Center the line
-			padding := (canvasWidth - plainLen) / 2
-			lines[i] = strings.Repeat(" ", padding) + line + strings.Repeat(" ", canvasWidth-plainLen-padding)
-		} else if plainLen > canvasWidth {
-			lines[i] = line[:canvasWidth]
-		}
-	}
-
-	canvasContent := strings.Join(lines, "\n")
-	return m.styles.Canvas.Width(canvasWidth).Height(m.canvasHeight).Render(canvasContent)
+	// Wrap raw content in a styled box WITHOUT transforming the content itself
+	// Pattern from sysc-greet: border provides structure, content stays raw
+	return lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#88C0D0")).
+		Padding(1).
+		Render(content)
 }
 
 // renderWelcome renders the welcome screen
@@ -183,42 +174,42 @@ func (m Model) renderGuidance() string {
 	// Explain selected animation
 	switch animName {
 	case "fire":
-		guidance = "🔥 DOOM PSX-style fire effect with upward propagation and random flickering"
+		guidance = "DOOM PSX-style fire effect with upward propagation and random flickering"
 	case "matrix":
-		guidance = "💚 Digital rain with falling character streaks (no text required)"
+		guidance = "Digital rain with falling character streaks (no text required)"
 	case "matrix-art":
-		guidance = "💚 Matrix rain effect that reveals your text file content"
+		guidance = "Matrix rain effect that reveals your text file content"
 	case "rain":
-		guidance = "🌧  ASCII character rain effect (no text required)"
+		guidance = "ASCII character rain effect (no text required)"
 	case "rain-art":
-		guidance = "🌧  Rain effect that reveals your text file content"
+		guidance = "Rain effect that reveals your text file content"
 	case "fireworks":
-		guidance = "🎆 Physics-based particle fireworks"
+		guidance = "Physics-based particle fireworks"
 	case "pour":
-		guidance = "🌊 Text pours down like liquid, character by character"
+		guidance = "Text pours down like liquid, character by character"
 	case "print":
-		guidance = "⌨  Typewriter effect - text appears with typing animation"
+		guidance = "Typewriter effect - text appears with typing animation"
 	case "beams":
-		guidance = "✨ Colored light beams sweep across the screen"
+		guidance = "Colored light beams sweep across the screen"
 	case "beam-text":
-		guidance = "✨ Light beams reveal your text content dramatically"
+		guidance = "Light beams reveal your text content dramatically"
 	case "ring-text":
-		guidance = "⭕ Text orbits in 3D rings with perspective effects"
+		guidance = "Text orbits in 3D rings with perspective effects"
 	case "blackhole-text":
-		guidance = "🌀 Text gets pulled into a gravitational vortex"
+		guidance = "Text gets pulled into a gravitational vortex"
 	case "aquarium":
-		guidance = "🐠 Animated aquarium with swimming fish and bubbles"
+		guidance = "Animated aquarium with swimming fish and bubbles"
 	default:
 		guidance = fmt.Sprintf("Selected: %s", animName)
 	}
 
 	// Add file info if relevant
 	if fileName == "BIT Text Editor" {
-		guidance += "\n\n📝 BIT Text Editor: Create ASCII art with 130 fonts"
+		guidance += "\n\nBIT Text Editor: Create ASCII art with 130 fonts"
 	} else if fileName == "Custom text" {
-		guidance += "\n\n✏  Custom Text: Write or paste your own ASCII art"
+		guidance += "\n\nCustom Text: Write or paste your own ASCII art"
 	} else if fileName != "(disabled)" {
-		guidance += fmt.Sprintf("\n\n📄 Using: %s", fileName)
+		guidance += fmt.Sprintf("\n\nUsing: %s", fileName)
 	}
 
 	return m.styles.GuidanceBox.Render(guidance)
