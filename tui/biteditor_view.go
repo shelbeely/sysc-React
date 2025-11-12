@@ -47,12 +47,9 @@ func (m Model) renderBitEditorView() string {
 	// Help text
 	sections = append(sections, m.renderBitHelp())
 
-	// Apply full background
+	// No background wrapping to prevent bleeding
 	content := lipgloss.JoinVertical(lipgloss.Left, sections...)
-	return m.styles.Background.
-		Width(m.width).
-		Height(m.height).
-		Render(content)
+	return content
 }
 
 // renderBitPreview renders the live preview canvas
@@ -100,8 +97,7 @@ func (m Model) renderBitControls() string {
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("#3B4252")).
 		Padding(1, 2).
-		Width(m.width - 8).
-		Background(lipgloss.Color("#1E1E2E"))
+		Width(m.width - 8)
 
 	var controls []string
 
@@ -134,7 +130,7 @@ func (m Model) renderFontControl() string {
 		Width(20)
 
 	if focused {
-		style = style.Background(lipgloss.Color("#2E3440"))
+		style = style.BorderForeground(lipgloss.Color("#A3BE8C"))
 	}
 
 	fontName := "none"
@@ -161,7 +157,7 @@ func (m Model) renderAlignmentControl() string {
 		Width(18)
 
 	if focused {
-		style = style.Background(lipgloss.Color("#2E3440"))
+		style = style.BorderForeground(lipgloss.Color("#A3BE8C"))
 	}
 
 	label := lipgloss.NewStyle().
@@ -194,7 +190,7 @@ func (m Model) renderColorControl() string {
 		Width(20)
 
 	if focused {
-		style = style.Background(lipgloss.Color("#2E3440"))
+		style = style.BorderForeground(lipgloss.Color("#A3BE8C"))
 	}
 
 	label := lipgloss.NewStyle().
@@ -221,7 +217,7 @@ func (m Model) renderScaleControl() string {
 		Width(18)
 
 	if focused {
-		style = style.Background(lipgloss.Color("#2E3440"))
+		style = style.BorderForeground(lipgloss.Color("#A3BE8C"))
 	}
 
 	label := lipgloss.NewStyle().
@@ -243,7 +239,7 @@ func (m Model) renderShadowControl() string {
 		Width(20)
 
 	if focused {
-		style = style.Background(lipgloss.Color("#2E3440"))
+		style = style.BorderForeground(lipgloss.Color("#A3BE8C"))
 	}
 
 	label := lipgloss.NewStyle().
@@ -270,7 +266,7 @@ func (m Model) renderSpacingControl() string {
 		Width(20)
 
 	if focused {
-		style = style.Background(lipgloss.Color("#2E3440"))
+		style = style.BorderForeground(lipgloss.Color("#A3BE8C"))
 	}
 
 	label := lipgloss.NewStyle().
@@ -307,8 +303,7 @@ func (m Model) renderFontBrowser() string {
 		BorderForeground(lipgloss.Color("#88C0D0")).
 		Padding(1, 2).
 		Width(m.width - 8).
-		Height(m.height - 10).
-		Background(lipgloss.Color("#1E1E2E"))
+		Height(m.height - 10)
 
 	var fontItems []string
 	startIdx := 0
@@ -355,10 +350,7 @@ func (m Model) renderFontBrowser() string {
 	sections = append(sections, m.styles.Help.Render(helpText))
 
 	content := lipgloss.JoinVertical(lipgloss.Left, sections...)
-	return m.styles.Background.
-		Width(m.width).
-		Height(m.height).
-		Render(content)
+	return content
 }
 
 // renderColorPicker renders the color picker
@@ -395,8 +387,7 @@ func (m Model) renderColorPicker() string {
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("#88C0D0")).
 		Padding(1, 2).
-		Width(m.width - 8).
-		Background(lipgloss.Color("#1E1E2E"))
+		Width(m.width - 8)
 
 	var colorItems []string
 	for _, c := range themeColors {
@@ -424,10 +415,7 @@ func (m Model) renderColorPicker() string {
 	sections = append(sections, m.styles.Help.Render(helpText))
 
 	content := lipgloss.JoinVertical(lipgloss.Left, sections...)
-	return m.styles.Background.
-		Width(m.width).
-		Height(m.height).
-		Render(content)
+	return content
 }
 
 // renderBitSavePrompt renders the save dialog for BIT editor
@@ -459,16 +447,12 @@ func (m Model) renderBitSavePrompt() string {
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("#88C0D0")).
 		Padding(1, 2).
-		Width(m.width - 6).
-		Background(lipgloss.Color("#2E3440"))
+		Width(m.width - 6)
 	sections = append(sections, inputStyle.Render(m.filenameInput.View()))
 
 	helpText := "Enter Confirm • Esc Cancel"
 	sections = append(sections, m.styles.Help.Render(helpText))
 
 	content := lipgloss.JoinVertical(lipgloss.Left, sections...)
-	return m.styles.Background.
-		Width(m.width).
-		Height(m.height).
-		Render(content)
+	return content
 }

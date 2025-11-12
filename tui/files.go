@@ -26,8 +26,8 @@ func discoverAssetFiles() []string {
 		"assets",              // Current directory
 		"./assets",            // Explicit relative
 		"../assets",           // Parent directory
-		filepath.Join("/usr/local/share/sysc-Go/assets"), // Local install
-		filepath.Join("/usr/share/sysc-Go/assets"),       // System install
+		filepath.Join("/usr/local/share/syscgo", "assets"), // Local install (matches installer)
+		filepath.Join("/usr/share/syscgo", "assets"),       // System install (matches installer)
 	}
 
 	// Add binary-relative path if available
@@ -79,8 +79,8 @@ func getAssetPath(filename string) string {
 
 	// Add system paths last (read-only fallback)
 	assetPaths = append(assetPaths,
-		filepath.Join("/usr/local/share/sysc-Go/assets", filename), // Local install
-		filepath.Join("/usr/share/sysc-Go/assets", filename),       // System install
+		filepath.Join("/usr/local/share/syscgo", "assets", filename), // Local install (matches installer)
+		filepath.Join("/usr/share/syscgo", "assets", filename),       // System install (matches installer)
 	)
 
 	for _, path := range assetPaths {

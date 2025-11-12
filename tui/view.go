@@ -22,10 +22,7 @@ func (m Model) View() string {
 				"Press Q to quit.",
 			m.width, m.height,
 		)
-		return m.styles.Background.
-			Width(m.width).
-			Height(m.height).
-			Render(warning)
+		return warning
 	}
 
 	// If in BIT editor mode, render BIT editor view
@@ -52,12 +49,9 @@ func (m Model) View() string {
 	// Help text (no j/k hints)
 	sections = append(sections, m.renderHelp())
 
-	// Join all sections and apply background
+	// Join all sections - no background wrapping to prevent bleeding
 	content := lipgloss.JoinVertical(lipgloss.Left, sections...)
-	return m.styles.Background.
-		Width(m.width).
-		Height(m.height).
-		Render(content)
+	return content
 }
 
 // renderCanvas renders the animation preview viewport
@@ -169,47 +163,45 @@ func (m Model) renderGuidance() string {
 	animName := m.animations[m.selectedAnimation]
 	fileName := m.files[m.selectedFile]
 
+	// Short one-line descriptions
 	var guidance string
-
-	// Explain selected animation
 	switch animName {
 	case "fire":
-		guidance = "DOOM PSX-style fire effect with upward propagation and random flickering"
-	case "matrix":
-		guidance = "Digital rain with falling character streaks (no text required)"
-	case "matrix-art":
-		guidance = "Matrix rain effect that reveals your text file content"
-	case "rain":
-		guidance = "ASCII character rain effect (no text required)"
-	case "rain-art":
-		guidance = "Rain effect that reveals your text file content"
+		guidance = "Fire effect"
+	case "matrix", "matrix-art":
+		guidance = "Matrix rain"
+	case "rain", "rain-art":
+		guidance = "ASCII rain"
 	case "fireworks":
-		guidance = "Physics-based particle fireworks"
+		guidance = "Fireworks"
 	case "pour":
-		guidance = "Text pours down like liquid, character by character"
+		guidance = "Pour effect"
 	case "print":
-		guidance = "Typewriter effect - text appears with typing animation"
-	case "beams":
-		guidance = "Colored light beams sweep across the screen"
-	case "beam-text":
-		guidance = "Light beams reveal your text content dramatically"
+		guidance = "Typewriter"
+	case "beams", "beam-text":
+		guidance = "Light beams"
 	case "ring-text":
-		guidance = "Text orbits in 3D rings with perspective effects"
+		guidance = "3D ring text"
 	case "blackhole-text":
-		guidance = "Text gets pulled into a gravitational vortex"
+		guidance = "Blackhole vortex"
 	case "aquarium":
-		guidance = "Animated aquarium with swimming fish and bubbles"
+		guidance = "Aquarium"
 	default:
-		guidance = fmt.Sprintf("Selected: %s", animName)
+		guidance = animName
 	}
 
-	// Add file info if relevant
+	// Add file info inline if relevant
 	if fileName == "BIT Text Editor" {
-		guidance += "\n\nBIT Text Editor: Create ASCII art with 130 fonts"
+		guidance += " • BIT Editor (130 fonts)"
 	} else if fileName == "Custom text" {
-		guidance += "\n\nCustom Text: Write or paste your own ASCII art"
-	} else if fileName != "(disabled)" {
-		guidance += fmt.Sprintf("\n\nUsing: %s", fileName)
+		guidance += " • Custom text editor"
+	} else if fileName != "(disabled)" && fileName != "" {
+		// Truncate long filenames
+		displayName := fileName
+		if len(displayName) > 20 {
+			displayName = displayName[:17] + "..."
+		}
+		guidance += " • " + displayName
 	}
 
 	return m.styles.GuidanceBox.Render(guidance)
@@ -252,12 +244,9 @@ func (m Model) renderEditorView() string {
 		Padding(1, 0)
 	sections = append(sections, helpStyle.Render(helpText))
 
-	// Apply full background to entire editor view
+	// No background wrapping to prevent bleeding
 	content := lipgloss.JoinVertical(lipgloss.Left, sections...)
-	return m.styles.Background.
-		Width(m.width).
-		Height(m.height).
-		Render(content)
+	return content
 }
 
 // renderExportPrompt renders the export target selection dialog
@@ -320,12 +309,9 @@ func (m Model) renderExportPrompt() string {
 		Padding(1, 0)
 	sections = append(sections, helpStyle.Render(helpText))
 
-	// Apply full background to entire prompt view
+	// No background wrapping to prevent bleeding
 	content := lipgloss.JoinVertical(lipgloss.Left, sections...)
-	return m.styles.Background.
-		Width(m.width).
-		Height(m.height).
-		Render(content)
+	return content
 }
 
 // renderSavePrompt renders the save dialog
@@ -372,10 +358,7 @@ func (m Model) renderSavePrompt() string {
 		Padding(1, 0)
 	sections = append(sections, helpStyle.Render(helpText))
 
-	// Apply full background to entire save prompt view
+	// No background wrapping to prevent bleeding
 	content := lipgloss.JoinVertical(lipgloss.Left, sections...)
-	return m.styles.Background.
-		Width(m.width).
-		Height(m.height).
-		Render(content)
+	return content
 }

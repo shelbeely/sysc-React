@@ -43,11 +43,12 @@ func LoadBitFont(path string) (*BitFont, error) {
 func ListAvailableFonts() []string {
 	var fonts []string
 
-	// Try multiple paths
+	// Try multiple paths - prioritize system-wide install locations
 	searchPaths := []string{
-		"assets/fonts",
-		filepath.Join(os.Getenv("HOME"), ".local", "share", "syscgo", "fonts"),
-		"/usr/share/syscgo/fonts",
+		"assets/fonts",                              // Relative to working directory (dev mode)
+		"/usr/local/share/syscgo/fonts",             // System-wide install (preferred)
+		"/usr/share/syscgo/fonts",                   // System-wide install (alternative)
+		filepath.Join(os.Getenv("HOME"), ".local", "share", "syscgo", "fonts"), // User local
 	}
 
 	for _, basePath := range searchPaths {
@@ -80,11 +81,12 @@ func FindFontPath(fontName string) (string, error) {
 		filename += ".bit"
 	}
 
-	// Try multiple paths
+	// Try multiple paths - prioritize system-wide install locations
 	searchPaths := []string{
-		"assets/fonts",
-		filepath.Join(os.Getenv("HOME"), ".local", "share", "syscgo", "fonts"),
-		"/usr/share/syscgo/fonts",
+		"assets/fonts",                              // Relative to working directory (dev mode)
+		"/usr/local/share/syscgo/fonts",             // System-wide install (preferred)
+		"/usr/share/syscgo/fonts",                   // System-wide install (alternative)
+		filepath.Join(os.Getenv("HOME"), ".local", "share", "syscgo", "fonts"), // User local
 	}
 
 	for _, basePath := range searchPaths {
