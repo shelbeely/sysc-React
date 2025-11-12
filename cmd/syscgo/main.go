@@ -260,7 +260,7 @@ func runFire(width, height int, theme string, frames int) {
 		fire.Update()
 		output := fire.Render()
 
-		fmt.Print("\033[2J\033[H") // Clear screen and move cursor to top
+		fmt.Print("\033[H") // Move cursor to top
 		fmt.Print(output)
 		time.Sleep(50 * time.Millisecond)
 		frame++
