@@ -12,6 +12,22 @@ func (m Model) View() string {
 		return "Loading..."
 	}
 
+	// Check if terminal is too small
+	if m.width < 100 || m.height < 30 {
+		warning := fmt.Sprintf(
+			"Terminal too small!\n\n"+
+				"Current: %dx%d\n"+
+				"Minimum: 100x30\n\n"+
+				"Please resize your terminal to at least full screen.\n"+
+				"Press Q to quit.",
+			m.width, m.height,
+		)
+		return m.styles.Background.
+			Width(m.width).
+			Height(m.height).
+			Render(warning)
+	}
+
 	// If in BIT editor mode, render BIT editor view
 	if m.bitEditorMode {
 		return m.renderBitEditorView()

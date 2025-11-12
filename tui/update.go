@@ -11,12 +11,27 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleKeyPress(msg)
 
 	case tea.WindowSizeMsg:
+		// Enforce minimum terminal dimensions (at least reasonable full screen)
+		minWidth := 100
+		minHeight := 30
+
 		m.width = msg.Width
 		m.height = msg.Height
-		// Canvas takes up most of the screen, leave room for selectors + guidance + help
-		m.canvasHeight = m.height - 20
-		if m.canvasHeight < 10 {
-			m.canvasHeight = 10 // Minimum height
+
+		// Check if terminal is too small
+		if m.width < minWidth || m.height < minHeight {
+			// Terminal too small - show warning instead
+			m.width = msg.Width
+			m.height = msg.Height
+			m.canvasHeight = 5
+			return m, nil
+		}
+
+		// Canvas takes up most of the screen, leave minimal room for UI elements
+		// Guidance box should be compact (2-3 lines max)
+		m.canvasHeight = m.height - 15  // Reduced from 20 to give more space to viewport
+		if m.canvasHeight < 15 {
+			m.canvasHeight = 15 // Minimum viewport height
 		}
 		// Update textarea size if in editor mode
 		if m.editorMode {
