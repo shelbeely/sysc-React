@@ -25,13 +25,16 @@ func (m Model) View() string {
 
 	var sections []string
 
-	// Canvas area
+	// Canvas area (viewport for animations)
 	sections = append(sections, m.renderCanvas())
 
 	// Selector area
 	sections = append(sections, m.renderSelectors())
 
-	// Help text
+	// Guidance box (explains current selection)
+	sections = append(sections, m.renderGuidance())
+
+	// Help text (no j/k hints)
 	sections = append(sections, m.renderHelp())
 
 	// Join all sections and apply background
@@ -42,7 +45,7 @@ func (m Model) View() string {
 		Render(content)
 }
 
-// renderCanvas renders the animation preview canvas
+// renderCanvas renders the animation preview viewport
 func (m Model) renderCanvas() string {
 	if m.canvasHeight <= 0 {
 		m.canvasHeight = 20 // fallback
@@ -50,11 +53,19 @@ func (m Model) renderCanvas() string {
 
 	canvasWidth := m.width - 8 // Account for borders and padding
 
-	// Always show welcome screen (no preview mode since we launch immediately)
-	content := m.renderWelcome()
+	var content string
+	if m.animationRunning && m.currentAnim != nil {
+		// Render actual animation frame
+		content = m.currentAnim.Render()
+	} else {
+		// Show welcome/instructions
+		content = m.renderWelcome()
+	}
 
-	// Pad content to fill canvas height
+	// Pad content to fill canvas
 	lines := strings.Split(content, "\n")
+
+	// Truncate or pad lines to match canvas height
 	for len(lines) < m.canvasHeight {
 		lines = append(lines, "")
 	}
@@ -62,11 +73,14 @@ func (m Model) renderCanvas() string {
 		lines = lines[:m.canvasHeight]
 	}
 
-	// Pad each line to canvas width
+	// Pad each line to canvas width (center if possible)
 	for i, line := range lines {
-		if len(line) < canvasWidth {
-			lines[i] = line + strings.Repeat(" ", canvasWidth-len(line))
-		} else if len(line) > canvasWidth {
+		plainLen := len(stripANSI(line))
+		if plainLen < canvasWidth {
+			// Center the line
+			padding := (canvasWidth - plainLen) / 2
+			lines[i] = strings.Repeat(" ", padding) + line + strings.Repeat(" ", canvasWidth-plainLen-padding)
+		} else if plainLen > canvasWidth {
 			lines[i] = line[:canvasWidth]
 		}
 	}
@@ -85,7 +99,8 @@ func (m Model) renderWelcome() string {
 Terminal Animation Library - Interactive TUI
 
 Select animation settings below
-Press ENTER to start animation`
+Press ENTER to preview animation in viewport
+Press ESC to stop preview`
 	return welcome
 }
 
@@ -149,8 +164,64 @@ func (m Model) renderSelector(index int, label, value string) string {
 
 // renderHelp renders the help text
 func (m Model) renderHelp() string {
-	helpText := "↑/↓ or j/k Navigate • ←/→ or h/l Change selector • Enter Start animation • Esc Quit"
+	var helpText string
+	if m.animationRunning {
+		helpText = "ESC Stop animation • ↑/↓ Navigate options • ←/→ Change selector"
+	} else {
+		helpText = "↑/↓ Navigate options • ←/→ Change selector • ENTER Start animation • Q Quit"
+	}
 	return m.styles.Help.Render(helpText)
+}
+
+// renderGuidance renders guidance/explainer box for current selection
+func (m Model) renderGuidance() string {
+	animName := m.animations[m.selectedAnimation]
+	fileName := m.files[m.selectedFile]
+
+	var guidance string
+
+	// Explain selected animation
+	switch animName {
+	case "fire":
+		guidance = "🔥 DOOM PSX-style fire effect with upward propagation and random flickering"
+	case "matrix":
+		guidance = "💚 Digital rain with falling character streaks (no text required)"
+	case "matrix-art":
+		guidance = "💚 Matrix rain effect that reveals your text file content"
+	case "rain":
+		guidance = "🌧  ASCII character rain effect (no text required)"
+	case "rain-art":
+		guidance = "🌧  Rain effect that reveals your text file content"
+	case "fireworks":
+		guidance = "🎆 Physics-based particle fireworks"
+	case "pour":
+		guidance = "🌊 Text pours down like liquid, character by character"
+	case "print":
+		guidance = "⌨  Typewriter effect - text appears with typing animation"
+	case "beams":
+		guidance = "✨ Colored light beams sweep across the screen"
+	case "beam-text":
+		guidance = "✨ Light beams reveal your text content dramatically"
+	case "ring-text":
+		guidance = "⭕ Text orbits in 3D rings with perspective effects"
+	case "blackhole-text":
+		guidance = "🌀 Text gets pulled into a gravitational vortex"
+	case "aquarium":
+		guidance = "🐠 Animated aquarium with swimming fish and bubbles"
+	default:
+		guidance = fmt.Sprintf("Selected: %s", animName)
+	}
+
+	// Add file info if relevant
+	if fileName == "BIT Text Editor" {
+		guidance += "\n\n📝 BIT Text Editor: Create ASCII art with 130 fonts"
+	} else if fileName == "Custom text" {
+		guidance += "\n\n✏  Custom Text: Write or paste your own ASCII art"
+	} else if fileName != "(disabled)" {
+		guidance += fmt.Sprintf("\n\n📄 Using: %s", fileName)
+	}
+
+	return m.styles.GuidanceBox.Render(guidance)
 }
 
 // renderEditorView renders the ASCII text editor
