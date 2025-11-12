@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -21,6 +22,88 @@ Terminal Animation Library
 `
 
 // wrapText wraps text to fit within the specified width
+// findAssetFile searches for an asset file in multiple locations
+// Priority order: user writable directories first, then system read-only paths
+func findAssetFile(filename string) string {
+	// Get the directory containing the binary
+	exePath, err := os.Executable()
+	var binaryDir string
+	if err == nil {
+		binaryDir = filepath.Dir(exePath)
+	}
+
+	// Priority order matches TUI for consistency:
+	// 1. User-writable directories (where TUI saves exports)
+	// 2. Local relative paths
+	// 3. Binary-relative path
+	// 4. System install paths (read-only)
+	locations := []string{
+		filepath.Join(os.Getenv("HOME"), "sysc-Go", "assets", filename), // User home (writable, TUI saves here)
+		filepath.Join("assets", filename),                               // ./assets/ (current dir)
+		filepath.Join("../assets", filename),                            // ../assets/ (parent dir, for TUI context)
+		filename,                                                        // Bare filename in current directory
+	}
+
+	// Add binary-relative path if we found it
+	if binaryDir != "" {
+		locations = append(locations, filepath.Join(binaryDir, "assets", filename))
+	}
+
+	// Add system paths last (read-only fallback)
+	locations = append(locations,
+		filepath.Join("/usr/local/share/sysc-Go/assets", filename), // Local install
+		filepath.Join("/usr/share/sysc-Go/assets", filename),       // System install
+	)
+
+	for _, path := range locations {
+		if _, err := os.Stat(path); err == nil {
+			return path
+		}
+	}
+
+	return ""
+}
+
+// readTextFile reads text from a file with fallback to SYSC.txt
+func readTextFile(file string) string {
+	if file != "" {
+		// Try to read from provided file
+		data, readErr := os.ReadFile(file)
+		if readErr == nil {
+			return string(data)
+		}
+
+		// Fall back to SYSC.txt
+		fallbackPath := findAssetFile("SYSC.txt")
+		if fallbackPath != "" {
+			data, readErr = os.ReadFile(fallbackPath)
+			if readErr == nil {
+				fmt.Printf("Warning: Could not read %s, using %s\n", file, fallbackPath)
+				time.Sleep(1 * time.Second)
+				return string(data)
+			}
+		}
+
+		fmt.Printf("Error: Could not read file %s and could not find fallback SYSC.txt\n", file)
+		os.Exit(1)
+	}
+
+	// No file provided, use SYSC.txt
+	fallbackPath := findAssetFile("SYSC.txt")
+	if fallbackPath != "" {
+		data, readErr := os.ReadFile(fallbackPath)
+		if readErr == nil {
+			return string(data)
+		}
+		fmt.Printf("Error: Could not read SYSC.txt from %s\n", fallbackPath)
+		os.Exit(1)
+	}
+
+	fmt.Println("Error: Could not find SYSC.txt in any asset location")
+	os.Exit(1)
+	return ""
+}
+
 func wrapText(text string, width int) string {
 	if width <= 0 {
 		width = 80
@@ -275,36 +358,8 @@ func runMatrixArt(width, height int, theme string, file string, frames int) {
 	// Get theme palette for matrix
 	palette := animations.GetMatrixPalette(theme)
 
-	// Read text from file or use default assets/SYSC.txt
-	var text string
-
-	if file != "" {
-		// Try to read from provided file
-		data, readErr := os.ReadFile(file)
-		if readErr == nil {
-			text = string(data)
-		} else {
-			// Fall back to assets/SYSC.txt
-			data, readErr = os.ReadFile("assets/SYSC.txt")
-			if readErr == nil {
-				text = string(data)
-				fmt.Printf("Warning: Could not read %s, using assets/SYSC.txt\n", file)
-				time.Sleep(1 * time.Second)
-			} else {
-				fmt.Printf("Error: Could not read file %s or assets/SYSC.txt\n", file)
-				os.Exit(1)
-			}
-		}
-	} else {
-		// No file provided, use assets/SYSC.txt
-		data, readErr := os.ReadFile("assets/SYSC.txt")
-		if readErr == nil {
-			text = string(data)
-		} else {
-			fmt.Println("Error: Could not read assets/SYSC.txt")
-			os.Exit(1)
-		}
-	}
+	// Read text from file or use default SYSC.txt
+	text := readTextFile(file)
 
 	// Create matrix-art effect
 	matrixArt := animations.NewMatrixArtEffect(width, height, palette, text)
@@ -390,36 +445,8 @@ func runRainArt(width, height int, theme string, file string, frames int) {
 	// Get theme palette for rain
 	palette := animations.GetRainPalette(theme)
 
-	// Read text from file or use default assets/SYSC.txt
-	var text string
-
-	if file != "" {
-		// Try to read from provided file
-		data, readErr := os.ReadFile(file)
-		if readErr == nil {
-			text = string(data)
-		} else {
-			// Fall back to assets/SYSC.txt
-			data, readErr = os.ReadFile("assets/SYSC.txt")
-			if readErr == nil {
-				text = string(data)
-				fmt.Printf("Warning: Could not read %s, using assets/SYSC.txt\n", file)
-				time.Sleep(1 * time.Second)
-			} else {
-				fmt.Printf("Error: Could not read file %s or assets/SYSC.txt\n", file)
-				os.Exit(1)
-			}
-		}
-	} else {
-		// No file provided, use assets/SYSC.txt
-		data, readErr := os.ReadFile("assets/SYSC.txt")
-		if readErr == nil {
-			text = string(data)
-		} else {
-			fmt.Println("Error: Could not read assets/SYSC.txt")
-			os.Exit(1)
-		}
-	}
+	// Read text from file or use default SYSC.txt
+	text := readTextFile(file)
 
 	// Create rain-art effect
 	rainArt := animations.NewRainArtEffect(width, height, palette, text)
@@ -864,36 +891,8 @@ func runRingText(width, height int, theme string, file string, frames int) {
 		finalGradientStops = []string{"#4A4A4A", "#00D1FF", "#FFFFFF"}
 	}
 
-	// Read text from file or use default assets/SYSC.txt
-	var text string
-
-	if file != "" {
-		// Try to read from provided file
-		data, readErr := os.ReadFile(file)
-		if readErr == nil {
-			text = string(data)
-		} else {
-			// Fall back to assets/SYSC.txt
-			data, readErr = os.ReadFile("assets/SYSC.txt")
-			if readErr == nil {
-				text = string(data)
-				fmt.Printf("Warning: Could not read %s, using assets/SYSC.txt\n", file)
-				time.Sleep(1 * time.Second)
-			} else {
-				fmt.Printf("Error: Could not read file %s or assets/SYSC.txt\n", file)
-				os.Exit(1)
-			}
-		}
-	} else {
-		// No file provided, use assets/SYSC.txt
-		data, readErr := os.ReadFile("assets/SYSC.txt")
-		if readErr == nil {
-			text = string(data)
-		} else {
-			fmt.Println("Error: Could not read assets/SYSC.txt")
-			os.Exit(1)
-		}
-	}
+	// Read text from file or use default SYSC.txt
+	text := readTextFile(file)
 
 	// Create ring text effect configuration (TTE-like parameters with theme-sensitive gradients)
 	config := animations.RingTextConfig{

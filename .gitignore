@@ -30,3 +30,10 @@ CLAUDE.md
 opencode.json
 syscgo-tui
 flf2bit
+
+# Development/design documents (internal only)
+*_DESIGN.md
+*_SYSTEM.md
+DESIGN_*.md
+NOTES.md
+TODO.md
