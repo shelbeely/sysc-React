@@ -99,23 +99,13 @@ func setupKeyboardInterrupt() chan bool {
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		defer term.Restore(int(os.Stdin.Fd()), oldState)
-
-		buf := make([]byte, 3)
-		for {
-			n, err := os.Stdin.Read(buf)
-			if err != nil {
-				return
-			}
-
-			// Check for ESC (27), Q (113/81), or Ctrl+C (3)
-			if n > 0 {
-				key := buf[0]
-				if key == 27 || key == 113 || key == 81 || key == 3 {
-					quit <- true
-					return
-				}
-			}
+		defer signal.Stop(sigChan) // Cleanup signal handler
+		select {
+		case <-sigChan:
+			quit <- true
+		case <-quit:
+			// Parent exited normally, cleanup
+			return
 		}
 	}()
 
