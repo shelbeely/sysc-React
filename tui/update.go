@@ -13,8 +13,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		// Canvas takes up most of the screen, leave room for selectors (6 lines) + help (2 lines) + margins (8 lines)
-		m.canvasHeight = m.height - 16
+		// Canvas takes up most of the screen, leave room for selectors + guidance + help
+		m.canvasHeight = m.height - 20
 		if m.canvasHeight < 10 {
 			m.canvasHeight = 10 // Minimum height
 		}
@@ -23,8 +23,49 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.textarea.SetWidth(m.width - 10)
 			m.textarea.SetHeight(m.height - 10)
 		}
+		//  Resize animation if running
+		if m.animationRunning && m.currentAnim != nil {
+			// Recreate animation with new dimensions
+			m.currentAnim = m.createAnimation()
+		}
 		return m, nil
 
+	case TickMsg:
+		// Handle animation tick
+		if m.animationRunning && m.currentAnim != nil {
+			m.currentAnim.Update()
+			m.animFrames++
+
+			// Check duration limit
+			duration := m.durations[m.selectedDuration]
+			if duration != "infinite" {
+				// Parse duration and check if we should stop
+				// For now, simplified: stop after reasonable frame count
+				// TODO: Parse actual duration string and calculate frames
+				maxFrames := 200 // ~10 seconds at 50ms per frame
+				switch duration {
+				case "5s":
+					maxFrames = 100
+				case "10s":
+					maxFrames = 200
+				case "30s":
+					maxFrames = 600
+				case "60s":
+					maxFrames = 1200
+				}
+
+				if m.animFrames >= maxFrames {
+					m.animationRunning = false
+					m.currentAnim = nil
+					m.animFrames = 0
+					return m, nil
+				}
+			}
+
+			// Continue ticking
+			return m, tickCmd()
+		}
+		return m, nil
 	}
 
 	return m, nil
@@ -42,23 +83,38 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleEditorKeyPress(msg)
 	}
 
+	// Global quit
+	if msg.String() == "ctrl+c" {
+		return m, tea.Quit
+	}
+
+	// If animation is running, only allow ESC to stop it
+	if m.animationRunning {
+		if msg.String() == "esc" {
+			m.animationRunning = false
+			m.currentAnim = nil
+			m.animFrames = 0
+			return m, nil
+		}
+		// Ignore other keys while animation is running
+		return m, nil
+	}
+
+	// Normal navigation when not running animation
 	switch msg.String() {
-	case "ctrl+c", "q":
+	case "q", "esc":
 		return m, tea.Quit
 
-	case "esc":
-		return m, tea.Quit
-
-	case "up", "k":
+	case "up":
 		return m.navigateUp(), nil
 
-	case "down", "j":
+	case "down":
 		return m.navigateDown(), nil
 
-	case "left", "h":
+	case "left":
 		return m.navigateLeft(), nil
 
-	case "right", "l":
+	case "right":
 		return m.navigateRight(), nil
 
 	case "enter":
@@ -70,6 +126,11 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 // navigateUp moves the selection up within the current selector
 func (m Model) navigateUp() Model {
+	// Don't allow navigation while animation is running
+	if m.animationRunning {
+		return m
+	}
+
 	switch m.focusedSelector {
 	case 0: // Animation selector
 		if m.selectedAnimation > 0 {
@@ -93,6 +154,11 @@ func (m Model) navigateUp() Model {
 
 // navigateDown moves the selection down within the current selector
 func (m Model) navigateDown() Model {
+	// Don't allow navigation while animation is running
+	if m.animationRunning {
+		return m
+	}
+
 	switch m.focusedSelector {
 	case 0: // Animation selector
 		if m.selectedAnimation < len(m.animations)-1 {
@@ -116,6 +182,11 @@ func (m Model) navigateDown() Model {
 
 // navigateLeft moves focus to the previous selector
 func (m Model) navigateLeft() Model {
+	// Don't allow navigation while animation is running
+	if m.animationRunning {
+		return m
+	}
+
 	if m.focusedSelector > 0 {
 		m.focusedSelector--
 	}
@@ -124,44 +195,37 @@ func (m Model) navigateLeft() Model {
 
 // navigateRight moves focus to the next selector
 func (m Model) navigateRight() Model {
+	// Don't allow navigation while animation is running
+	if m.animationRunning {
+		return m
+	}
+
 	if m.focusedSelector < 3 {
 		m.focusedSelector++
 	}
 	return m
 }
 
-// startAnimation begins the animation with current settings
+// startAnimation creates and starts the animation in viewport
 func (m Model) startAnimation() (Model, tea.Cmd) {
-	// Get selected values
-	animName := m.animations[m.selectedAnimation]
-	theme := m.themes[m.selectedTheme]
-	fileName := m.files[m.selectedFile]
-	duration := m.durations[m.selectedDuration]
+	// Create animation instance (this may set editor mode instead)
+	anim := m.createAnimation()
 
-	// Check if "BIT Text Editor" is selected - enter BIT editor mode instead
-	if fileName == "BIT Text Editor" {
-		m.bitEditorMode = true
-		m.bitTextInput.Focus()
+	// If createAnimation set editor mode, return early
+	if m.editorMode || m.bitEditorMode {
 		return m, nil
 	}
 
-	// Check if "Custom text" is selected - enter editor mode instead
-	if fileName == "Custom text" {
-		m.editorMode = true
-		m.textarea.Focus()
-		return m, nil
+	// If animation was created, start it
+	if anim != nil {
+		m.currentAnim = anim
+		m.animationRunning = true
+		m.animFrames = 0
+		return m, tickCmd() // Start the tick loop
 	}
 
-	// Launch animation immediately and quit TUI
-	// This returns user to normal terminal where animation runs
-	return m, tea.Sequence(
-		tea.Quit,
-		func() tea.Msg {
-			// Launch animation after TUI quits
-			LaunchAnimation(animName, theme, fileName, duration)
-			return nil
-		},
-	)
+	// No animation created (shouldn't happen)
+	return m, nil
 }
 
 // handleEditorKeyPress handles keyboard input in editor mode
@@ -176,14 +240,14 @@ func (m Model) handleEditorKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.showExportPrompt = false
 			return m, nil
 
-		case "up", "k":
+		case "up":
 			// Navigate up in export options
 			if m.exportTarget > 0 {
 				m.exportTarget--
 			}
 			return m, nil
 
-		case "down", "j":
+		case "down":
 			// Navigate down in export options
 			if m.exportTarget < 1 { // 0=syscgo, 1=sysc-walls
 				m.exportTarget++
@@ -233,7 +297,7 @@ func (m Model) handleEditorKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if len(files) == 0 {
 			files = []string{"SYSC.txt"}
 		}
-		files = append([]string{"Custom text"}, files...)
+		files = append([]string{"BIT Text Editor", "Custom text"}, files...)
 		m.files = files
 		return m, nil
 
@@ -293,7 +357,7 @@ func (m Model) saveFile() (Model, tea.Cmd) {
 	if len(files) == 0 {
 		files = []string{"SYSC.txt"}
 	}
-	files = append([]string{"Custom text"}, files...)
+	files = append([]string{"BIT Text Editor", "Custom text"}, files...)
 	m.files = files
 
 	// Set the selected file to the newly created file

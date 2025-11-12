@@ -11,14 +11,28 @@ import (
 // discoverAssetFiles finds all .txt files in the assets directory
 func discoverAssetFiles() []string {
 	var files []string
+	seen := make(map[string]bool) // Deduplicate files
 
-	// Try multiple possible asset paths
+	// Get executable directory for better path resolution
+	exePath, err := os.Executable()
+	var binaryDir string
+	if err == nil {
+		binaryDir = filepath.Dir(exePath)
+	}
+
+	// Try multiple possible asset paths (prioritize user-writable locations)
 	assetPaths := []string{
-		"assets",
-		"./assets",
-		"../assets",
-		filepath.Join(os.Getenv("HOME"), "sysc-Go", "assets"),
-		"/usr/local/share/sysc-go/assets",
+		filepath.Join(os.Getenv("HOME"), "sysc-Go", "assets"), // User home (writable)
+		"assets",              // Current directory
+		"./assets",            // Explicit relative
+		"../assets",           // Parent directory
+		filepath.Join("/usr/local/share/sysc-Go/assets"), // Local install
+		filepath.Join("/usr/share/sysc-Go/assets"),       // System install
+	}
+
+	// Add binary-relative path if available
+	if binaryDir != "" {
+		assetPaths = append(assetPaths, filepath.Join(binaryDir, "assets"))
 	}
 
 	for _, assetPath := range assetPaths {
@@ -32,14 +46,10 @@ func discoverAssetFiles() []string {
 				continue
 			}
 			name := entry.Name()
-			if strings.HasSuffix(strings.ToLower(name), ".txt") {
+			if strings.HasSuffix(strings.ToLower(name), ".txt") && !seen[name] {
 				files = append(files, name)
+				seen[name] = true
 			}
-		}
-
-		// If we found files, return them
-		if len(files) > 0 {
-			return files
 		}
 	}
 
@@ -48,13 +58,30 @@ func discoverAssetFiles() []string {
 
 // getAssetPath returns the full path to an asset file
 func getAssetPath(filename string) string {
-	assetPaths := []string{
-		filepath.Join("assets", filename),
-		filepath.Join("./assets", filename),
-		filepath.Join("../assets", filename),
-		filepath.Join(os.Getenv("HOME"), "sysc-Go", "assets", filename),
-		filepath.Join("/usr/local/share/sysc-go/assets", filename),
+	// Get executable directory
+	exePath, err := os.Executable()
+	var binaryDir string
+	if err == nil {
+		binaryDir = filepath.Dir(exePath)
 	}
+
+	assetPaths := []string{
+		filepath.Join(os.Getenv("HOME"), "sysc-Go", "assets", filename), // User home (writable, TUI saves here)
+		filepath.Join("assets", filename),                               // ./assets/ (current dir)
+		filepath.Join("../assets", filename),                            // ../assets/ (parent dir)
+		filename,                                                        // Bare filename in current directory
+	}
+
+	// Add binary-relative path if available
+	if binaryDir != "" {
+		assetPaths = append(assetPaths, filepath.Join(binaryDir, "assets", filename))
+	}
+
+	// Add system paths last (read-only fallback)
+	assetPaths = append(assetPaths,
+		filepath.Join("/usr/local/share/sysc-Go/assets", filename), // Local install
+		filepath.Join("/usr/share/sysc-Go/assets", filename),       // System install
+	)
 
 	for _, path := range assetPaths {
 		if _, err := os.Stat(path); err == nil {
@@ -108,10 +135,10 @@ func saveToAssets(filename, content string) error {
 
 	// Try to find writable assets directory
 	assetPaths := []string{
-		"assets",
-		"./assets",
-		"../assets",
-		filepath.Join(os.Getenv("HOME"), "sysc-Go", "assets"),
+		filepath.Join(os.Getenv("HOME"), "sysc-Go", "assets"), // User home (writable)
+		"assets",   // Current directory
+		"./assets", // Explicit relative
+		"../assets", // Parent directory
 	}
 
 	var targetPath string

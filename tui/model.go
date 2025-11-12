@@ -3,6 +3,7 @@ package tui
 import (
 	"time"
 
+	"github.com/Nomadcxx/sysc-Go/animations"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -31,6 +32,11 @@ type Model struct {
 
 	// Which selector is focused (0=animation, 1=theme, 2=file, 3=duration)
 	focusedSelector int
+
+	// Animation preview state
+	animationRunning bool
+	currentAnim      animations.Animation
+	animFrames       int // Frame counter
 
 	// Editor mode for custom text creation
 	editorMode       bool
@@ -77,6 +83,7 @@ type Styles struct {
 	SelectorFocused lipgloss.Style
 	SelectorLabel   lipgloss.Style
 	SelectorValue   lipgloss.Style
+	GuidanceBox     lipgloss.Style
 	Help            lipgloss.Style
 	Background      lipgloss.Style
 }
@@ -169,9 +176,12 @@ func NewModel() Model {
 		},
 		selectedAnimation: 0,
 		selectedTheme:     0,
-		selectedFile:      2, // Default to SYSC.txt (index 2 after prepending both editors)
+		selectedFile:      2, // Default to first .txt file after both editors
 		selectedDuration:  4, // infinite by default
 		focusedSelector:   0,
+		animationRunning:  false,
+		currentAnim:       nil,
+		animFrames:        0,
 		editorMode:        false,
 		textarea:          ta,
 		filenameInput:     fi,
@@ -212,45 +222,56 @@ func NewStyles() Styles {
 	return Styles{
 		Canvas: lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#3B4252")).
+			BorderForeground(lipgloss.Color("#88C0D0")).
 			Padding(1, 2).
 			MarginBottom(1).
+			Align(lipgloss.Center, lipgloss.Center).
 			Background(lipgloss.Color("#1E1E2E")),
 
 		Selector: lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color("#3B4252")).
-			Padding(0, 1).
+			Padding(0, 2).
 			MarginRight(1).
-			Width(16).
+			Width(20).
+			Align(lipgloss.Center, lipgloss.Top).
 			Background(lipgloss.Color("#1E1E2E")),
 
 		SelectorFocused: lipgloss.NewStyle().
 			Border(lipgloss.ThickBorder()).
 			BorderForeground(lipgloss.Color("#88C0D0")).
-			Padding(0, 1).
+			Padding(0, 2).
 			MarginRight(1).
-			Width(16).
+			Width(20).
+			Align(lipgloss.Center, lipgloss.Top).
 			Background(lipgloss.Color("#2E3440")),
 
 		SelectorLabel: lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#88C0D0")).
 			Bold(true).
-			Border(lipgloss.NormalBorder(), false, false, true, false).
-			BorderForeground(lipgloss.Color("#3B4252")).
-			PaddingBottom(0).
-			MarginBottom(0),
+			Align(lipgloss.Center).
+			MarginBottom(1),
 
 		SelectorValue: lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#ECEFF4")).
 			Bold(false).
-			PaddingTop(0).
-			MarginTop(0),
+			Align(lipgloss.Center).
+			MarginTop(0).
+			MarginBottom(1),
+
+		GuidanceBox: lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#4C566A")).
+			Padding(1, 2).
+			MarginTop(1).
+			Foreground(lipgloss.Color("#D8DEE9")).
+			Background(lipgloss.Color("#1E1E2E")),
 
 		Help: lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#4C566A")).
 			Background(lipgloss.Color("#1E1E2E")).
-			Padding(1, 2),
+			Padding(1, 2).
+			Align(lipgloss.Center),
 
 		Background: lipgloss.NewStyle().
 			Background(lipgloss.Color("#1E1E2E")),
@@ -264,3 +285,10 @@ func (m Model) Init() tea.Cmd {
 
 // TickMsg is sent when animation should update
 type TickMsg time.Time
+
+// tickCmd returns a command that sends a tick message for animation updates
+func tickCmd() tea.Cmd {
+	return tea.Tick(50*time.Millisecond, func(t time.Time) tea.Msg {
+		return TickMsg(t)
+	})
+}
