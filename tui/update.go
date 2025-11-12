@@ -191,14 +191,7 @@ func (m Model) handleEditorKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 
 		case "enter":
-			// Confirm export target
-			if m.exportTarget == 1 {
-				// sysc-walls is not implemented yet
-				// TODO: Show a message that this feature is WIP
-				m.showExportPrompt = false
-				return m, nil
-			}
-			// syscgo export - show save prompt
+			// Confirm export target - both syscgo and sysc-walls are supported
 			m.showExportPrompt = false
 			m.showSavePrompt = true
 			m.filenameInput.Focus()
