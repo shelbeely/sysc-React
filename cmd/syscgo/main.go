@@ -4,7 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/Nomadcxx/sysc-Go/animations"
@@ -87,17 +89,14 @@ func wrapText(text string, width int) string {
 	return strings.Join(wrappedLines, "\n")
 }
 
-// setupKeyboardInterrupt sets up a goroutine to listen for ESC, Q, or Ctrl+C
+// setupKeyboardInterrupt sets up signal handling for Ctrl+C
 // Returns a channel that will receive true when user wants to exit
 func setupKeyboardInterrupt() chan bool {
 	quit := make(chan bool, 1)
 
-	// Set terminal to raw mode for immediate key detection
-	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
-	if err != nil {
-		// If we can't set raw mode, just return a channel that never closes
-		return quit
-	}
+	// Use signal handling instead of raw mode to avoid breaking output formatting
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
 		defer term.Restore(int(os.Stdin.Fd()), oldState)
