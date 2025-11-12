@@ -63,6 +63,7 @@ func (f *FireEffect) spreadFire(from int) {
 	// Calculate target row
 	toY := to / f.width
 	hardLimit := f.height / 10 // Top 10% - absolute no-go zone
+	fadeZoneStart := f.height / 4 // Top 25% - gentle fade zone
 
 	// Hard limit - no propagation into top 10%
 	if toY < hardLimit {
@@ -71,6 +72,11 @@ func (f *FireEffect) spreadFire(from int) {
 
 	// Random decay (0 or 1)
 	decay := rand.Intn(2)
+
+	// Gentle fade in top 15% (between 10% and 25% from top)
+	if toY < fadeZoneStart {
+		decay += rand.Intn(2) // Add 0 or 1 extra (gentle!)
+	}
 
 	newHeat := f.buffer[from] - decay
 	if newHeat < 0 {
