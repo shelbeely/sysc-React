@@ -23,6 +23,7 @@ Terminal Animation Library
 
 // wrapText wraps text to fit within the specified width
 // findAssetFile searches for an asset file in multiple locations
+// Priority order: user writable directories first, then system read-only paths
 func findAssetFile(filename string) string {
 	// Get the directory containing the binary
 	exePath, err := os.Executable()
@@ -31,18 +32,28 @@ func findAssetFile(filename string) string {
 		binaryDir = filepath.Dir(exePath)
 	}
 
+	// Priority order matches TUI for consistency:
+	// 1. User-writable directories (where TUI saves exports)
+	// 2. Local relative paths
+	// 3. Binary-relative path
+	// 4. System install paths (read-only)
 	locations := []string{
-		filename,                                           // Current directory
-		filepath.Join("assets", filename),                  // ./assets/
-		filepath.Join("/usr/share/sysc-Go/assets", filename), // System install
-		filepath.Join("/usr/local/share/sysc-Go/assets", filename), // Local install
-		filepath.Join("/home/user/sysc-Go/assets", filename), // Dev install
+		filepath.Join(os.Getenv("HOME"), "sysc-Go", "assets", filename), // User home (writable, TUI saves here)
+		filepath.Join("assets", filename),                               // ./assets/ (current dir)
+		filepath.Join("../assets", filename),                            // ../assets/ (parent dir, for TUI context)
+		filename,                                                        // Bare filename in current directory
 	}
 
 	// Add binary-relative path if we found it
 	if binaryDir != "" {
 		locations = append(locations, filepath.Join(binaryDir, "assets", filename))
 	}
+
+	// Add system paths last (read-only fallback)
+	locations = append(locations,
+		filepath.Join("/usr/local/share/sysc-Go/assets", filename), // Local install
+		filepath.Join("/usr/share/sysc-Go/assets", filename),       // System install
+	)
 
 	for _, path := range locations {
 		if _, err := os.Stat(path); err == nil {
