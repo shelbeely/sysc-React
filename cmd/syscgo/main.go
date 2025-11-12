@@ -104,22 +104,9 @@ func setupKeyboardInterrupt() chan bool {
 
 		buf := make([]byte, 3)
 		for {
-			// Set read deadline to allow periodic checking if we should exit
-			os.Stdin.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
-
 			n, err := os.Stdin.Read(buf)
 			if err != nil {
-				// Check if it's just a timeout
-				if os.IsTimeout(err) {
-					// Check if quit channel is closed (parent exited)
-					select {
-					case <-quit:
-						return
-					default:
-						continue // Keep reading
-					}
-				}
-				return // Other error, exit
+				return
 			}
 
 			// Check for ESC (27), Q (113/81), or Ctrl+C (3)
@@ -245,17 +232,17 @@ func runFire(width, height int, theme string, frames int) {
 	palette := animations.GetFirePalette(theme)
 	fire := animations.NewFireEffect(width, height, palette)
 
-	// quit := setupKeyboardInterrupt()
-	// defer close(quit)
+	quit := setupKeyboardInterrupt()
+	defer close(quit)
 
 	frame := 0
 	for frames == 0 || frame < frames {
 		// Check for user exit
-		// select {
-		// case <-quit:
-		// 	return
-		// default:
-		// }
+		select {
+		case <-quit:
+			return
+		default:
+		}
 
 		fire.Update()
 		output := fire.Render()
