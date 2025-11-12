@@ -255,15 +255,11 @@ func NewStyles() Styles {
 			MarginBottom(1),
 
 		GuidanceBox: lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#4C566A")).
-			Padding(0, 2).
-			MarginTop(1).
-			Foreground(lipgloss.Color("#D8DEE9")),
+			Foreground(lipgloss.Color("#D8DEE9")).
+			Align(lipgloss.Center),
 
 		Help: lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#4C566A")).
-			Padding(1, 0).
 			Align(lipgloss.Center),
 
 		Background: lipgloss.NewStyle(),
