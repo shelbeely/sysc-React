@@ -31,9 +31,10 @@ func NewFireEffect(width, height int, palette []string) *FireEffect {
 func (f *FireEffect) init() {
 	f.buffer = make([]int, f.width*f.height)
 
-	// Set bottom row to maximum heat (fire source)
+	// Set bottom row to varied heat (less dense)
 	for i := 0; i < f.width; i++ {
-		f.buffer[(f.height-1)*f.width+i] = 36
+		// Random heat 24-36 for less density
+		f.buffer[(f.height-1)*f.width+i] = 24 + rand.Intn(13)
 	}
 }
 
@@ -62,20 +63,20 @@ func (f *FireEffect) spreadFire(from int) {
 
 	// Calculate target row
 	toY := to / f.width
-	hardLimit := f.height / 10       // Top 10% - absolute no-go zone
-	fadeZoneStart := f.height / 3     // Top 33% - gentle fade zone
+	hardLimit := (f.height * 3) / 10 // Top 30% - absolute no-go zone
+	fadeZoneStart := f.height / 2     // Top 50% - gentle fade zone
 
-	// Hard limit - no propagation into top 10%
+	// Hard limit - no propagation into top 30%
 	if toY < hardLimit {
 		return
 	}
 
-	// Random decay (0 or 1)
-	decay := rand.Intn(2)
+	// Random decay (0-2) - increased for less density
+	decay := rand.Intn(3)
 
-	// Fade zone (between 10% and 33% from top)
+	// Fade zone (between 30% and 50% from top)
 	if toY < fadeZoneStart {
-		decay += rand.Intn(3) + 1 // Add 1-3 extra for gentle fade
+		decay += rand.Intn(2) + 1 // Add 1 or 2 extra
 	}
 
 	newHeat := f.buffer[from] - decay
