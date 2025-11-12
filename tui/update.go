@@ -28,8 +28,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		// Canvas takes up maximum available screen space
-		// UI elements (selectors, guidance, help) are now compact, leaving ~10 lines overhead
-		m.canvasHeight = m.height - 10  // Maximized viewport - only leave room for compact UI
+		// UI elements (selectors, guidance, help) are now ultra-compact, leaving ~7 lines overhead
+		m.canvasHeight = m.height - 7  // Maximized viewport - compact selectors save space
 		if m.canvasHeight < 20 {
 			m.canvasHeight = 20 // Minimum viewport height
 		}
