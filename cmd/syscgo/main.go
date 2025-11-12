@@ -104,9 +104,22 @@ func setupKeyboardInterrupt() chan bool {
 
 		buf := make([]byte, 3)
 		for {
+			// Set read deadline to allow periodic checking if we should exit
+			os.Stdin.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
+
 			n, err := os.Stdin.Read(buf)
 			if err != nil {
-				return
+				// Check if it's just a timeout
+				if os.IsTimeout(err) {
+					// Check if quit channel is closed (parent exited)
+					select {
+					case <-quit:
+						return
+					default:
+						continue // Keep reading
+					}
+				}
+				return // Other error, exit
 			}
 
 			// Check for ESC (27), Q (113/81), or Ctrl+C (3)
