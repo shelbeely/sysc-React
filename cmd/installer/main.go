@@ -176,12 +176,14 @@ func (m *model) initTasks() {
 			{name: "Check privileges", description: "Checking root access", execute: checkPrivileges, status: statusPending},
 			{name: "Remove syscgo", description: "Removing /usr/local/bin/syscgo", execute: removeSyscgoBinary, status: statusPending},
 			{name: "Remove syscgo-tui", description: "Removing /usr/local/bin/syscgo-tui", execute: removeTuiBinary, status: statusPending},
+			{name: "Remove assets", description: "Removing /usr/local/share/syscgo", execute: removeAssets, status: statusPending},
 		}
 	} else {
 		m.tasks = []installTask{
 			{name: "Check privileges", description: "Checking root access", execute: checkPrivileges, status: statusPending},
 			{name: "Build syscgo", description: "Building syscgo binary", execute: buildBinary, status: statusPending},
 			{name: "Build syscgo-tui", description: "Building syscgo-tui binary", execute: buildTuiBinary, status: statusPending},
+			{name: "Install assets", description: "Installing assets to /usr/local/share/syscgo", execute: installAssets, status: statusPending},
 			{name: "Install syscgo", description: "Installing syscgo to /usr/local/bin", execute: installBinary, status: statusPending},
 			{name: "Install syscgo-tui", description: "Installing syscgo-tui to /usr/local/bin", execute: installTuiBinary, status: statusPending},
 		}
@@ -336,6 +338,10 @@ func (m model) renderComplete() string {
 			b.WriteString("\n")
 			b.WriteString(lipgloss.NewStyle().Foreground(Accent).Render("  • /usr/local/bin/syscgo-tui"))
 			b.WriteString("\n\n")
+			b.WriteString(lipgloss.NewStyle().Foreground(FgSecondary).Render("Installed assets:"))
+			b.WriteString("\n")
+			b.WriteString(lipgloss.NewStyle().Foreground(Accent).Render("  • /usr/local/share/syscgo/"))
+			b.WriteString("\n\n")
 			b.WriteString(lipgloss.NewStyle().Foreground(FgSecondary).Render("Try them out:"))
 			b.WriteString("\n")
 			b.WriteString(lipgloss.NewStyle().Foreground(Accent).Render("  syscgo -effect fire -theme dracula"))
@@ -413,6 +419,26 @@ func buildTuiBinary(m *model) error {
 	return nil
 }
 
+func installAssets(m *model) error {
+	projectRoot := getProjectRoot()
+	srcPath := filepath.Join(projectRoot, "assets")
+	dstPath := "/usr/local/share/syscgo"
+
+	// Create destination directory
+	err := os.MkdirAll(dstPath, 0755)
+	if err != nil {
+		return fmt.Errorf("failed to create directory: %v", err)
+	}
+
+	// Copy assets directory recursively
+	err = copyDir(srcPath, dstPath)
+	if err != nil {
+		return fmt.Errorf("failed to copy assets: %v", err)
+	}
+
+	return nil
+}
+
 func installBinary(m *model) error {
 	projectRoot := getProjectRoot()
 	srcPath := filepath.Join(projectRoot, "syscgo")
@@ -466,6 +492,80 @@ func removeTuiBinary(m *model) error {
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("failed to remove binary: %v", err)
 	}
+	return nil
+}
+
+func removeAssets(m *model) error {
+	err := os.RemoveAll("/usr/local/share/syscgo")
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to remove assets: %v", err)
+	}
+	return nil
+}
+
+// copyDir recursively copies a directory
+func copyDir(src, dst string) error {
+	// Get properties of source dir
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	// Create destination directory
+	err = os.MkdirAll(dst, srcInfo.Mode())
+	if err != nil {
+		return err
+	}
+
+	// Read source directory
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+
+	// Copy each entry
+	for _, entry := range entries {
+		srcPath := filepath.Join(src, entry.Name())
+		dstPath := filepath.Join(dst, entry.Name())
+
+		if entry.IsDir() {
+			// Recursively copy subdirectory
+			err = copyDir(srcPath, dstPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			// Copy file
+			err = copyFile(srcPath, dstPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// copyFile copies a single file
+func copyFile(src, dst string) error {
+	// Read source file
+	data, err := os.ReadFile(src)
+	if err != nil {
+		return err
+	}
+
+	// Get source file permissions
+	srcInfo, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+
+	// Write to destination
+	err = os.WriteFile(dst, data, srcInfo.Mode())
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

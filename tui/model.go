@@ -223,28 +223,23 @@ func NewStyles() Styles {
 		Canvas: lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color("#88C0D0")).
-			Padding(1, 2).
-			MarginBottom(1).
-			Align(lipgloss.Center, lipgloss.Center).
-			Background(lipgloss.Color("#1E1E2E")),
+			Padding(1),
 
 		Selector: lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color("#3B4252")).
-			Padding(0, 2).
-			MarginRight(1).
-			Width(20).
-			Align(lipgloss.Center, lipgloss.Top).
-			Background(lipgloss.Color("#1E1E2E")),
+			Padding(0, 1).
+			MarginRight(2).
+			Width(18).
+			Align(lipgloss.Center, lipgloss.Top),
 
 		SelectorFocused: lipgloss.NewStyle().
 			Border(lipgloss.ThickBorder()).
 			BorderForeground(lipgloss.Color("#88C0D0")).
-			Padding(0, 2).
-			MarginRight(1).
-			Width(20).
-			Align(lipgloss.Center, lipgloss.Top).
-			Background(lipgloss.Color("#2E3440")),
+			Padding(0, 1).
+			MarginRight(2).
+			Width(18).
+			Align(lipgloss.Center, lipgloss.Top),
 
 		SelectorLabel: lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#88C0D0")).
@@ -262,21 +257,16 @@ func NewStyles() Styles {
 		GuidanceBox: lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color("#4C566A")).
-			Padding(1, 2).
+			Padding(0, 2).
 			MarginTop(1).
-			Foreground(lipgloss.Color("#D8DEE9")).
-			Background(lipgloss.Color("#1E1E2E")),
+			Foreground(lipgloss.Color("#D8DEE9")),
 
 		Help: lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#4C566A")).
-			Background(lipgloss.Color("#1E1E2E")).
-			Padding(1, 2).
+			Padding(1, 0).
 			Align(lipgloss.Center),
 
-		Background: lipgloss.NewStyle().
-			Background(lipgloss.Color("#1E1E2E")).
-			Align(lipgloss.Left, lipgloss.Top).
-			Padding(0),
+		Background: lipgloss.NewStyle(),
 	}
 }
 
