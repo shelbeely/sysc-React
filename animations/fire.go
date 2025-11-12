@@ -1,9 +1,10 @@
 package animations
 
 import (
-	"fmt"
 	"math/rand"
 	"strings"
+
+	"github.com/charmbracelet/lipgloss/v2"
 )
 
 // FireEffect implements PSX DOOM-style fire algorithm
@@ -31,10 +32,9 @@ func NewFireEffect(width, height int, palette []string) *FireEffect {
 func (f *FireEffect) init() {
 	f.buffer = make([]int, f.width*f.height)
 
-	// Set bottom row to varied heat (less dense)
+	// Set bottom row to maximum heat (fire source)
 	for i := 0; i < f.width; i++ {
-		// Random heat 24-36 for less density
-		f.buffer[(f.height-1)*f.width+i] = 24 + rand.Intn(13)
+		f.buffer[(f.height-1)*f.width+i] = 36
 	}
 }
 
@@ -63,20 +63,21 @@ func (f *FireEffect) spreadFire(from int) {
 
 	// Calculate target row
 	toY := to / f.width
-	hardLimit := (f.height * 3) / 10 // Top 30% - absolute no-go zone
-	fadeZoneStart := f.height / 2     // Top 50% - gentle fade zone
+	hardLimit := f.height / 10          // Top 10% - absolute no-go zone
+	fadeZoneStart := (f.height * 4) / 5 // Top 80% - start heavy decay
 
-	// Hard limit - no propagation into top 30%
+	// Hard limit - no propagation into top 10%
 	if toY < hardLimit {
 		return
 	}
 
-	// Random decay (0-2) - increased for less density
-	decay := rand.Intn(3)
+	// Random decay (0 or 1)
+	decay := rand.Intn(2)
 
-	// Fade zone (between 30% and 50% from top)
+	// Aggressive decay in fade zone (between 10% and 80% from top)
 	if toY < fadeZoneStart {
-		decay += rand.Intn(2) + 1 // Add 1 or 2 extra
+		// Add 2-6 extra decay for smooth gradient fade
+		decay += rand.Intn(5) + 2
 	}
 
 	newHeat := f.buffer[from] - decay
@@ -99,59 +100,19 @@ func (f *FireEffect) Update() {
 	}
 }
 
-// hexToRGB converts hex color to RGB values
-func hexToRGB(hex string) (int, int, int) {
-	// Remove # if present
-	if len(hex) > 0 && hex[0] == '#' {
-		hex = hex[1:]
-	}
-
-	// Parse RGB
-	var r, g, b int
-	if len(hex) == 6 {
-		fmt.Sscanf(hex, "%02x%02x%02x", &r, &g, &b)
-	}
-	return r, g, b
-}
-
-// Render converts fire to colored block output with batched raw ANSI codes
+// Render converts the fire buffer to colored text output
 func (f *FireEffect) Render() string {
-	var output strings.Builder
+	var lines []string
 
-	// Find first row with actual fire (heat >= 3)
-	firstFireRow := f.height - 1
+	// Render across full height - low heat at top will naturally fade to black/background
 	for y := 0; y < f.height; y++ {
-		hasFireInRow := false
-		for x := 0; x < f.width; x++ {
-			if f.buffer[y*f.width+x] >= 3 {
-				hasFireInRow = true
-				break
-			}
-		}
-		if hasFireInRow {
-			firstFireRow = y
-			break
-		}
-	}
-
-	// Render only rows with actual fire
-	for y := firstFireRow; y < f.height; y++ {
-		var currentColor string
-		var batchChars strings.Builder
-
+		var line strings.Builder
 		for x := 0; x < f.width; x++ {
 			heat := f.buffer[y*f.width+x]
 
 			// Skip very low heat (natural fade to background)
 			if heat < 3 {
-				// Flush any pending batch
-				if batchChars.Len() > 0 {
-					r, g, b := hexToRGB(currentColor)
-					fmt.Fprintf(&output, "\033[38;2;%d;%d;%dm%s\033[0m", r, g, b, batchChars.String())
-					batchChars.Reset()
-					currentColor = ""
-				}
-				output.WriteRune(' ')
+				line.WriteString(" ")
 				continue
 			}
 
@@ -167,31 +128,16 @@ func (f *FireEffect) Render() string {
 			if colorIndex >= len(f.palette) {
 				colorIndex = len(f.palette) - 1
 			}
-			color := f.palette[colorIndex]
+			colorHex := f.palette[colorIndex]
 
-			// If color changed, flush current batch
-			if color != currentColor && batchChars.Len() > 0 {
-				r, g, b := hexToRGB(currentColor)
-				fmt.Fprintf(&output, "\033[38;2;%d;%d;%dm%s\033[0m", r, g, b, batchChars.String())
-				batchChars.Reset()
-			}
-
-			// Add char to batch
-			currentColor = color
-			batchChars.WriteRune(char)
+			// Render colored character
+			styled := lipgloss.NewStyle().
+				Foreground(lipgloss.Color(colorHex)).
+				Render(string(char))
+			line.WriteString(styled)
 		}
-
-		// Flush final batch for this row
-		if batchChars.Len() > 0 {
-			r, g, b := hexToRGB(currentColor)
-			fmt.Fprintf(&output, "\033[38;2;%d;%d;%dm%s\033[0m", r, g, b, batchChars.String())
-		}
-
-		// Add newline at end of row (but not after last row)
-		if y < f.height-1 {
-			output.WriteRune('\n')
-		}
+		lines = append(lines, line.String())
 	}
 
-	return output.String()
+	return strings.Join(lines, "\n")
 }
