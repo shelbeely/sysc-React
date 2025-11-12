@@ -72,6 +72,15 @@ func (m *Model) createAnimation() animations.Animation {
 			update: fire.Update,
 		}
 
+	case "fire-text":
+		palette := animations.GetFirePalette(themeName)
+		text := m.loadTextFile(fileName)
+		fireText := animations.NewFireTextEffect(width, height, palette, text)
+		return &AnimationWrapper{
+			render: fireText.Render,
+			update: fireText.Update,
+		}
+
 	case "matrix":
 		palette := animations.GetMatrixPalette(themeName)
 		matrix := animations.NewMatrixEffect(width, height, palette)

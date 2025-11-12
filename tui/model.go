@@ -138,6 +138,7 @@ func NewModel() Model {
 	return Model{
 		animations: []string{
 			"fire",
+			"fire-text",
 			"matrix",
 			"matrix-art",
 			"rain",
