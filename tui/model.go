@@ -274,7 +274,9 @@ func NewStyles() Styles {
 			Align(lipgloss.Center),
 
 		Background: lipgloss.NewStyle().
-			Background(lipgloss.Color("#1E1E2E")),
+			Background(lipgloss.Color("#1E1E2E")).
+			Align(lipgloss.Left, lipgloss.Top).
+			Padding(0),
 	}
 }
 
