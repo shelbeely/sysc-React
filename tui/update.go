@@ -32,6 +32,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // handleKeyPress processes keyboard input
 func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// Handle BIT editor mode separately
+	if m.bitEditorMode {
+		return m.handleBitEditorKeyPress(msg)
+	}
+
 	// Handle editor mode separately
 	if m.editorMode {
 		return m.handleEditorKeyPress(msg)
@@ -133,6 +138,13 @@ func (m Model) startAnimation() (Model, tea.Cmd) {
 	fileName := m.files[m.selectedFile]
 	duration := m.durations[m.selectedDuration]
 
+	// Check if "BIT Text Editor" is selected - enter BIT editor mode instead
+	if fileName == "BIT Text Editor" {
+		m.bitEditorMode = true
+		m.bitTextInput.Focus()
+		return m, nil
+	}
+
 	// Check if "Custom text" is selected - enter editor mode instead
 	if fileName == "Custom text" {
 		m.editorMode = true
@@ -179,14 +191,7 @@ func (m Model) handleEditorKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 
 		case "enter":
-			// Confirm export target
-			if m.exportTarget == 1 {
-				// sysc-walls is not implemented yet
-				// TODO: Show a message that this feature is WIP
-				m.showExportPrompt = false
-				return m, nil
-			}
-			// syscgo export - show save prompt
+			// Confirm export target - both syscgo and sysc-walls are supported
 			m.showExportPrompt = false
 			m.showSavePrompt = true
 			m.filenameInput.Focus()

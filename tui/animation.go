@@ -120,10 +120,10 @@ func LaunchAnimation(animName, theme, file, duration string) error {
 func findSyscgoBinary() string {
 	// Try multiple locations
 	locations := []string{
-		"./syscgo",                          // Current directory
-		"../syscgo",                         // Parent directory
-		"/usr/local/bin/syscgo",             // System install
-		"/usr/bin/syscgo",                   // System install
+		"./syscgo",              // Current directory
+		"../syscgo",             // Parent directory
+		"/usr/local/bin/syscgo", // System install
+		"/usr/bin/syscgo",       // System install
 		filepath.Join(os.Getenv("HOME"), "sysc-Go", "syscgo"), // Home directory
 	}
 

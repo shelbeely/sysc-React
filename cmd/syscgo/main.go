@@ -23,27 +23,27 @@ func wrapText(text string, width int) string {
 	if width <= 0 {
 		width = 80
 	}
-	
+
 	lines := strings.Split(text, "\n")
 	var wrappedLines []string
-	
+
 	for _, line := range lines {
 		// If line is empty, keep it
 		if strings.TrimSpace(line) == "" {
 			wrappedLines = append(wrappedLines, "")
 			continue
 		}
-		
+
 		// If line fits, keep it
 		if len(line) <= width {
 			wrappedLines = append(wrappedLines, line)
 			continue
 		}
-		
+
 		// Wrap long lines
 		words := strings.Fields(line)
 		currentLine := ""
-		
+
 		for _, word := range words {
 			// If word itself is longer than width, break it
 			if len(word) > width {
@@ -59,14 +59,14 @@ func wrapText(text string, width int) string {
 				currentLine = word
 				continue
 			}
-			
+
 			// Try adding word to current line
 			testLine := currentLine
 			if testLine != "" {
 				testLine += " "
 			}
 			testLine += word
-			
+
 			if len(testLine) <= width {
 				currentLine = testLine
 			} else {
@@ -77,13 +77,13 @@ func wrapText(text string, width int) string {
 				currentLine = word
 			}
 		}
-		
+
 		// Add remaining line
 		if currentLine != "" {
 			wrappedLines = append(wrappedLines, currentLine)
 		}
 	}
-	
+
 	return strings.Join(wrappedLines, "\n")
 }
 
@@ -104,9 +104,22 @@ func setupKeyboardInterrupt() chan bool {
 
 		buf := make([]byte, 3)
 		for {
+			// Set read deadline to allow periodic checking if we should exit
+			os.Stdin.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
+
 			n, err := os.Stdin.Read(buf)
 			if err != nil {
-				return
+				// Check if it's just a timeout
+				if os.IsTimeout(err) {
+					// Check if quit channel is closed (parent exited)
+					select {
+					case <-quit:
+						return
+					default:
+						continue // Keep reading
+					}
+				}
+				return // Other error, exit
 			}
 
 			// Check for ESC (27), Q (113/81), or Ctrl+C (3)
@@ -455,7 +468,7 @@ func runRainArt(width, height int, theme string, file string, frames int) {
 func runPour(width, height int, theme string, file string, frames int) {
 	// Get theme colors for pour effect
 	var gradientStops []string
-	
+
 	switch theme {
 	case "dracula":
 		gradientStops = []string{"#ff79c6", "#bd93f9", "#ffffff"}
@@ -493,10 +506,10 @@ func runPour(width, height int, theme string, file string, frames int) {
 			text = string(data)
 		}
 	}
-	
+
 	// Wrap text to fit terminal width (leave margin for centering)
 	text = wrapText(text, width-10)
-	
+
 	// Create pour effect with sample text centered in terminal
 	config := animations.PourConfig{
 		Width:                  width,
@@ -512,7 +525,7 @@ func runPour(width, height int, theme string, file string, frames int) {
 		FinalGradientFrames:    5,
 		FinalGradientDirection: "horizontal",
 	}
-	
+
 	pour := animations.NewPourEffect(config)
 
 	quit := setupKeyboardInterrupt()
@@ -540,7 +553,7 @@ func runPour(width, height int, theme string, file string, frames int) {
 func runPrint(width, height int, theme string, file string, frames int) {
 	// Get theme colors for print effect
 	var gradientStops []string
-	
+
 	switch theme {
 	case "dracula":
 		gradientStops = []string{"#ff79c6", "#bd93f9", "#8be9fd"}
@@ -578,10 +591,10 @@ func runPrint(width, height int, theme string, file string, frames int) {
 			text = string(data)
 		}
 	}
-	
+
 	// Wrap text to fit terminal width (leave margin for centering)
 	text = wrapText(text, width-10)
-	
+
 	// Create print effect configuration
 	config := animations.PrintConfig{
 		Width:           width,
@@ -593,7 +606,7 @@ func runPrint(width, height int, theme string, file string, frames int) {
 		TrailSymbols:    []string{"░", "▒", "▓"},
 		GradientStops:   gradientStops,
 	}
-	
+
 	print := animations.NewPrintEffect(config)
 
 	quit := setupKeyboardInterrupt()
@@ -902,16 +915,16 @@ func runRingText(width, height int, theme string, file string, frames int) {
 		Height:              height,
 		Text:                text,
 		RingColors:          ringColors,
-		RingGap:             0.1,                        // Like TTE default
+		RingGap:             0.1,                      // Like TTE default
 		SpinSpeedRange:      [2]float64{0.025, 0.075}, // Min-max range like TTE (0.25-1.0 mapped to radians)
-		SpinDuration:        200,                       // Frames per spin rotation
-		DisperseDuration:    200,                       // Frames in dispersed state
-		SpinDisperseCycles:  3,                         // 3 cycles like TTE default
-		TransitionFrames:    60,                        // Transition between states (reduced for faster animation)
-		StaticFrames:        30,                        // Initial static display (reduced to start ring animation sooner)
+		SpinDuration:        200,                      // Frames per spin rotation
+		DisperseDuration:    200,                      // Frames in dispersed state
+		SpinDisperseCycles:  3,                        // 3 cycles like TTE default
+		TransitionFrames:    60,                       // Transition between states (reduced for faster animation)
+		StaticFrames:        30,                       // Initial static display (reduced to start ring animation sooner)
 		FinalGradientStops:  finalGradientStops,
 		FinalGradientSteps:  12,
-		StaticGradientStops: ringColors,                // Use ring colors for static gradient
+		StaticGradientStops: ringColors,                    // Use ring colors for static gradient
 		StaticGradientDir:   animations.GradientHorizontal, // Left-to-right gradient
 	}
 

@@ -18,18 +18,18 @@ type BeamTextEffect struct {
 	display bool // Display mode: complete once and hold (true) or loop continuously (false)
 
 	// Configuration
-	beamRowSymbols      []rune
-	beamColumnSymbols   []rune
-	beamDelay           int
-	beamRowSpeedRange   [2]int
+	beamRowSymbols       []rune
+	beamColumnSymbols    []rune
+	beamDelay            int
+	beamRowSpeedRange    [2]int
 	beamColumnSpeedRange [2]int
-	beamGradientStops   []string
-	beamGradientSteps   int
-	beamGradientFrames  int
-	finalGradientStops  []string
-	finalGradientSteps  int
-	finalGradientFrames int
-	finalWipeSpeed      int
+	beamGradientStops    []string
+	beamGradientSteps    int
+	beamGradientFrames   int
+	finalGradientStops   []string
+	finalGradientSteps   int
+	finalGradientFrames  int
+	finalWipeSpeed       int
 
 	// Character data
 	chars []BeamCharacter

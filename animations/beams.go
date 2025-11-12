@@ -17,18 +17,18 @@ type BeamsEffect struct {
 	height int
 
 	// Configuration
-	beamRowSymbols      []rune
-	beamColumnSymbols   []rune
-	beamDelay           int
-	beamRowSpeedRange   [2]int
+	beamRowSymbols       []rune
+	beamColumnSymbols    []rune
+	beamDelay            int
+	beamRowSpeedRange    [2]int
 	beamColumnSpeedRange [2]int
-	beamGradientStops   []string
-	beamGradientSteps   int
-	beamGradientFrames  int
-	finalGradientStops  []string
-	finalGradientSteps  int
-	finalGradientFrames int
-	finalWipeSpeed      int
+	beamGradientStops    []string
+	beamGradientSteps    int
+	beamGradientFrames   int
+	finalGradientStops   []string
+	finalGradientSteps   int
+	finalGradientFrames  int
+	finalWipeSpeed       int
 
 	// Character data
 	chars []BeamCharacter
@@ -58,20 +58,20 @@ type BeamCharacter struct {
 	y        int
 
 	// Animation state
-	visible         bool
-	currentSymbol   rune
-	currentColor    string
-	sceneActive     string // "beam_row", "beam_column", or "brighten"
-	sceneFrame      int
-	beamGradient    []string
-	fadeGradient    []string
+	visible          bool
+	currentSymbol    rune
+	currentColor     string
+	sceneActive      string // "beam_row", "beam_column", or "brighten"
+	sceneFrame       int
+	beamGradient     []string
+	fadeGradient     []string
 	brightenGradient []string
 }
 
 // BeamGroup represents a group of characters for beam animation
 type BeamGroup struct {
 	charIndices        []int
-	direction          string  // "row" or "column"
+	direction          string // "row" or "column"
 	speed              float64
 	nextCharCounter    float64
 	currentCharIndex   int

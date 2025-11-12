@@ -42,6 +42,30 @@ type Model struct {
 	saveError        string // Error message from save operation
 	savingInProgress bool
 
+	// BIT Editor mode for banner text creation
+	bitEditorMode     bool
+	bitTextInput      textinput.Model
+	bitFonts          []string // Available font names
+	bitSelectedFont   int      // Currently selected font index
+	bitCurrentFont    *BitFont // Loaded font
+	bitAlignment      int      // 0=left, 1=center, 2=right
+	bitColor          string   // Hex color
+	bitScale          float64  // 0.5, 1.0, 2.0, 3.0, 4.0
+	bitShadow         bool     // Shadow enabled
+	bitShadowOffsetX  int      // Shadow horizontal offset
+	bitShadowOffsetY  int      // Shadow vertical offset
+	bitShadowStyle    int      // 0=light, 1=medium, 2=dark
+	bitCharSpacing    int      // Character spacing (0-10)
+	bitWordSpacing    int      // Word spacing (0-20)
+	bitLineSpacing    int      // Line spacing (0-10)
+	bitUseGradient    bool     // Gradient enabled
+	bitGradientColor  string   // Gradient end color (hex)
+	bitGradientDir    int      // 0=up-down, 1=down-up, 2=left-right, 3=right-left
+	bitPreviewLines   []string // Rendered preview output
+	bitFocusedControl int      // Which control has focus
+	bitColorPicker    bool     // Color picker open
+	bitShowFontList   bool     // Font browser open
+
 	// Styles
 	styles Styles
 }
@@ -64,8 +88,8 @@ func NewModel() Model {
 	if len(files) == 0 {
 		files = []string{"SYSC.txt"} // fallback
 	}
-	// Prepend "Custom text" option to files list
-	files = append([]string{"Custom text"}, files...)
+	// Prepend editor options to files list
+	files = append([]string{"BIT Text Editor", "Custom text"}, files...)
 
 	// Initialize textarea for editor mode
 	ta := textarea.New()
@@ -81,6 +105,28 @@ func NewModel() Model {
 	fi.Placeholder = "filename.txt"
 	fi.CharLimit = 256
 	fi.Width = 40
+
+	// Initialize BIT text input
+	bitInput := textinput.New()
+	bitInput.Placeholder = "Enter text here..."
+	bitInput.CharLimit = 100
+	bitInput.Width = 40
+	bitInput.Focus()
+
+	// Discover available .bit fonts
+	bitFonts := ListAvailableFonts()
+	if len(bitFonts) == 0 {
+		bitFonts = []string{"block"} // fallback
+	}
+
+	// Load default font
+	var defaultFont *BitFont
+	if len(bitFonts) > 0 {
+		fontPath, err := FindFontPath(bitFonts[0])
+		if err == nil {
+			defaultFont, _ = LoadBitFont(fontPath)
+		}
+	}
 
 	return Model{
 		animations: []string{
@@ -113,7 +159,7 @@ func NewModel() Model {
 			"dark",
 			"default",
 		},
-		files:             files,
+		files: files,
 		durations: []string{
 			"5s",
 			"10s",
@@ -123,7 +169,7 @@ func NewModel() Model {
 		},
 		selectedAnimation: 0,
 		selectedTheme:     0,
-		selectedFile:      1, // Default to SYSC.txt (index 1 after prepending "Custom text")
+		selectedFile:      2, // Default to SYSC.txt (index 2 after prepending both editors)
 		selectedDuration:  4, // infinite by default
 		focusedSelector:   0,
 		editorMode:        false,
@@ -134,6 +180,29 @@ func NewModel() Model {
 		exportTarget:      0,
 		saveError:         "",
 		savingInProgress:  false,
+		// BIT Editor defaults
+		bitEditorMode:     false,
+		bitTextInput:      bitInput,
+		bitFonts:          bitFonts,
+		bitSelectedFont:   0,
+		bitCurrentFont:    defaultFont,
+		bitAlignment:      1, // center
+		bitColor:          "#88C0D0",
+		bitScale:          1.0,
+		bitShadow:         false,
+		bitShadowOffsetX:  1,
+		bitShadowOffsetY:  1,
+		bitShadowStyle:    0,
+		bitCharSpacing:    1,
+		bitWordSpacing:    2,
+		bitLineSpacing:    1,
+		bitUseGradient:    false,
+		bitGradientColor:  "#FFFFFF",
+		bitGradientDir:    0,
+		bitPreviewLines:   []string{},
+		bitFocusedControl: 0,
+		bitColorPicker:    false,
+		bitShowFontList:   false,
 		styles:            NewStyles(),
 	}
 }
