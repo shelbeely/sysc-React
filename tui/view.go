@@ -106,7 +106,7 @@ func (m Model) renderSelector(index int, label, value string) string {
 	// Check if this is the File selector and current animation doesn't need a file
 	isFileSelector := (index == 2)
 	animName := m.animations[m.selectedAnimation]
-	needsFile := animName == "matrix-art" || animName == "rain-art" || animName == "pour" ||
+	needsFile := animName == "fire-text" || animName == "matrix-art" || animName == "rain-art" || animName == "pour" ||
 		animName == "print" || animName == "beam-text" || animName == "ring-text" || animName == "blackhole-text"
 
 	// Disable file selector for non-text animations
@@ -185,6 +185,8 @@ func (m Model) renderGuidance() string {
 	switch animName {
 	case "fire":
 		guidance = "Fire effect"
+	case "fire-text":
+		guidance = "Fire with ASCII art"
 	case "matrix", "matrix-art":
 		guidance = "Matrix rain"
 	case "rain", "rain-art":

@@ -213,7 +213,7 @@ func showHelp() {
 	fmt.Println("  -display           Hold at final state (beam-text only)")
 	fmt.Println()
 	fmt.Println("Effects:")
-	fmt.Println("  fire, matrix, matrix-art, rain, rain-art, fireworks")
+	fmt.Println("  fire, fire-text, matrix, matrix-art, rain, rain-art, fireworks")
 	fmt.Println("  pour, print, beams, beam-text, ring-text, blackhole, aquarium")
 	fmt.Println()
 	fmt.Println("Themes:")
@@ -222,6 +222,7 @@ func showHelp() {
 	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Println("  syscgo -effect fire -theme nord -duration 30")
+	fmt.Println("  syscgo -effect fire-text -file SYSC.txt -theme dracula -duration 0")
 	fmt.Println("  syscgo -effect aquarium -theme dracula -duration 0")
 	fmt.Println("  syscgo -effect beam-text -file art.txt -auto -display -theme nord")
 	fmt.Println()
@@ -266,6 +267,8 @@ func main() {
 	switch *effect {
 	case "fire":
 		runFire(width, height, *theme, frames)
+	case "fire-text":
+		runFireText(width, height, *theme, *file, frames)
 	case "matrix":
 		runMatrix(width, height, *theme, frames)
 	case "matrix-art":
@@ -295,7 +298,7 @@ func main() {
 		runAquarium(width, height, *theme, frames)
 	default:
 		fmt.Printf("Unknown effect: %s\n", *effect)
-		fmt.Println("Available: fire, matrix, rain, fireworks, pour, print, beams, beam-text, ring-text, blackhole, aquarium")
+		fmt.Println("Available: fire, fire-text, matrix, rain, fireworks, pour, print, beams, beam-text, ring-text, blackhole, aquarium")
 		os.Exit(1)
 	}
 }
@@ -318,6 +321,39 @@ func runFire(width, height int, theme string, frames int) {
 
 		fire.Update()
 		output := fire.Render()
+
+		fmt.Print("\033[H") // Move cursor to top
+		fmt.Print(output)
+		os.Stdout.Sync() // Flush output buffer immediately
+		time.Sleep(50 * time.Millisecond)
+		frame++
+	}
+}
+
+func runFireText(width, height int, theme string, file string, frames int) {
+	// Get theme palette for fire
+	palette := animations.GetFirePalette(theme)
+
+	// Read text from file or use default SYSC.txt
+	text := readTextFile(file)
+
+	// Create fire-text effect
+	fireText := animations.NewFireTextEffect(width, height, palette, text)
+
+	quit := setupKeyboardInterrupt()
+	defer close(quit)
+
+	frame := 0
+	for frames == 0 || frame < frames {
+		// Check for user exit
+		select {
+		case <-quit:
+			return
+		default:
+		}
+
+		fireText.Update()
+		output := fireText.Render()
 
 		fmt.Print("\033[H") // Move cursor to top
 		fmt.Print(output)
