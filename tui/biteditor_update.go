@@ -43,14 +43,18 @@ func (m Model) handleBitEditorKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case "f", "F":
-		// Open font browser
-		m.bitShowFontList = true
-		return m, nil
+		// Open font browser (only when text input is not focused)
+		if m.bitFocusedControl != 0 {
+			m.bitShowFontList = true
+			return m, nil
+		}
 
 	case "c", "C":
-		// Open color picker
-		m.bitColorPicker = true
-		return m, nil
+		// Open color picker (only when text input is not focused)
+		if m.bitFocusedControl != 0 {
+			m.bitColorPicker = true
+			return m, nil
+		}
 
 	case "tab":
 		// Next control
@@ -103,7 +107,21 @@ func (m Model) handleBitEditorKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleBitControlDown(), nil
 
 	default:
-		// Update text input if focused
+		// Auto-focus text input when typing (excluding single-char special keys)
+		// This provides better UX - user can just start typing without focusing first
+		key := msg.String()
+		isTyping := len(key) == 1 || key == "space" || key == "backspace" || key == "delete"
+
+		if isTyping {
+			// Auto-focus text input
+			m.bitFocusedControl = 0
+			m.bitTextInput.Focus()
+			m.bitTextInput, cmd = m.bitTextInput.Update(msg)
+			m = m.updateBitPreview()
+			return m, cmd
+		}
+
+		// Update text input if already focused
 		if m.bitFocusedControl == 0 {
 			m.bitTextInput, cmd = m.bitTextInput.Update(msg)
 			m = m.updateBitPreview()

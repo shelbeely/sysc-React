@@ -81,12 +81,13 @@ func (m Model) renderBitTextInput() string {
 		Width(m.width - 8)
 
 	if m.bitFocusedControl == 0 {
-		inputStyle = inputStyle.BorderForeground(lipgloss.Color("#A3BE8C"))
+		inputStyle = inputStyle.
+			Background(lipgloss.Color("#88C0D0")).
+			Foreground(lipgloss.Color("#2E3440")).
+			Bold(true)
 	}
 
-	label := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#88C0D0")).
-		Render("Text: ")
+	label := "Text: "
 
 	return inputStyle.Render(label + m.bitTextInput.View())
 }
@@ -126,11 +127,16 @@ func (m Model) renderBitControls() string {
 func (m Model) renderFontControl() string {
 	focused := m.bitFocusedControl == 1
 	style := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#88C0D0")).
 		Padding(0, 1).
 		Width(20)
 
 	if focused {
-		style = style.BorderForeground(lipgloss.Color("#A3BE8C"))
+		style = style.
+			Background(lipgloss.Color("#88C0D0")).
+			Foreground(lipgloss.Color("#2E3440")).
+			Bold(true)
 	}
 
 	fontName := "none"
@@ -138,13 +144,8 @@ func (m Model) renderFontControl() string {
 		fontName = m.bitCurrentFont.Name
 	}
 
-	label := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#88C0D0")).
-		Render("Font: ")
-
-	value := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#ECEFF4")).
-		Render(fmt.Sprintf("%s (%d/%d)", fontName, m.bitSelectedFont+1, len(m.bitFonts)))
+	label := "Font: "
+	value := fmt.Sprintf("%s (%d/%d)", fontName, m.bitSelectedFont+1, len(m.bitFonts))
 
 	return style.Render(label + "\n" + value)
 }
@@ -153,29 +154,27 @@ func (m Model) renderFontControl() string {
 func (m Model) renderAlignmentControl() string {
 	focused := m.bitFocusedControl == 2
 	style := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#A3BE8C")).
 		Padding(0, 1).
 		Width(18)
 
 	if focused {
-		style = style.BorderForeground(lipgloss.Color("#A3BE8C"))
+		style = style.
+			Background(lipgloss.Color("#A3BE8C")).
+			Foreground(lipgloss.Color("#2E3440")).
+			Bold(true)
 	}
 
-	label := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#88C0D0")).
-		Render("Align: ")
+	label := "Align: "
 
 	buttons := []string{}
 	alignments := []string{"[L]", "[C]", "[R]"}
 	for i, text := range alignments {
 		if i == m.bitAlignment {
-			buttons = append(buttons, lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#A3BE8C")).
-				Bold(true).
-				Render(text))
+			buttons = append(buttons, text)
 		} else {
-			buttons = append(buttons, lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#4C566A")).
-				Render(text))
+			buttons = append(buttons, text)
 		}
 	}
 
@@ -186,47 +185,42 @@ func (m Model) renderAlignmentControl() string {
 func (m Model) renderColorControl() string {
 	focused := m.bitFocusedControl == 3
 	style := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#D08770")).
 		Padding(0, 1).
 		Width(20)
 
 	if focused {
-		style = style.BorderForeground(lipgloss.Color("#A3BE8C"))
+		style = style.
+			Background(lipgloss.Color("#D08770")).
+			Foreground(lipgloss.Color("#2E3440")).
+			Bold(true)
 	}
 
-	label := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#88C0D0")).
-		Render("Color: ")
+	label := "Color: "
+	value := "███ " + m.bitColor
 
-	// Show color swatch
-	swatch := lipgloss.NewStyle().
-		Foreground(lipgloss.Color(m.bitColor)).
-		Render("███ ")
-
-	value := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#ECEFF4")).
-		Render(m.bitColor)
-
-	return style.Render(label + "\n" + swatch + value)
+	return style.Render(label + "\n" + value)
 }
 
 // renderScaleControl renders scale selector
 func (m Model) renderScaleControl() string {
 	focused := m.bitFocusedControl == 4
 	style := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#EBCB8B")).
 		Padding(0, 1).
 		Width(18)
 
 	if focused {
-		style = style.BorderForeground(lipgloss.Color("#A3BE8C"))
+		style = style.
+			Background(lipgloss.Color("#EBCB8B")).
+			Foreground(lipgloss.Color("#2E3440")).
+			Bold(true)
 	}
 
-	label := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#88C0D0")).
-		Render("Scale: ")
-
-	value := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#ECEFF4")).
-		Render(fmt.Sprintf("%.1fx", m.bitScale))
+	label := "Scale: "
+	value := fmt.Sprintf("%.1fx", m.bitScale)
 
 	return style.Render(label + "\n" + value)
 }
@@ -235,47 +229,46 @@ func (m Model) renderScaleControl() string {
 func (m Model) renderShadowControl() string {
 	focused := m.bitFocusedControl == 5
 	style := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#B48EAD")).
 		Padding(0, 1).
 		Width(20)
 
 	if focused {
-		style = style.BorderForeground(lipgloss.Color("#A3BE8C"))
+		style = style.
+			Background(lipgloss.Color("#B48EAD")).
+			Foreground(lipgloss.Color("#2E3440")).
+			Bold(true)
 	}
 
-	label := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#88C0D0")).
-		Render("Shadow: ")
+	label := "Shadow: "
 
 	status := "Off"
 	if m.bitShadow {
 		status = fmt.Sprintf("On (%d,%d)", m.bitShadowOffsetX, m.bitShadowOffsetY)
 	}
 
-	value := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#ECEFF4")).
-		Render(status)
-
-	return style.Render(label + "\n" + value)
+	return style.Render(label + "\n" + status)
 }
 
 // renderSpacingControl renders spacing controls
 func (m Model) renderSpacingControl() string {
 	focused := m.bitFocusedControl == 6
 	style := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#5E81AC")).
 		Padding(0, 1).
 		Width(20)
 
 	if focused {
-		style = style.BorderForeground(lipgloss.Color("#A3BE8C"))
+		style = style.
+			Background(lipgloss.Color("#5E81AC")).
+			Foreground(lipgloss.Color("#ECEFF4")).
+			Bold(true)
 	}
 
-	label := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#88C0D0")).
-		Render("Spacing: ")
-
-	value := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#ECEFF4")).
-		Render(fmt.Sprintf("C:%d W:%d L:%d", m.bitCharSpacing, m.bitWordSpacing, m.bitLineSpacing))
+	label := "Spacing: "
+	value := fmt.Sprintf("C:%d W:%d L:%d", m.bitCharSpacing, m.bitWordSpacing, m.bitLineSpacing)
 
 	return style.Render(label + "\n" + value)
 }
