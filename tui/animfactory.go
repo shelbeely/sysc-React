@@ -37,10 +37,8 @@ func (m *Model) createAnimation() animations.Animation {
 	themeName := m.themes[m.selectedTheme]
 	fileName := m.files[m.selectedFile]
 
-	width := m.canvasHeight * 2 // Rough estimate for width based on height
-	if width > m.width-10 {
-		width = m.width - 10
-	}
+	// Use full available width for viewport
+	width := m.width - 10 // Leave small margin for UI elements
 	height := m.canvasHeight
 
 	// Handle editor modes
