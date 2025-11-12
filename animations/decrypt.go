@@ -101,12 +101,12 @@ func (d *DecryptEffect) init() {
 		for charIdx, char := range line {
 			finalX := startX + charIdx
 			finalY := startY + lineIdx
-			
+
 			// Skip characters that would be off-screen
 			if finalX >= d.width || finalY >= d.height {
 				continue
 			}
-			
+
 			d.chars = append(d.chars, DecryptCharacter{
 				original: char,
 				current:  char,

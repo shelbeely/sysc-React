@@ -60,7 +60,7 @@ type RingTextEffect struct {
 	finalGradient       []string
 	staticGradientStops []string
 	staticGradientDir   GradientDirection
-	staticGradient      []string          // Pre-computed static gradient
+	staticGradient      []string         // Pre-computed static gradient
 	ringGradients       map[int][]string // 8-step gradients for each ring
 
 	// Character data
@@ -688,7 +688,7 @@ func (e *RingTextEffect) applyStaticGradient() {
 			// Center outward
 			dx := float64(e.chars[i].x) - e.centerX
 			dy := float64(e.chars[i].y) - e.centerY
-			maxDist := math.Sqrt(textWidth*textWidth + textHeight*textHeight) / 2.0
+			maxDist := math.Sqrt(textWidth*textWidth+textHeight*textHeight) / 2.0
 			dist := math.Sqrt(dx*dx + dy*dy)
 			gradientPos = math.Min(dist/maxDist, 1.0)
 

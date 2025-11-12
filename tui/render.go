@@ -349,7 +349,6 @@ func applyAlignmentToTextLine(lineRendered []string, maxTextLineWidth int, align
 // ANSI escape sequence regex for accurate stripping
 var ansiRegex = regexp.MustCompile(`\x1b\[[0-9;]*m`)
 
-
 // stripEmptyLines removes empty lines from both the top and bottom of rendered text
 // This ensures consistent spacing behavior regardless of whether characters have descenders
 func stripEmptyLines(lines []string) []string {

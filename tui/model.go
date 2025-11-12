@@ -45,26 +45,26 @@ type Model struct {
 	// BIT Editor mode for banner text creation
 	bitEditorMode     bool
 	bitTextInput      textinput.Model
-	bitFonts          []string  // Available font names
-	bitSelectedFont   int       // Currently selected font index
-	bitCurrentFont    *BitFont  // Loaded font
-	bitAlignment      int       // 0=left, 1=center, 2=right
-	bitColor          string    // Hex color
-	bitScale          float64   // 0.5, 1.0, 2.0, 3.0, 4.0
-	bitShadow         bool      // Shadow enabled
-	bitShadowOffsetX  int       // Shadow horizontal offset
-	bitShadowOffsetY  int       // Shadow vertical offset
-	bitShadowStyle    int       // 0=light, 1=medium, 2=dark
-	bitCharSpacing    int       // Character spacing (0-10)
-	bitWordSpacing    int       // Word spacing (0-20)
-	bitLineSpacing    int       // Line spacing (0-10)
-	bitUseGradient    bool      // Gradient enabled
-	bitGradientColor  string    // Gradient end color (hex)
-	bitGradientDir    int       // 0=up-down, 1=down-up, 2=left-right, 3=right-left
-	bitPreviewLines   []string  // Rendered preview output
-	bitFocusedControl int       // Which control has focus
-	bitColorPicker    bool      // Color picker open
-	bitShowFontList   bool      // Font browser open
+	bitFonts          []string // Available font names
+	bitSelectedFont   int      // Currently selected font index
+	bitCurrentFont    *BitFont // Loaded font
+	bitAlignment      int      // 0=left, 1=center, 2=right
+	bitColor          string   // Hex color
+	bitScale          float64  // 0.5, 1.0, 2.0, 3.0, 4.0
+	bitShadow         bool     // Shadow enabled
+	bitShadowOffsetX  int      // Shadow horizontal offset
+	bitShadowOffsetY  int      // Shadow vertical offset
+	bitShadowStyle    int      // 0=light, 1=medium, 2=dark
+	bitCharSpacing    int      // Character spacing (0-10)
+	bitWordSpacing    int      // Word spacing (0-20)
+	bitLineSpacing    int      // Line spacing (0-10)
+	bitUseGradient    bool     // Gradient enabled
+	bitGradientColor  string   // Gradient end color (hex)
+	bitGradientDir    int      // 0=up-down, 1=down-up, 2=left-right, 3=right-left
+	bitPreviewLines   []string // Rendered preview output
+	bitFocusedControl int      // Which control has focus
+	bitColorPicker    bool     // Color picker open
+	bitShowFontList   bool     // Font browser open
 
 	// Styles
 	styles Styles
@@ -159,7 +159,7 @@ func NewModel() Model {
 			"dark",
 			"default",
 		},
-		files:             files,
+		files: files,
 		durations: []string{
 			"5s",
 			"10s",

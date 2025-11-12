@@ -156,7 +156,7 @@ func (p *PrintEffect) Render() string {
 			if x >= p.width {
 				break
 			}
-			
+
 			// Calculate gradient color
 			color := p.getGradientColor(float64(charIdx) / float64(len(line)))
 			style := lipgloss.NewStyle().Foreground(lipgloss.Color(color))
@@ -170,7 +170,7 @@ func (p *PrintEffect) Render() string {
 		if y < p.height {
 			currentLineText := p.lines[p.currentLine]
 			runes := []rune(currentLineText)
-			
+
 			startX := (p.width - len(currentLineText)) / 2
 			if startX < 0 {
 				startX = 0
@@ -184,7 +184,7 @@ func (p *PrintEffect) Render() string {
 					if x >= p.width {
 						break
 					}
-					
+
 					color := p.getGradientColor(float64(charIdx) / float64(len(currentLineText)))
 					style := lipgloss.NewStyle().Foreground(lipgloss.Color(color))
 					buffer[y][x] = style.Render(string(char))

@@ -11,22 +11,22 @@ import (
 
 // BlackholeConfig holds the configuration for the Blackhole effect
 type BlackholeConfig struct {
-	Width              int
-	Height             int
-	Text               string
-	BlackholeColor     string   // Border color for singularity
-	StarColors         []string // Colors for post-explosion stars
-	FinalGradientStops []string // Gradient for final text state
-	FinalGradientSteps int      // Number of gradient steps
-	FinalGradientDir   GradientDirection
+	Width               int
+	Height              int
+	Text                string
+	BlackholeColor      string   // Border color for singularity
+	StarColors          []string // Colors for post-explosion stars
+	FinalGradientStops  []string // Gradient for final text state
+	FinalGradientSteps  int      // Number of gradient steps
+	FinalGradientDir    GradientDirection
 	StaticGradientStops []string // Gradient for static ASCII
 	StaticGradientDir   GradientDirection
-	FormingFrames      int // Frames for border formation
-	ConsumingFrames    int // Frames for consumption
-	CollapsingFrames   int // Frames for border collapse
-	ExplodingFrames    int // Frames for explosion scatter
-	ReturningFrames    int // Frames for return to text
-	StaticFrames       int // Frames to display static text initially
+	FormingFrames       int // Frames for border formation
+	ConsumingFrames     int // Frames for consumption
+	CollapsingFrames    int // Frames for border collapse
+	ExplodingFrames     int // Frames for explosion scatter
+	ReturningFrames     int // Frames for return to text
+	StaticFrames        int // Frames to display static text initially
 }
 
 // BlackholeEffect represents the multi-phase blackhole animation
@@ -36,19 +36,19 @@ type BlackholeEffect struct {
 	text   string
 
 	// Blackhole configuration
-	blackholeColor     string
-	starColors         []string
-	finalGradientStops []string
-	finalGradientSteps int
-	finalGradientDir   GradientDirection
+	blackholeColor      string
+	starColors          []string
+	finalGradientStops  []string
+	finalGradientSteps  int
+	finalGradientDir    GradientDirection
 	staticGradientStops []string
 	staticGradientDir   GradientDirection
-	formingFrames      int
-	consumingFrames    int
-	collapsingFrames   int
-	explodingFrames    int
-	returningFrames    int
-	staticFrames       int
+	formingFrames       int
+	consumingFrames     int
+	collapsingFrames    int
+	explodingFrames     int
+	returningFrames     int
+	staticFrames        int
 
 	// Gradients
 	finalGradient  []string
@@ -56,13 +56,13 @@ type BlackholeEffect struct {
 	starGradient   []string
 
 	// Character data
-	chars          []BlackholeCharacter
-	borderChars    []BorderCharacter
-	centerX        float64
-	centerY        float64
+	chars           []BlackholeCharacter
+	borderChars     []BorderCharacter
+	centerX         float64
+	centerY         float64
 	blackholeRadius float64
-	rng            *rand.Rand
-	frameCount     int
+	rng             *rand.Rand
+	frameCount      int
 
 	// Animation state
 	phase              string // "static", "forming", "consuming", "collapsing", "exploding", "returning", "hold"
@@ -730,20 +730,20 @@ func (e *BlackholeEffect) Render() string {
 
 	// Border animation removed - doesn't work well with ASCII characters
 	/*
-	// Draw border
-	for _, borderChar := range e.borderChars {
-		if !borderChar.visible {
-			continue
-		}
+		// Draw border
+		for _, borderChar := range e.borderChars {
+			if !borderChar.visible {
+				continue
+			}
 
-		x := int(math.Round(borderChar.currentX))
-		y := int(math.Round(borderChar.currentY))
+			x := int(math.Round(borderChar.currentX))
+			y := int(math.Round(borderChar.currentY))
 
-		if x >= 0 && x < e.width && y >= 0 && y < e.height {
-			buffer[y][x] = borderChar.symbol
-			colors[y][x] = borderChar.currentColor
+			if x >= 0 && x < e.width && y >= 0 && y < e.height {
+				buffer[y][x] = borderChar.symbol
+				colors[y][x] = borderChar.currentColor
+			}
 		}
-	}
 	*/
 
 	// Build output (line-by-line like other effects)
