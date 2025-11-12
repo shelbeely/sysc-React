@@ -99,13 +99,23 @@ func setupKeyboardInterrupt() chan bool {
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		defer signal.Stop(sigChan) // Cleanup signal handler
-		select {
-		case <-sigChan:
-			quit <- true
-		case <-quit:
-			// Parent exited normally, cleanup
-			return
+		defer term.Restore(int(os.Stdin.Fd()), oldState)
+
+		buf := make([]byte, 3)
+		for {
+			n, err := os.Stdin.Read(buf)
+			if err != nil {
+				return
+			}
+
+			// Check for ESC (27), Q (113/81), or Ctrl+C (3)
+			if n > 0 {
+				key := buf[0]
+				if key == 27 || key == 113 || key == 81 || key == 3 {
+					quit <- true
+					return
+				}
+			}
 		}
 	}()
 
@@ -236,8 +246,9 @@ func runFire(width, height int, theme string, frames int) {
 		fire.Update()
 		output := fire.Render()
 
-		fmt.Print("\033[2J\033[H") // Clear screen and move cursor to top
+		fmt.Print("\033[H") // Move cursor to top
 		fmt.Print(output)
+		os.Stdout.Sync() // Flush output buffer immediately
 		time.Sleep(50 * time.Millisecond)
 		frame++
 	}
@@ -264,6 +275,7 @@ func runMatrix(width, height int, theme string, frames int) {
 
 		fmt.Print("\033[H") // Move cursor to top
 		fmt.Print(output)
+		os.Stdout.Sync() // Flush output buffer immediately
 		time.Sleep(50 * time.Millisecond)
 		frame++
 	}
@@ -324,6 +336,7 @@ func runMatrixArt(width, height int, theme string, file string, frames int) {
 
 		fmt.Print("\033[H")
 		fmt.Print(output)
+		os.Stdout.Sync() // Flush output buffer immediately
 		time.Sleep(50 * time.Millisecond)
 		frame++
 	}
@@ -350,6 +363,7 @@ func runFireworks(width, height int, theme string, frames int) {
 
 		fmt.Print("\033[H")
 		fmt.Print(output)
+		os.Stdout.Sync() // Flush output buffer immediately
 		time.Sleep(50 * time.Millisecond)
 		frame++
 	}
@@ -376,6 +390,7 @@ func runRain(width, height int, theme string, frames int) {
 
 		fmt.Print("\033[H")
 		fmt.Print(output)
+		os.Stdout.Sync() // Flush output buffer immediately
 		time.Sleep(50 * time.Millisecond)
 		frame++
 	}
@@ -436,6 +451,7 @@ func runRainArt(width, height int, theme string, file string, frames int) {
 
 		fmt.Print("\033[H")
 		fmt.Print(output)
+		os.Stdout.Sync() // Flush output buffer immediately
 		time.Sleep(50 * time.Millisecond)
 		frame++
 	}
@@ -521,6 +537,7 @@ func runPour(width, height int, theme string, file string, frames int) {
 
 		fmt.Print("\033[H")
 		fmt.Print(output)
+		os.Stdout.Sync() // Flush output buffer immediately
 		time.Sleep(50 * time.Millisecond)
 		frame++
 	}
@@ -602,6 +619,7 @@ func runPrint(width, height int, theme string, file string, frames int) {
 
 		fmt.Print("\033[H")
 		fmt.Print(output)
+		os.Stdout.Sync() // Flush output buffer immediately
 		time.Sleep(30 * time.Millisecond)
 		frame++
 	}
@@ -691,6 +709,7 @@ func runBeams(width, height int, theme string, frames int) {
 
 		fmt.Print("\033[H")
 		fmt.Print(output)
+		os.Stdout.Sync() // Flush output buffer immediately
 		time.Sleep(50 * time.Millisecond)
 		frame++
 	}
@@ -802,6 +821,7 @@ func runBeamText(width, height int, theme string, file string, auto bool, displa
 
 		fmt.Print("\033[H")
 		fmt.Print(output)
+		os.Stdout.Sync() // Flush output buffer immediately
 		time.Sleep(50 * time.Millisecond)
 		frame++
 	}
@@ -923,6 +943,7 @@ func runRingText(width, height int, theme string, file string, frames int) {
 
 		fmt.Print("\033[H")
 		fmt.Print(output)
+		os.Stdout.Sync() // Flush output buffer immediately
 		time.Sleep(50 * time.Millisecond)
 		frame++
 	}
@@ -1041,6 +1062,7 @@ func runBlackhole(width, height int, theme string, file string, frames int) {
 
 		fmt.Print("\033[H")
 		fmt.Print(output)
+		os.Stdout.Sync() // Flush output buffer immediately
 		time.Sleep(50 * time.Millisecond)
 		frame++
 	}

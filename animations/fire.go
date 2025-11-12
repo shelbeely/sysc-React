@@ -1,9 +1,10 @@
 package animations
 
 import (
-	"fmt"
 	"math/rand"
 	"strings"
+
+	"github.com/charmbracelet/lipgloss/v2"
 )
 
 // FireEffect implements PSX DOOM-style fire algorithm
@@ -62,7 +63,8 @@ func (f *FireEffect) spreadFire(from int) {
 
 	// Calculate target row
 	toY := to / f.width
-	hardLimit := f.height / 10 // Top 10% - absolute no-go zone
+	hardLimit := f.height / 10          // Top 10% - absolute no-go zone
+	fadeZoneStart := (f.height * 4) / 5 // Top 80% - start heavy decay
 
 	// Hard limit - no propagation into top 10%
 	if toY < hardLimit {
@@ -71,6 +73,12 @@ func (f *FireEffect) spreadFire(from int) {
 
 	// Random decay (0 or 1)
 	decay := rand.Intn(2)
+
+	// Aggressive decay in fade zone (between 10% and 80% from top)
+	if toY < fadeZoneStart {
+		// Add 2-6 extra decay for smooth gradient fade
+		decay += rand.Intn(5) + 2
+	}
 
 	newHeat := f.buffer[from] - decay
 	if newHeat < 0 {
@@ -92,42 +100,19 @@ func (f *FireEffect) Update() {
 	}
 }
 
-// hexToRGB converts hex color to RGB values
-func hexToRGB(hex string) (int, int, int) {
-	// Remove # if present
-	if len(hex) > 0 && hex[0] == '#' {
-		hex = hex[1:]
-	}
-
-	// Parse RGB
-	var r, g, b int
-	if len(hex) == 6 {
-		fmt.Sscanf(hex, "%02x%02x%02x", &r, &g, &b)
-	}
-	return r, g, b
-}
-
-// Render converts fire to colored block output with batched raw ANSI codes
+// Render converts the fire buffer to colored text output
 func (f *FireEffect) Render() string {
-	var output strings.Builder
+	var lines []string
 
+	// Render across full height - low heat at top will naturally fade to black/background
 	for y := 0; y < f.height; y++ {
-		var currentColor string
-		var batchChars strings.Builder
-
+		var line strings.Builder
 		for x := 0; x < f.width; x++ {
 			heat := f.buffer[y*f.width+x]
 
 			// Skip very low heat (natural fade to background)
 			if heat < 3 {
-				// Flush any pending batch
-				if batchChars.Len() > 0 {
-					r, g, b := hexToRGB(currentColor)
-					fmt.Fprintf(&output, "\033[38;2;%d;%d;%dm%s\033[0m", r, g, b, batchChars.String())
-					batchChars.Reset()
-					currentColor = ""
-				}
-				output.WriteRune(' ')
+				line.WriteString(" ")
 				continue
 			}
 
@@ -143,31 +128,16 @@ func (f *FireEffect) Render() string {
 			if colorIndex >= len(f.palette) {
 				colorIndex = len(f.palette) - 1
 			}
-			color := f.palette[colorIndex]
+			colorHex := f.palette[colorIndex]
 
-			// If color changed, flush current batch
-			if color != currentColor && batchChars.Len() > 0 {
-				r, g, b := hexToRGB(currentColor)
-				fmt.Fprintf(&output, "\033[38;2;%d;%d;%dm%s\033[0m", r, g, b, batchChars.String())
-				batchChars.Reset()
-			}
-
-			// Add char to batch
-			currentColor = color
-			batchChars.WriteRune(char)
+			// Render colored character
+			styled := lipgloss.NewStyle().
+				Foreground(lipgloss.Color(colorHex)).
+				Render(string(char))
+			line.WriteString(styled)
 		}
-
-		// Flush final batch for this row
-		if batchChars.Len() > 0 {
-			r, g, b := hexToRGB(currentColor)
-			fmt.Fprintf(&output, "\033[38;2;%d;%d;%dm%s\033[0m", r, g, b, batchChars.String())
-		}
-
-		// Add newline at end of row (but not after last row)
-		if y < f.height-1 {
-			output.WriteRune('\n')
-		}
+		lines = append(lines, line.String())
 	}
 
-	return output.String()
+	return strings.Join(lines, "\n")
 }
