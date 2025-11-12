@@ -60,6 +60,15 @@ func (f *FireEffect) spreadFire(from int) {
 		return
 	}
 
+	// Calculate target row
+	toY := to / f.width
+	hardLimit := f.height / 10 // Top 10% - absolute no-go zone
+
+	// Hard limit - no propagation into top 10%
+	if toY < hardLimit {
+		return
+	}
+
 	// Random decay (0 or 1)
 	decay := rand.Intn(2)
 
