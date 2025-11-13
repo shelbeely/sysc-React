@@ -23,6 +23,7 @@ type PrintEffect struct {
 	trailSymbols    []string
 	gradientStops   []string
 	complete        bool
+	maxLineWidth    int
 }
 
 // PrintConfig holds configuration for the print effect
@@ -67,7 +68,16 @@ func NewPrintEffect(config PrintConfig) *PrintEffect {
 		gradientStops = []string{"#ffffff"}
 	}
 
-	return &PrintEffect{
+	// Calculate max line width for proper ASCII art alignment
+	maxLineWidth := 0
+	for _, line := range lines {
+		lineLen := len([]rune(line))
+		if lineLen > maxLineWidth {
+			maxLineWidth = lineLen
+		}
+	}
+
+	effect := &PrintEffect{
 		width:           config.Width,
 		height:          config.Height,
 		text:            config.Text,
@@ -82,7 +92,10 @@ func NewPrintEffect(config PrintConfig) *PrintEffect {
 		trailSymbols:    trailSymbols,
 		gradientStops:   gradientStops,
 		complete:        false,
+		maxLineWidth:    maxLineWidth,
 	}
+
+	return effect
 }
 
 // Update advances the print effect animation
@@ -138,6 +151,12 @@ func (p *PrintEffect) Render() string {
 		startY = 0
 	}
 
+	// Calculate starting X position based on max line width (centers the entire block)
+	baseStartX := (p.width - p.maxLineWidth) / 2
+	if baseStartX < 0 {
+		baseStartX = 0
+	}
+
 	// Render revealed lines and current line being printed
 	for lineIdx := 0; lineIdx < len(p.revealed); lineIdx++ {
 		y := startY + lineIdx
@@ -146,10 +165,8 @@ func (p *PrintEffect) Render() string {
 		}
 
 		line := p.revealed[lineIdx]
-		startX := (p.width - len(line)) / 2
-		if startX < 0 {
-			startX = 0
-		}
+		// All lines start at the same X position for proper ASCII art alignment
+		startX := baseStartX
 
 		for charIdx, char := range line {
 			x := startX + charIdx
@@ -171,10 +188,8 @@ func (p *PrintEffect) Render() string {
 			currentLineText := p.lines[p.currentLine]
 			runes := []rune(currentLineText)
 
-			startX := (p.width - len(currentLineText)) / 2
-			if startX < 0 {
-				startX = 0
-			}
+			// All lines start at the same X position for proper ASCII art alignment
+			startX := baseStartX
 
 			// Render revealed portion of current line
 			if p.currentCol > 0 {

@@ -638,8 +638,8 @@ func runPrint(width, height int, theme string, file string, frames int) {
 		}
 	}
 
-	// Wrap text to fit terminal width (leave margin for centering)
-	text = wrapText(text, width-10)
+	// Don't wrap text - ASCII art needs to be preserved as-is
+	// The print effect will handle centering
 
 	// Create print effect configuration
 	config := animations.PrintConfig{
@@ -816,23 +816,14 @@ func runBeamText(width, height int, theme string, file string, auto bool, displa
 	}
 
 	// Read text from file
-	text := ""
-	if file != "" {
-		data, err := os.ReadFile(file)
-		if err == nil {
-			text = string(data)
-			// Only wrap text if not auto-sizing
-			if !auto {
-				text = wrapText(text, width-10)
-			}
-		} else {
-			fmt.Printf("Error reading file: %v\n", err)
-			os.Exit(1)
-		}
-	} else {
+	text := readTextFile(file)
+	if text == "" {
 		fmt.Println("beam-text effect requires -file flag")
 		os.Exit(1)
 	}
+
+	// Don't wrap text - ASCII art needs to be preserved as-is
+	// The beam-text effect will handle sizing based on auto flag
 
 	// Create beam text effect configuration
 	config := animations.BeamTextConfig{
