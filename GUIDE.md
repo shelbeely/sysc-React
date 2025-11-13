@@ -2,6 +2,10 @@
 
 Complete guide for using sysc-Go animation library in your Go applications.
 
+sysc-Go provides two types of effects:
+- **Animations**: Standalone effects that don't require text input (fire, matrix, rain, fireworks, beams, aquarium)
+- **Text Effects**: Effects that animate ASCII text and art (fire-text, matrix-art, rain-art, pour, print, beam-text, ring-text, blackhole)
+
 ## Table of Contents
 - [Quick Start](#quick-start)
 - [Installation](#installation)
@@ -20,6 +24,10 @@ go get github.com/Nomadcxx/sysc-Go
 # Try the CLI tool
 go install github.com/Nomadcxx/sysc-Go/cmd/syscgo@latest
 syscgo -effect fire -theme dracula
+
+# Or use the interactive TUI
+go install github.com/Nomadcxx/sysc-Go/cmd/syscgo-tui@latest
+syscgo-tui
 ```
 
 ## Installation
@@ -204,15 +212,16 @@ func main() {
 }
 ```
 
-### Blackhole Particles
+### Fire Text
 
-Full-screen particle animation with dramatic blackhole effect (no text required).
+ASCII text consumed by rising flames.
 
 ```go
 package main
 
 import (
     "fmt"
+    "os"
     "time"
     "github.com/Nomadcxx/sysc-Go/animations"
 )
@@ -220,30 +229,25 @@ import (
 func main() {
     width, height := 120, 40
 
-    config := animations.BlackholeConfig{
-        Width:               width,
-        Height:              height,
-        Text:                "", // Empty text triggers random particle generation
-        BlackholeColor:      "#ebfafa",
-        StarColors:          []string{"#37f499", "#04d1f9", "#a48cf2", "#f265b5", "#f16c75", "#f7c67f"},
-        FinalGradientStops:  []string{"#37f499", "#04d1f9", "#a48cf2"},
-        FinalGradientSteps:  12,
-        FinalGradientDir:    animations.GradientRadial,
-        StaticGradientStops: []string{"#37f499", "#04d1f9", "#a48cf2"},
-        StaticGradientDir:   animations.GradientRadial,
-        FormingFrames:       10,
-        ConsumingFrames:     60,
-        CollapsingFrames:    50,
-        ExplodingFrames:     100,
-        ReturningFrames:     120,
-        StaticFrames:        30,
+    // Read ASCII art from file
+    artData, _ := os.ReadFile("logo.txt")
+    artText := string(artData)
+
+    config := animations.FireTextConfig{
+        Width:         width,
+        Height:        height,
+        Text:          artText,
+        FireColors:    []string{"#f92672", "#fd971f", "#f4bf75", "#ffffe0"},
+        TextColor:     "#f8f8f2",
+        BurnSpeed:     2,
+        FlameHeight:   8,
     }
 
-    blackhole := animations.NewBlackholeEffect(config)
+    fireText := animations.NewFireTextEffect(config)
 
     for {
-        blackhole.Update()
-        output := blackhole.Render()
+        fireText.Update()
+        output := fireText.Render()
 
         fmt.Print("\033[H")
         fmt.Print(output)
@@ -299,7 +303,10 @@ func main() {
 
 ## Available Animations
 
-### Fire Effect
+### Animations (Standalone)
+Effects that don't require text input.
+
+#### Fire Effect
 - **Constructor**: `NewFireEffect(width, height int, palette []string) *FireEffect`
 - **Palette Function**: `GetFirePalette(theme string) []string`
 - **Methods**:
@@ -308,7 +315,7 @@ func main() {
   - `Resize(width, height int)` - Change dimensions
   - `UpdatePalette(palette []string)` - Change colors
 
-### Matrix Effect  
+#### Matrix Effect
 - **Constructor**: `NewMatrixEffect(width, height int, palette []string) *MatrixEffect`
 - **Palette Function**: `GetMatrixPalette(theme string) []string`
 - **Methods**:
@@ -316,7 +323,14 @@ func main() {
   - `Render() string` - Get current frame
   - `Resize(width, height int)` - Change dimensions
 
-### Fireworks Effect
+#### Rain Effect
+- **Constructor**: `NewRainEffect(width, height int, palette []string) *RainEffect`
+- **Palette Function**: `GetRainPalette(theme string) []string`
+- **Methods**:
+  - `Update(frame int)` - Advance animation
+  - `Render() string` - Get current frame
+
+#### Fireworks Effect
 - **Constructor**: `NewFireworksEffect(width, height int, palette []string) *FireworksEffect`
 - **Palette Function**: `GetFireworksPalette(theme string) []string`
 - **Methods**:
@@ -324,37 +338,64 @@ func main() {
   - `Render() string` - Get current frame
   - `Resize(width, height int)` - Change dimensions
 
-### Rain Effect
-- **Constructor**: `NewRainEffect(width, height int, palette []string) *RainEffect`
-- **Palette Function**: `GetRainPalette(theme string) []string`
-- **Methods**:
-  - `Update(frame int)` - Advance animation
-  - `Render() string` - Get current frame
-
-### Decrypt Effect
-Movie-style text decryption animation with ciphertext morphing into final text.
-- **Constructor**: `NewDecryptEffect(config DecryptConfig) *DecryptEffect`
-- **Methods**:
-  - `Update()` - Advance animation
-  - `Render() string` - Get current frame
-  - `Reset()` - Restart animation
-
-### Pour Effect
-Characters pour into position from different directions (top, bottom, left, right).
-- **Constructor**: `NewPourEffect(config PourConfig) *PourEffect`
-- **Methods**:
-  - `Update()` - Advance animation
-  - `Render() string` - Get current frame
-  - `Reset()` - Restart animation
-
-### Beams Effect
+#### Beams Effect
 Full-screen light beam background animation with sweeping beams.
 - **Constructor**: `NewBeamsEffect(config BeamsConfig) *BeamsEffect`
 - **Methods**:
   - `Update()` - Advance animation
   - `Render() string` - Get current frame
 
-### Beam Text Effect
+#### Aquarium Effect
+Underwater scene with swimming fish, diver, boat, mermaid, and sea life.
+- **Constructor**: `NewAquariumEffect(config AquariumConfig) *AquariumEffect`
+- **Methods**:
+  - `Update()` - Advance animation
+  - `Render() string` - Get current frame
+
+### Text Effects
+Effects that require text/ASCII art input.
+
+#### Fire Text Effect
+ASCII text consumed by rising flames.
+- **Constructor**: `NewFireTextEffect(config FireTextConfig) *FireTextEffect`
+- **Methods**:
+  - `Update()` - Advance animation
+  - `Render() string` - Get current frame
+  - `Reset()` - Restart animation
+
+#### Matrix Art Effect
+ASCII art revealed by Matrix-style digital streams with 90% freeze rate.
+- **Constructor**: `NewMatrixArtEffect(config MatrixArtConfig) *MatrixArtEffect`
+- **Methods**:
+  - `Update()` - Advance animation
+  - `Render() string` - Get current frame
+
+#### Rain Art Effect
+ASCII art with crystallizing rain effect - drops fall and freeze into art.
+- **Constructor**: `NewRainArtEffect(config RainArtConfig) *RainArtEffect`
+- **Methods**:
+  - `Update()` - Advance animation
+  - `Render() string` - Get current frame
+
+#### Pour Effect
+Characters pour into position from different directions (top, bottom, left, right).
+- **Constructor**: `NewPourEffect(config PourConfig) *PourEffect`
+- **Methods**:
+  - `Update()` - Advance animation
+  - `Render() string` - Get current frame
+  - `Reset()` - Restart animation
+  - `Resize(width, height int)` - Change dimensions
+
+#### Print Effect
+Classic typewriter-style text rendering with cursor.
+- **Constructor**: `NewPrintEffect(config PrintConfig) *PrintEffect`
+- **Methods**:
+  - `Update()` - Advance animation
+  - `Render() string` - Get current frame
+  - `Reset()` - Restart animation
+  - `Resize(width, height int)` - Change dimensions
+
+#### Beam Text Effect
 Text display with animated light beams, auto-sizing, and display mode.
 - **Constructor**: `NewBeamTextEffect(config BeamTextConfig) *BeamTextEffect`
 - **Methods**:
@@ -363,7 +404,7 @@ Text display with animated light beams, auto-sizing, and display mode.
   - `Reset()` - Restart animation
   - `IsComplete() bool` - Check if animation finished
 
-### Ring Text Effect
+#### Ring Text Effect
 Spectacular animation where text rotates and converges into position.
 - **Constructor**: `NewRingTextEffect(config RingTextConfig) *RingTextEffect`
 - **Methods**:
@@ -371,48 +412,13 @@ Spectacular animation where text rotates and converges into position.
   - `Render() string` - Get current frame
   - `Reset()` - Restart animation
 
-### Blackhole Effect
+#### Blackhole Effect
 Text gets consumed by a swirling blackhole, collapses, and explodes outward.
 - **Constructor**: `NewBlackholeEffect(config BlackholeConfig) *BlackholeEffect`
 - **Methods**:
   - `Update()` - Advance animation
   - `Render() string` - Get current frame
   - `Reset()` - Restart animation
-
-### Blackhole Particles
-Pure particle animation with 200-400 random star particles (no text required).
-Dramatic full-screen effect with massive blackhole consuming random stars.
-- **Constructor**: `NewBlackholeEffect(config BlackholeConfig)` with empty `Text` field
-- **Methods**: Same as Blackhole Effect
-
-### Aquarium Effect
-Underwater scene with swimming fish, diver, boat, mermaid, and sea life.
-- **Constructor**: `NewAquariumEffect(config AquariumConfig) *AquariumEffect`
-- **Methods**:
-  - `Update()` - Advance animation
-  - `Render() string` - Get current frame
-
-### Print Effect
-Classic typewriter-style text rendering with cursor.
-- **Constructor**: `NewPrintEffect(config PrintConfig) *PrintEffect`
-- **Methods**:
-  - `Update()` - Advance animation
-  - `Render() string` - Get current frame
-  - `Reset()` - Restart animation
-
-### Rain Art Effect
-ASCII art with crystallizing rain effect - drops fall and freeze into art.
-- **Constructor**: `NewRainArtEffect(config RainArtConfig) *RainArtEffect`
-- **Methods**:
-  - `Update()` - Advance animation
-  - `Render() string` - Get current frame
-
-### Matrix Art Effect
-ASCII art revealed by Matrix-style digital streams with 90% freeze rate.
-- **Constructor**: `NewMatrixArtEffect(config MatrixArtConfig) *MatrixArtEffect`
-- **Methods**:
-  - `Update()` - Advance animation
-  - `Render() string` - Get current frame
 
 ## Color Themes
 
