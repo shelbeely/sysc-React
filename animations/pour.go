@@ -18,6 +18,7 @@ type PourEffect struct {
 	pourDirection          string
 	pourSpeed              int
 	movementSpeed          float64
+	easingFunction         string // "easeIn", "easeOut", "easeInOut"
 	gap                    int
 	startingColor          string
 	finalGradientStops     []string
@@ -26,6 +27,10 @@ type PourEffect struct {
 	finalGradientDirection string
 	phase                  string
 	frameCount             int
+	holdFrameCount         int  // Frames to hold after completion before looping
+	auto                   bool // Auto-size canvas to fit text
+	display                bool // Display mode: complete once and hold
+	holdFrames             int  // Configurable hold frames
 
 	chars          []PourCharacter
 	groups         [][]int // Indices of characters grouped by row/column
@@ -33,6 +38,12 @@ type PourEffect struct {
 	currentInGroup int
 	gapCounter     int
 	alternateDir   bool // Alternate pouring direction
+
+	// Pre-allocated buffer for performance
+	buffer [][]string
+	// Cached RGB values for color interpolation (performance)
+	startColorRGB [3]int
+	colorCache    map[string][3]int
 }
 
 // PourCharacter represents a single character in the pour animation
@@ -60,23 +71,52 @@ type PourConfig struct {
 	PourDirection          string
 	PourSpeed              int
 	MovementSpeed          float64
+	EasingFunction         string // "easeIn", "easeOut", "easeInOut" (default: "easeIn")
 	Gap                    int
 	StartingColor          string
 	FinalGradientStops     []string
 	FinalGradientSteps     int
 	FinalGradientFrames    int
 	FinalGradientDirection string
+	Auto                   bool // Auto-size canvas to fit text dimensions
+	Display                bool // Display mode: complete once and hold (true) or loop (false)
+	HoldFrames             int  // Frames to hold completed state before looping (default 100)
 }
 
 // NewPourEffect creates a new pour effect with given configuration
 func NewPourEffect(config PourConfig) *PourEffect {
+	// Handle auto-sizing
+	width := config.Width
+	height := config.Height
+	if config.Auto {
+		width, height = calculatePourTextDimensions(config.Text)
+	}
+
+	// Set defaults
+	easingFunction := config.EasingFunction
+	if easingFunction == "" {
+		easingFunction = "easeIn" // Default easing
+	}
+
+	holdFrames := config.HoldFrames
+	if holdFrames <= 0 {
+		holdFrames = 100 // Default ~5 seconds at 20fps
+	}
+
+	// Pre-allocate buffer for performance
+	buffer := make([][]string, height)
+	for i := range buffer {
+		buffer[i] = make([]string, width)
+	}
+
 	effect := &PourEffect{
-		width:                  config.Width,
-		height:                 config.Height,
+		width:                  width,
+		height:                 height,
 		text:                   config.Text,
 		pourDirection:          config.PourDirection,
 		pourSpeed:              config.PourSpeed,
 		movementSpeed:          config.MovementSpeed,
+		easingFunction:         easingFunction,
 		gap:                    config.Gap,
 		startingColor:          config.StartingColor,
 		finalGradientStops:     config.FinalGradientStops,
@@ -89,10 +129,31 @@ func NewPourEffect(config PourConfig) *PourEffect {
 		currentInGroup:         0,
 		gapCounter:             0,
 		alternateDir:           false,
+		auto:                   config.Auto,
+		display:                config.Display,
+		holdFrames:             holdFrames,
+		buffer:                 buffer,
+		colorCache:             make(map[string][3]int),
 	}
+
+	// Cache starting color RGB
+	effect.startColorRGB = effect.parseAndCacheColor(config.StartingColor)
 
 	effect.init()
 	return effect
+}
+
+// calculatePourTextDimensions calculates dimensions needed to display text
+func calculatePourTextDimensions(text string) (int, int) {
+	lines := strings.Split(text, "\n")
+	maxWidth := 0
+	for _, line := range lines {
+		runes := []rune(line)
+		if len(runes) > maxWidth {
+			maxWidth = len(runes)
+		}
+	}
+	return maxWidth, len(lines)
 }
 
 // Initialize the pour effect with characters and their animations
@@ -125,10 +186,12 @@ func (p *PourEffect) init() {
 		// All lines start at the same X position for proper ASCII art alignment
 		startX := baseStartX
 
-		for charIdx, char := range line {
-			if char == ' ' || char == '\t' {
-				continue // Skip whitespace
-			}
+		// Convert to runes to get proper character indices (not byte indices)
+		runes := []rune(line)
+		for charIdx := 0; charIdx < len(runes); charIdx++ {
+			char := runes[charIdx]
+			// Don't skip spaces - they're part of ASCII art structure!
+			// Spaces create the negative space that defines the art
 
 			finalX := startX + charIdx
 			finalY := startY + lineIdx
@@ -142,16 +205,16 @@ func (p *PourEffect) init() {
 			color := p.getGradientColorForCoord(finalX, finalY)
 
 			// Get starting position based on pour direction
-			startX, startY := p.getStartPosition(finalX, finalY)
+			startXPos, startYPos := p.getStartPosition(finalX, finalY)
 
 			p.chars = append(p.chars, PourCharacter{
 				original:        char,
 				finalX:          finalX,
 				finalY:          finalY,
-				startX:          startX,
-				startY:          startY,
-				currentX:        float64(startX),
-				currentY:        float64(startY),
+				startX:          startXPos,
+				startY:          startYPos,
+				currentX:        float64(startXPos),
+				currentY:        float64(startYPos),
 				visible:         false,
 				color:           p.startingColor,
 				finalColor:      color,
@@ -288,9 +351,32 @@ func (p *PourEffect) getGradientColorForCoord(x, y int) string {
 	return p.finalGradientStops[step]
 }
 
-// Easing function for smooth movement
+// Easing functions for smooth movement
 func (p *PourEffect) easeInQuad(t float64) float64 {
 	return t * t
+}
+
+func (p *PourEffect) easeOutQuad(t float64) float64 {
+	return t * (2 - t)
+}
+
+func (p *PourEffect) easeInOutQuad(t float64) float64 {
+	if t < 0.5 {
+		return 2 * t * t
+	}
+	return -1 + (4-2*t)*t
+}
+
+// applyEasing applies the configured easing function
+func (p *PourEffect) applyEasing(t float64) float64 {
+	switch p.easingFunction {
+	case "easeOut":
+		return p.easeOutQuad(t)
+	case "easeInOut":
+		return p.easeInOutQuad(t)
+	default: // "easeIn"
+		return p.easeInQuad(t)
+	}
 }
 
 // Update advances the pour animation by one frame
@@ -301,6 +387,17 @@ func (p *PourEffect) Update() {
 	case "pouring":
 		p.updatePouringPhase()
 	case "complete":
+		p.holdFrameCount++
+
+		// In display mode, hold forever
+		if p.display {
+			return
+		}
+
+		// In loop mode, reset after hold period
+		if p.holdFrameCount >= p.holdFrames {
+			p.Reset()
+		}
 		return
 	}
 }
@@ -362,8 +459,8 @@ func (p *PourEffect) updateCharacterMovement() {
 			char.progress = 1.0
 		}
 
-		// Apply easing
-		easedProgress := p.easeInQuad(char.progress)
+		// Apply configured easing function
+		easedProgress := p.applyEasing(char.progress)
 
 		// Calculate new position
 		char.currentX = float64(char.startX) + (float64(char.finalX)-float64(char.startX))*easedProgress
@@ -407,14 +504,35 @@ func (p *PourEffect) updateCharacterGradients() {
 	}
 }
 
-// Interpolate between two colors
-func (p *PourEffect) interpolateColor(startColor, endColor string, ratio float64) string {
-	startR, startG, startB := p.parseHexColor(startColor)
-	endR, endG, endB := p.parseHexColor(endColor)
+// parseAndCacheColor parses and caches RGB values for performance
+func (p *PourEffect) parseAndCacheColor(hex string) [3]int {
+	if rgb, ok := p.colorCache[hex]; ok {
+		return rgb
+	}
 
-	r := int(float64(startR) + float64(endR-startR)*ratio)
-	g := int(float64(startG) + float64(endG-startG)*ratio)
-	b := int(float64(startB) + float64(endB-startB)*ratio)
+	if len(hex) < 7 || hex[0] != '#' {
+		rgb := [3]int{255, 255, 255}
+		p.colorCache[hex] = rgb
+		return rgb
+	}
+
+	r, _ := strconv.ParseInt(hex[1:3], 16, 64)
+	g, _ := strconv.ParseInt(hex[3:5], 16, 64)
+	b, _ := strconv.ParseInt(hex[5:7], 16, 64)
+
+	rgb := [3]int{int(r), int(g), int(b)}
+	p.colorCache[hex] = rgb
+	return rgb
+}
+
+// Interpolate between two colors using cached RGB values
+func (p *PourEffect) interpolateColor(startColor, endColor string, ratio float64) string {
+	startRGB := p.parseAndCacheColor(startColor)
+	endRGB := p.parseAndCacheColor(endColor)
+
+	r := int(float64(startRGB[0]) + float64(endRGB[0]-startRGB[0])*ratio)
+	g := int(float64(startRGB[1]) + float64(endRGB[1]-startRGB[1])*ratio)
+	b := int(float64(startRGB[2]) + float64(endRGB[2]-startRGB[2])*ratio)
 
 	r = int(math.Max(0, math.Min(255, float64(r))))
 	g = int(math.Max(0, math.Min(255, float64(g))))
@@ -423,26 +541,12 @@ func (p *PourEffect) interpolateColor(startColor, endColor string, ratio float64
 	return fmt.Sprintf("#%02x%02x%02x", r, g, b)
 }
 
-// Parse hex color string to RGB values
-func (p *PourEffect) parseHexColor(hex string) (int, int, int) {
-	if len(hex) < 7 || hex[0] != '#' {
-		return 255, 255, 255
-	}
-
-	r, _ := strconv.ParseInt(hex[1:3], 16, 64)
-	g, _ := strconv.ParseInt(hex[3:5], 16, 64)
-	b, _ := strconv.ParseInt(hex[5:7], 16, 64)
-
-	return int(r), int(g), int(b)
-}
-
 // Render converts the pour effect to colored text output
 func (p *PourEffect) Render() string {
-	buffer := make([][]string, p.height)
-	for i := range buffer {
-		buffer[i] = make([]string, p.width)
-		for j := range buffer[i] {
-			buffer[i][j] = " "
+	// Clear pre-allocated buffer
+	for i := range p.buffer {
+		for j := range p.buffer[i] {
+			p.buffer[i][j] = " "
 		}
 	}
 
@@ -454,24 +558,49 @@ func (p *PourEffect) Render() string {
 
 			if y >= 0 && y < p.height && x >= 0 && x < p.width {
 				style := lipgloss.NewStyle().Foreground(lipgloss.Color(char.color))
-				buffer[y][x] = style.Render(string(char.original))
+				p.buffer[y][x] = style.Render(string(char.original))
 			}
 		}
 	}
 
 	// Convert buffer to string
 	var lines []string
-	for _, line := range buffer {
+	for _, line := range p.buffer {
 		lines = append(lines, strings.Join(line, ""))
 	}
 
 	return strings.Join(lines, "\n")
 }
 
+// Resize updates the effect dimensions and reinitializes
+func (p *PourEffect) Resize(width, height int) {
+	p.width = width
+	p.height = height
+
+	// Re-allocate buffer for new dimensions
+	p.buffer = make([][]string, height)
+	for i := range p.buffer {
+		p.buffer[i] = make([]string, width)
+	}
+
+	// Reinitialize with new dimensions
+	p.chars = nil
+	p.groups = nil
+	p.currentGroup = 0
+	p.currentInGroup = 0
+	p.gapCounter = 0
+	p.frameCount = 0
+	p.holdFrameCount = 0
+	p.phase = "pouring"
+
+	p.init()
+}
+
 // Reset restarts the animation from the beginning
 func (p *PourEffect) Reset() {
 	p.phase = "pouring"
 	p.frameCount = 0
+	p.holdFrameCount = 0
 	p.currentGroup = 0
 	p.currentInGroup = 0
 	p.gapCounter = 0

@@ -563,12 +563,16 @@ func runPour(width, height int, theme string, file string, frames int) {
 		PourDirection:          "down",
 		PourSpeed:              3,
 		MovementSpeed:          0.2,
+		EasingFunction:         "easeIn", // Options: "easeIn", "easeOut", "easeInOut"
 		Gap:                    1,
 		StartingColor:          "#ffffff",
 		FinalGradientStops:     gradientStops,
 		FinalGradientSteps:     12,
 		FinalGradientFrames:    5,
 		FinalGradientDirection: "horizontal",
+		Auto:                   false, // CLI uses full terminal width/height
+		Display:                false, // CLI loops continuously
+		HoldFrames:             100,   // ~5 seconds at 20fps
 	}
 
 	pour := animations.NewPourEffect(config)
@@ -646,11 +650,14 @@ func runPrint(width, height int, theme string, file string, frames int) {
 		Width:           width,
 		Height:          height,
 		Text:            text,
-		CharDelay:       30 * time.Millisecond,
-		PrintSpeed:      2,
+		FramesPerChar:   1,  // Print every frame for smooth animation
+		PrintSpeed:      2,  // 2 characters per update
 		PrintHeadSymbol: "█",
 		TrailSymbols:    []string{"░", "▒", "▓"},
 		GradientStops:   gradientStops,
+		Auto:            false, // CLI uses full terminal width/height
+		Display:         false, // CLI loops continuously
+		HoldFrames:      100,   // ~5 seconds at 20fps
 	}
 
 	print := animations.NewPrintEffect(config)

@@ -2,7 +2,6 @@ package tui
 
 import (
 	"os"
-	"time"
 
 	"github.com/Nomadcxx/sysc-Go/animations"
 )
@@ -132,12 +131,16 @@ func (m *Model) createAnimation() animations.Animation {
 			PourDirection:          "down",
 			PourSpeed:              3,
 			MovementSpeed:          0.2,
+			EasingFunction:         "easeInOut", // Smooth for TUI viewing
 			Gap:                    1,
 			StartingColor:          "#ffffff",
 			FinalGradientStops:     getGradientStops(themeName),
 			FinalGradientSteps:     12,
 			FinalGradientFrames:    5,
 			FinalGradientDirection: "horizontal",
+			Auto:                   false, // TUI uses fixed viewport size
+			Display:                false, // TUI loops continuously
+			HoldFrames:             100,   // ~5 seconds at 20fps
 		}
 		pour := animations.NewPourEffect(config)
 		return &AnimationWrapper{
@@ -151,11 +154,14 @@ func (m *Model) createAnimation() animations.Animation {
 			Width:           width,
 			Height:          height,
 			Text:            text,
-			CharDelay:       30 * time.Millisecond,
+			FramesPerChar:   1, // Print every frame for smooth animation
 			PrintSpeed:      2,
 			PrintHeadSymbol: "█",
 			TrailSymbols:    []string{"░", "▒", "▓"},
 			GradientStops:   getGradientStops(themeName),
+			Auto:            false, // TUI uses fixed viewport size
+			Display:         false, // TUI loops continuously
+			HoldFrames:      100,   // ~5 seconds at 20fps
 		}
 		print := animations.NewPrintEffect(config)
 		return &AnimationWrapper{

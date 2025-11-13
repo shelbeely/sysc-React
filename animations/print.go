@@ -2,9 +2,8 @@ package animations
 
 import (
 	"strings"
-	"time"
 
-	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/v2"
 )
 
 // PrintEffect creates a typewriter/printer effect for text
@@ -16,14 +15,21 @@ type PrintEffect struct {
 	currentLine     int
 	currentCol      int
 	revealed        []string
-	lastUpdate      time.Time
-	charDelay       time.Duration
+	frameCounter    int // Frame-based timing instead of time.Duration
+	framesPerChar   int // Frames to wait before printing next character
 	printSpeed      int
 	printHeadSymbol string
 	trailSymbols    []string
 	gradientStops   []string
-	complete        bool
+	phase           string // "printing", "complete", "holding"
+	holdFrameCount  int
 	maxLineWidth    int
+	auto            bool // Auto-size canvas to fit text
+	display         bool // Display mode: complete once and hold
+	holdFrames      int  // Frames to hold before looping
+
+	// Pre-allocated buffer for performance
+	buffer [][]string
 }
 
 // PrintConfig holds configuration for the print effect
@@ -31,26 +37,56 @@ type PrintConfig struct {
 	Width           int
 	Height          int
 	Text            string
-	CharDelay       time.Duration
-	PrintSpeed      int
+	FramesPerChar   int // Frames to wait before printing next character (replaces CharDelay)
+	PrintSpeed      int // Characters to print per update cycle
 	PrintHeadSymbol string
 	TrailSymbols    []string
 	GradientStops   []string
+	Auto            bool // Auto-size canvas to fit text dimensions
+	Display         bool // Display mode: complete once and hold (true) or loop (false)
+	HoldFrames      int  // Frames to hold completed state before looping (default 100)
+}
+
+// calculatePrintTextDimensions calculates the dimensions needed to display text
+func calculatePrintTextDimensions(text string) (int, int) {
+	lines := strings.Split(text, "\n")
+	maxWidth := 0
+	for _, line := range lines {
+		runes := []rune(line)
+		if len(runes) > maxWidth {
+			maxWidth = len(runes)
+		}
+	}
+	return maxWidth, len(lines)
 }
 
 // NewPrintEffect creates a new print effect with given configuration
 func NewPrintEffect(config PrintConfig) *PrintEffect {
 	lines := strings.Split(config.Text, "\n")
 
-	// Remove empty trailing lines
-	for len(lines) > 0 && strings.TrimSpace(lines[len(lines)-1]) == "" {
-		lines = lines[:len(lines)-1]
+	// Don't remove empty lines - they might be part of ASCII art structure!
+
+	// Handle auto-sizing
+	width := config.Width
+	height := config.Height
+	if config.Auto {
+		width, height = calculatePrintTextDimensions(config.Text)
 	}
 
 	// Set defaults if not provided
 	printSpeed := config.PrintSpeed
 	if printSpeed <= 0 {
 		printSpeed = 1
+	}
+
+	framesPerChar := config.FramesPerChar
+	if framesPerChar <= 0 {
+		framesPerChar = 1 // Print every frame by default
+	}
+
+	holdFrames := config.HoldFrames
+	if holdFrames <= 0 {
+		holdFrames = 100 // Default ~5 seconds at 20fps
 	}
 
 	printHeadSymbol := config.PrintHeadSymbol
@@ -77,22 +113,33 @@ func NewPrintEffect(config PrintConfig) *PrintEffect {
 		}
 	}
 
+	// Pre-allocate buffer for performance
+	buffer := make([][]string, height)
+	for i := range buffer {
+		buffer[i] = make([]string, width)
+	}
+
 	effect := &PrintEffect{
-		width:           config.Width,
-		height:          config.Height,
+		width:           width,
+		height:          height,
 		text:            config.Text,
 		lines:           lines,
 		currentLine:     0,
 		currentCol:      0,
 		revealed:        []string{},
-		lastUpdate:      time.Now(),
-		charDelay:       config.CharDelay,
+		frameCounter:    0,
+		framesPerChar:   framesPerChar,
 		printSpeed:      printSpeed,
 		printHeadSymbol: printHeadSymbol,
 		trailSymbols:    trailSymbols,
 		gradientStops:   gradientStops,
-		complete:        false,
+		phase:           "printing",
+		holdFrameCount:  0,
 		maxLineWidth:    maxLineWidth,
+		auto:            config.Auto,
+		display:         config.Display,
+		holdFrames:      holdFrames,
+		buffer:          buffer,
 	}
 
 	return effect
@@ -100,20 +147,29 @@ func NewPrintEffect(config PrintConfig) *PrintEffect {
 
 // Update advances the print effect animation
 func (p *PrintEffect) Update() {
-	if p.complete {
-		return
+	p.frameCounter++
+
+	switch p.phase {
+	case "printing":
+		p.updatePrintingPhase()
+	case "complete":
+		p.updateCompletePhase()
+	case "holding":
+		p.updateHoldingPhase()
 	}
+}
 
-	currentTime := time.Now()
-
+// updatePrintingPhase handles the main printing animation
+func (p *PrintEffect) updatePrintingPhase() {
 	// Check if animation is complete
 	if p.currentLine >= len(p.lines) {
-		p.complete = true
+		p.phase = "complete"
+		p.frameCounter = 0
 		return
 	}
 
-	// Check if enough time has passed to print next character(s)
-	if currentTime.Sub(p.lastUpdate) >= p.charDelay {
+	// Check if enough frames have passed to print next character(s)
+	if p.frameCounter >= p.framesPerChar {
 		currentLineText := p.lines[p.currentLine]
 		runes := []rune(currentLineText)
 
@@ -129,19 +185,39 @@ func (p *PrintEffect) Update() {
 			p.currentCol = 0
 		}
 
-		p.lastUpdate = currentTime
+		p.frameCounter = 0 // Reset frame counter for next character
+	}
+}
+
+// updateCompletePhase handles transition to holding
+func (p *PrintEffect) updateCompletePhase() {
+	// Immediately transition to holding phase
+	p.phase = "holding"
+	p.holdFrameCount = 0
+}
+
+// updateHoldingPhase handles the hold state before looping
+func (p *PrintEffect) updateHoldingPhase() {
+	p.holdFrameCount++
+
+	// In display mode, hold forever
+	if p.display {
+		return
+	}
+
+	// In loop mode, reset after hold period
+	if p.holdFrameCount >= p.holdFrames {
+		p.Reset()
 	}
 }
 
 // Render converts the print effect to text output
 // Render returns the current state of the print effect with colors
 func (p *PrintEffect) Render() string {
-	// Create a buffer to hold the output
-	buffer := make([][]string, p.height)
-	for i := range buffer {
-		buffer[i] = make([]string, p.width)
-		for j := range buffer[i] {
-			buffer[i][j] = " "
+	// Clear pre-allocated buffer
+	for i := range p.buffer {
+		for j := range p.buffer[i] {
+			p.buffer[i][j] = " "
 		}
 	}
 
@@ -168,16 +244,18 @@ func (p *PrintEffect) Render() string {
 		// All lines start at the same X position for proper ASCII art alignment
 		startX := baseStartX
 
-		for charIdx, char := range line {
+		// Convert to runes to get proper character indices (not byte indices)
+		runes := []rune(line)
+		for charIdx := 0; charIdx < len(runes); charIdx++ {
 			x := startX + charIdx
 			if x >= p.width {
 				break
 			}
 
 			// Calculate gradient color
-			color := p.getGradientColor(float64(charIdx) / float64(len(line)))
+			color := p.getGradientColor(float64(charIdx) / float64(len(runes)))
 			style := lipgloss.NewStyle().Foreground(lipgloss.Color(color))
-			buffer[y][x] = style.Render(string(char))
+			p.buffer[y][x] = style.Render(string(runes[charIdx]))
 		}
 	}
 
@@ -193,16 +271,16 @@ func (p *PrintEffect) Render() string {
 
 			// Render revealed portion of current line
 			if p.currentCol > 0 {
-				revealedText := string(runes[:min(p.currentCol, len(runes))])
-				for charIdx, char := range revealedText {
+				revealedRunes := runes[:min(p.currentCol, len(runes))]
+				for charIdx := 0; charIdx < len(revealedRunes); charIdx++ {
 					x := startX + charIdx
 					if x >= p.width {
 						break
 					}
 
-					color := p.getGradientColor(float64(charIdx) / float64(len(currentLineText)))
+					color := p.getGradientColor(float64(charIdx) / float64(len(runes)))
 					style := lipgloss.NewStyle().Foreground(lipgloss.Color(color))
-					buffer[y][x] = style.Render(string(char))
+					p.buffer[y][x] = style.Render(string(revealedRunes[charIdx]))
 				}
 
 				// Add trail effect
@@ -212,21 +290,21 @@ func (p *PrintEffect) Render() string {
 					if x >= p.width {
 						break
 					}
-					buffer[y][x] = trailSymbol
+					p.buffer[y][x] = trailSymbol
 				}
 
 				// Add print head
 				headX := trailX + len(p.trailSymbols)
 				if headX < p.width {
-					buffer[y][headX] = p.printHeadSymbol
+					p.buffer[y][headX] = p.printHeadSymbol
 				}
 			} else {
 				// Just starting - show trail and head at beginning
 				x := startX
 				if x < p.width && len(p.trailSymbols) > 0 {
-					buffer[y][x] = p.trailSymbols[0]
+					p.buffer[y][x] = p.trailSymbols[0]
 					if x+1 < p.width {
-						buffer[y][x+1] = p.printHeadSymbol
+						p.buffer[y][x+1] = p.printHeadSymbol
 					}
 				}
 			}
@@ -235,7 +313,7 @@ func (p *PrintEffect) Render() string {
 
 	// Convert buffer to string
 	var lines []string
-	for _, line := range buffer {
+	for _, line := range p.buffer {
 		lines = append(lines, strings.Join(line, ""))
 	}
 
@@ -273,19 +351,40 @@ func min(a, b int) int {
 // Reset restarts the print effect animation
 func (p *PrintEffect) Reset() {
 	lines := strings.Split(p.text, "\n")
-	for len(lines) > 0 && strings.TrimSpace(lines[len(lines)-1]) == "" {
-		lines = lines[:len(lines)-1]
-	}
+	// Don't remove empty lines - they might be part of ASCII art structure
 
 	p.lines = lines
 	p.currentLine = 0
 	p.currentCol = 0
 	p.revealed = []string{}
-	p.lastUpdate = time.Now()
-	p.complete = false
+	p.frameCounter = 0
+	p.phase = "printing"
+	p.holdFrameCount = 0
+}
+
+// Resize updates the effect dimensions and reinitializes
+func (p *PrintEffect) Resize(width, height int) {
+	p.width = width
+	p.height = height
+
+	// Re-allocate buffer for new dimensions
+	p.buffer = make([][]string, height)
+	for i := range p.buffer {
+		p.buffer[i] = make([]string, width)
+	}
+
+	// Recalculate max line width for centering
+	maxLineWidth := 0
+	for _, line := range p.lines {
+		lineLen := len([]rune(line))
+		if lineLen > maxLineWidth {
+			maxLineWidth = lineLen
+		}
+	}
+	p.maxLineWidth = maxLineWidth
 }
 
 // IsComplete returns whether the animation is finished
 func (p *PrintEffect) IsComplete() bool {
-	return p.complete
+	return p.phase == "holding"
 }
