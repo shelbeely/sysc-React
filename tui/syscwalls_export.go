@@ -5,20 +5,83 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
-// ExportToSyscWalls exports ASCII art to sysc-walls with config update
+// ExportToSyscWalls exports ASCII art to the sysc-walls screensaver daemon.
+//
+// The function saves the provided content to ~/.local/share/syscgo/walls/filename
+// and updates the sysc-walls configuration file at ~/.config/sysc-walls/daemon.conf
+// to use the exported artwork.
+//
+// The filename is automatically sanitized to prevent path traversal attacks.
+// Only alphanumeric characters, dots, hyphens, underscores, and spaces are allowed.
+// The .txt extension is added automatically if not present.
+//
+// Files and directories are created with user-only permissions (0600 for files,
+// 0700 for directories) to protect user privacy.
+//
+// Parameters:
+//   - filename: The name for the exported file (e.g., "my-art.txt").
+//     Path separators and shell metacharacters are automatically stripped.
+//   - content: The ASCII art content to export (plain text).
+//
+// Returns:
+//   - nil on success
+//   - error if filename is invalid, file cannot be written, or config update fails
+//
+// Example:
+//
+//	art := "HELLO\nWORLD"
+//	err := ExportToSyscWalls("greeting.txt", art)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//
+// Security:
+//   - Filenames are sanitized to prevent directory traversal
+//   - Only safe characters allowed in filenames
+//   - Files created with 0600 permissions (user-only read/write)
+//   - Directories created with 0700 permissions (user-only access)
 func ExportToSyscWalls(filename, content string) error {
-	// Create walls directory
+	// Sanitize filename: strip any directory components to prevent path traversal
+	filename = filepath.Base(filename)
+
+	// Validate filename is not empty or special directory names
+	if filename == "" || filename == "." || filename == ".." {
+		return fmt.Errorf("invalid filename: %s", filename)
+	}
+
+	// Validate filename contains only safe characters
+	// Allow: alphanumeric, hyphens, underscores, dots, spaces
+	// Block: shell metacharacters and path separators
+	safeFilename, _ := regexp.MatchString(`^[a-zA-Z0-9_. -]+$`, filename)
+	if !safeFilename {
+		return fmt.Errorf("filename contains unsafe characters: %s", filename)
+	}
+
+	// Ensure .txt extension
+	if !strings.HasSuffix(filename, ".txt") {
+		filename += ".txt"
+	}
+
+	// Create walls directory with user-only permissions
 	wallsDir := filepath.Join(os.Getenv("HOME"), ".local", "share", "syscgo", "walls")
-	if err := os.MkdirAll(wallsDir, 0755); err != nil {
+	if err := os.MkdirAll(wallsDir, 0700); err != nil {
 		return fmt.Errorf("failed to create walls directory: %w", err)
 	}
 
-	// Save ASCII art file
+	// Build and validate final path
 	artPath := filepath.Join(wallsDir, filename)
-	if err := os.WriteFile(artPath, []byte(content), 0644); err != nil {
+
+	// Final safety check: ensure path is within walls directory
+	if !strings.HasPrefix(filepath.Clean(artPath), filepath.Clean(wallsDir)) {
+		return fmt.Errorf("path traversal detected: %s", filename)
+	}
+
+	// Save ASCII art file with user-only permissions
+	if err := os.WriteFile(artPath, []byte(content), 0600); err != nil {
 		return fmt.Errorf("failed to save ASCII art: %w", err)
 	}
 
@@ -34,9 +97,9 @@ func ExportToSyscWalls(filename, content string) error {
 
 // updateSyscWallsConfig updates or creates the sysc-walls daemon config
 func updateSyscWallsConfig(configPath, artPath string) error {
-	// Create config directory if needed
+	// Create config directory with user-only permissions
 	configDir := filepath.Dir(configPath)
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := os.MkdirAll(configDir, 0700); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
@@ -132,10 +195,31 @@ func writeINI(path string, config map[string]map[string]string) error {
 		content.WriteString("\n")
 	}
 
-	return os.WriteFile(path, []byte(content.String()), 0644)
+	// Write config file with user-only permissions
+	return os.WriteFile(path, []byte(content.String()), 0600)
 }
 
-// ExportBitArt handles export target selection and saves accordingly
+// ExportBitArt handles export target selection and saves accordingly.
+//
+// This function serves as a router for exporting ASCII art to different targets.
+// It automatically strips ANSI color codes and ensures the filename has a .txt extension.
+//
+// Parameters:
+//   - filename: The base filename for the export (extension added if missing)
+//   - content: The ASCII art content as an array of lines (may contain ANSI codes)
+//   - target: The export destination (0 = syscgo assets, 1 = sysc-walls daemon)
+//
+// Returns:
+//   - nil on success
+//   - error if the export fails or target is unknown
+//
+// Example:
+//
+//	art := []string{"\x1b[31mHello\x1b[0m", "\x1b[32mWorld\x1b[0m"}
+//	err := ExportBitArt("greeting", art, 1)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
 func ExportBitArt(filename string, content []string, target int) error {
 	// Strip ANSI codes
 	plainContent := ""
