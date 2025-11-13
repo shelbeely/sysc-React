@@ -79,15 +79,35 @@ func (f *FireTextEffect) parseText() {
 	}
 }
 
-// Initialize fire buffer with bottom row as heat source
+// Initialize fire buffer with fire in all non-masked positions
 func (f *FireTextEffect) init() {
 	f.buffer = make([]int, f.width*f.height)
 
-	// Set bottom row to maximum heat (fire source)
-	// Don't place fire where text is
-	for i := 0; i < f.width; i++ {
-		if !f.textMask[f.height-1][i] {
-			f.buffer[(f.height-1)*f.width+i] = 65
+	// Initialize fire in ALL non-masked positions
+	// This allows fire to appear in empty spaces within letters (like inside 'O', 'A', 'R')
+	// Bottom rows get more heat, creating natural fire gradient
+	for y := 0; y < f.height; y++ {
+		for x := 0; x < f.width; x++ {
+			if !f.textMask[y][x] {
+				// More heat at bottom, less at top (creates gradient)
+				distanceFromBottom := f.height - y - 1
+				heatRatio := float64(distanceFromBottom) / float64(f.height)
+				baseHeat := int(heatRatio * 65)
+
+				// Add randomness for natural look
+				randomOffset := rand.Intn(20) - 10
+				heat := baseHeat + randomOffset
+
+				// Clamp to valid range
+				if heat < 0 {
+					heat = 0
+				}
+				if heat > 65 {
+					heat = 65
+				}
+
+				f.buffer[y*f.width+x] = heat
+			}
 		}
 	}
 }
