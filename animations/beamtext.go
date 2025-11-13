@@ -31,6 +31,9 @@ type BeamTextEffect struct {
 	finalGradientFrames  int
 	finalWipeSpeed       int
 
+	// Background beams effect
+	backgroundBeams *BeamsEffect
+
 	// Character data
 	chars []BeamCharacter
 
@@ -116,6 +119,24 @@ func NewBeamTextEffect(config BeamTextConfig) *BeamTextEffect {
 		width, height = calculateTextDimensions(config.Text)
 	}
 
+	// Create background beams effect for visual depth
+	beamsConfig := BeamsConfig{
+		Width:                width,
+		Height:               height,
+		BeamRowSymbols:       config.BeamRowSymbols,
+		BeamColumnSymbols:    config.BeamColumnSymbols,
+		BeamDelay:            config.BeamDelay,
+		BeamRowSpeedRange:    config.BeamRowSpeedRange,
+		BeamColumnSpeedRange: config.BeamColumnSpeedRange,
+		BeamGradientStops:    config.BeamGradientStops,
+		BeamGradientSteps:    config.BeamGradientSteps,
+		BeamGradientFrames:   config.BeamGradientFrames,
+		FinalGradientStops:   config.FinalGradientStops,
+		FinalGradientSteps:   config.FinalGradientSteps,
+		FinalGradientFrames:  config.FinalGradientFrames,
+		FinalWipeSpeed:       config.FinalWipeSpeed,
+	}
+
 	b := &BeamTextEffect{
 		width:                width,
 		height:               height,
@@ -134,6 +155,7 @@ func NewBeamTextEffect(config BeamTextConfig) *BeamTextEffect {
 		finalGradientSteps:   config.FinalGradientSteps,
 		finalGradientFrames:  config.FinalGradientFrames,
 		finalWipeSpeed:       config.FinalWipeSpeed,
+		backgroundBeams:      NewBeamsEffect(beamsConfig),
 		phase:                "beams",
 		frameCount:           0,
 		beamDelayCount:       0,
@@ -429,6 +451,11 @@ func (b *BeamTextEffect) createFadeGradient(startColor string, steps int) []stri
 func (b *BeamTextEffect) Update() {
 	b.frameCount++
 
+	// Update background beams for visual depth
+	if b.backgroundBeams != nil {
+		b.backgroundBeams.Update()
+	}
+
 	if b.phase == "beams" {
 		b.updateBeamsPhase()
 	} else if b.phase == "final_wipe" {
@@ -691,7 +718,26 @@ func (b *BeamTextEffect) Render() string {
 		}
 	}
 
-	// Draw characters
+	// First, render background beams directly from their character data (as base layer)
+	if b.backgroundBeams != nil {
+		// Access background beams' character array directly
+		bgChars := getBeamsCharacters(b.backgroundBeams)
+		for _, bgChar := range bgChars {
+			if !bgChar.visible {
+				continue
+			}
+
+			if bgChar.y >= 0 && bgChar.y < b.height && bgChar.x >= 0 && bgChar.x < b.width {
+				// Only place background if position is empty
+				if canvas[bgChar.y][bgChar.x] == ' ' {
+					canvas[bgChar.y][bgChar.x] = bgChar.currentSymbol
+					colors[bgChar.y][bgChar.x] = bgChar.currentColor
+				}
+			}
+		}
+	}
+
+	// Draw text characters (these overlay the background)
 	for _, char := range b.chars {
 		if !char.visible {
 			continue
@@ -710,6 +756,7 @@ func (b *BeamTextEffect) Render() string {
 		for x := 0; x < b.width; x++ {
 			char := canvas[y][x]
 			if char != ' ' && colors[y][x] != "" {
+				// Characters with explicit colors
 				styled := lipgloss.NewStyle().
 					Foreground(lipgloss.Color(colors[y][x])).
 					Render(string(char))
@@ -724,6 +771,15 @@ func (b *BeamTextEffect) Render() string {
 	return strings.Join(lines, "\n")
 }
 
+// getBeamsCharacters is a helper to access the background beams' character array
+func getBeamsCharacters(beams *BeamsEffect) []BeamCharacter {
+	if beams == nil {
+		return nil
+	}
+	// Access the Chars field directly - it's exported in the BeamsEffect struct
+	return beams.Chars
+}
+
 // Reset restarts the animation from the beginning
 func (b *BeamTextEffect) Reset() {
 	b.phase = "beams"
@@ -731,6 +787,11 @@ func (b *BeamTextEffect) Reset() {
 	b.beamDelayCount = 0
 	b.currentDiag = 0
 	b.holdCounter = 0
+
+	// Reset background beams
+	if b.backgroundBeams != nil {
+		b.backgroundBeams.Reset()
+	}
 
 	// Reset all characters
 	for i := range b.chars {
@@ -756,6 +817,12 @@ func (b *BeamTextEffect) Reset() {
 func (b *BeamTextEffect) Resize(width, height int) {
 	b.width = width
 	b.height = height
+
+	// Resize background beams
+	if b.backgroundBeams != nil {
+		b.backgroundBeams.Resize(width, height)
+	}
+
 	b.chars = b.chars[:0]
 	b.rowGroups = b.rowGroups[:0]
 	b.columnGroups = b.columnGroups[:0]
