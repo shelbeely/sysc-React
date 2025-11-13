@@ -9,7 +9,7 @@ license=('MIT')
 depends=()
 makedepends=('go>=1.21')
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/Nomadcxx/sysc-Go/archive/v${pkgver}.tar.gz")
-sha256sums=('9b396de4c0beb813882902fbddee6972d582a6fd476d91172cd2d93d39153a0a')
+sha256sums=('58a62ff406a263bddab6abafc90090391b2eb638db60ac4f691307203f883923')
 
 build() {
   cd "${srcdir}/sysc-Go-${pkgver}"
