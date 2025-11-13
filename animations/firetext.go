@@ -168,6 +168,15 @@ func (f *FireTextEffect) spreadFire(from int) {
 
 // Update advances the fire simulation by one frame
 func (f *FireTextEffect) Update() {
+	// Maintain constant heat source at bottom of terminal (not text base)
+	// This keeps fire burning continuously from the bottom up
+	for x := 0; x < f.width; x++ {
+		bottomIdx := (f.height - 1) * f.width + x
+		if !f.textMask[f.height-1][x] {
+			f.buffer[bottomIdx] = 65 // Maximum heat
+		}
+	}
+
 	// Process all pixels from bottom to top
 	// (Fire spreads upward, must process bottom row first)
 	for y := f.height - 1; y > 0; y-- {
