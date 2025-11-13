@@ -163,10 +163,161 @@ func (m *Model) createAnimation() animations.Animation {
 			update: print.Update,
 		}
 
-	// TODO: Config-based animations below need full config structs
-	// For now, return nil and they will fall back to external launch
-	case "beams", "beam-text", "ring-text", "blackhole-text", "aquarium":
-		return nil
+	case "beams":
+		colors := getBeamColors(themeName)
+		config := animations.BeamsConfig{
+			Width:                width,
+			Height:               height,
+			BeamRowSymbols:       []rune{'▂', '▁', '_'},
+			BeamColumnSymbols:    []rune{'▌', '▍', '▎', '▏'},
+			BeamDelay:            2,
+			BeamRowSpeedRange:    [2]int{20, 80},
+			BeamColumnSpeedRange: [2]int{15, 30},
+			BeamGradientStops:    colors,
+			BeamGradientSteps:    5,
+			BeamGradientFrames:   1,
+			FinalGradientStops:   colors,
+			FinalGradientSteps:   8,
+			FinalGradientFrames:  1,
+			FinalWipeSpeed:       3,
+		}
+		beams := animations.NewBeamsEffect(config)
+		return &AnimationWrapper{
+			render: beams.Render,
+			update: beams.Update,
+		}
+
+	case "beam-text":
+		text := m.loadTextFile(fileName)
+		colors := getBeamColors(themeName)
+		config := animations.BeamTextConfig{
+			Width:                width,
+			Height:               height,
+			Text:                 text,
+			Auto:                 false,
+			Display:              false,
+			BeamRowSymbols:       []rune{'▂', '▁', '_'},
+			BeamColumnSymbols:    []rune{'▌', '▍', '▎', '▏'},
+			BeamDelay:            2,
+			BeamRowSpeedRange:    [2]int{20, 80},
+			BeamColumnSpeedRange: [2]int{15, 30},
+			BeamGradientStops:    colors,
+			BeamGradientSteps:    5,
+			BeamGradientFrames:   1,
+			FinalGradientStops:   getGradientStops(themeName),
+			FinalGradientSteps:   8,
+			FinalGradientFrames:  1,
+			FinalWipeSpeed:       3,
+		}
+		beamText := animations.NewBeamTextEffect(config)
+		return &AnimationWrapper{
+			render: beamText.Render,
+			update: beamText.Update,
+		}
+
+	case "ring-text":
+		text := m.loadTextFile(fileName)
+		colors := getBeamColors(themeName)
+		config := animations.RingTextConfig{
+			Width:               width,
+			Height:              height,
+			Text:                text,
+			RingColors:          colors,
+			RingGap:             0.15,
+			SpinSpeedRange:      [2]float64{0.02, 0.08},
+			SpinDuration:        120,
+			DisperseDuration:    60,
+			SpinDisperseCycles:  2,
+			TransitionFrames:    30,
+			StaticFrames:        60,
+			FinalGradientStops:  getGradientStops(themeName),
+			FinalGradientSteps:  12,
+			StaticGradientStops: getGradientStops(themeName),
+			StaticGradientDir:   animations.GradientHorizontal,
+		}
+		ringText := animations.NewRingTextEffect(config)
+		return &AnimationWrapper{
+			render: ringText.Render,
+			update: ringText.Update,
+		}
+
+	case "blackhole-text":
+		text := m.loadTextFile(fileName)
+		colors := getBeamColors(themeName)
+		var blackholeColor string
+		if len(colors) > 0 {
+			blackholeColor = colors[0]
+		} else {
+			blackholeColor = "#ff0080"
+		}
+		config := animations.BlackholeConfig{
+			Width:               width,
+			Height:              height,
+			Text:                text,
+			BlackholeColor:      blackholeColor,
+			StarColors:          colors,
+			FinalGradientStops:  getGradientStops(themeName),
+			FinalGradientSteps:  12,
+			FinalGradientDir:    animations.GradientHorizontal,
+			StaticGradientStops: getGradientStops(themeName),
+			StaticGradientDir:   animations.GradientHorizontal,
+			FormingFrames:       60,
+			ConsumingFrames:     90,
+			CollapsingFrames:    40,
+			ExplodingFrames:     60,
+			ReturningFrames:     80,
+			StaticFrames:        60,
+		}
+		blackhole := animations.NewBlackholeEffect(config)
+		return &AnimationWrapper{
+			render: blackhole.Render,
+			update: blackhole.Update,
+		}
+
+	case "aquarium":
+		aquaColors := getAquariumColors(themeName)
+		var fishColors, waterColors, seaweedColors []string
+		var bubbleColor, diverColor, boatColor, mermaidColor, anchorColor string
+
+		// Distribute colors appropriately
+		if len(aquaColors) >= 3 {
+			fishColors = []string{aquaColors[0], aquaColors[1]}
+			waterColors = []string{aquaColors[1], aquaColors[2]}
+			seaweedColors = []string{aquaColors[2], aquaColors[0]}
+			bubbleColor = aquaColors[2]
+			diverColor = aquaColors[0]
+			boatColor = aquaColors[1]
+			mermaidColor = aquaColors[0]
+			anchorColor = aquaColors[1]
+		} else {
+			// Fallback colors
+			fishColors = []string{"#00D1FF", "#8A008A"}
+			waterColors = []string{"#004D66", "#003D52"}
+			seaweedColors = []string{"#00FF00", "#00CC00"}
+			bubbleColor = "#FFFFFF"
+			diverColor = "#FF8800"
+			boatColor = "#8B4513"
+			mermaidColor = "#FF79C6"
+			anchorColor = "#666666"
+		}
+
+		config := animations.AquariumConfig{
+			Width:         width,
+			Height:        height,
+			FishColors:    fishColors,
+			WaterColors:   waterColors,
+			SeaweedColors: seaweedColors,
+			BubbleColor:   bubbleColor,
+			DiverColor:    diverColor,
+			BoatColor:     boatColor,
+			MermaidColor:  mermaidColor,
+			AnchorColor:   anchorColor,
+		}
+		aquarium := animations.NewAquariumEffect(config)
+		return &AnimationWrapper{
+			render: aquarium.Render,
+			update: aquarium.Update,
+		}
 
 	default:
 		// Unsupported animation type - return nil
