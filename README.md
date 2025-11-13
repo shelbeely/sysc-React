@@ -4,20 +4,27 @@ Terminal animation library for Go. Pure Go animations ready to use in your TUI a
 
 ## Effects
 
-- **Fire Effect** - DOOM PSX-style fire animation
-- **Fire Text Effect** - ASCII text consumed by rising flames
+### Animations
+Standalone effects that don't require text input.
+
+- **Fire** - DOOM PSX-style fire animation
 - **Matrix Rain** - Classic Matrix digital rain
-- **Matrix Art** - ASCII art with Matrix-style digital streams
-- **Rain Effect** - ASCII character rain effect
-- **Rain Art** - ASCII art with crystallizing rain effect
+- **Rain** - ASCII character rain effect
 - **Fireworks** - Particle-based fireworks display
-- **Pour Effect** - Characters pour into position from different directions
-- **Print Effect** - Typewriter-style text rendering
-- **Beams Effect** - Full-screen light beam background animation
-- **Beam Text Effect** - Text display with animated light beams and auto-sizing
-- **Ring Text Effect** - Text rotates and converges in spectacular ring animation
-- **Blackhole Effect** - Text gets consumed by a swirling blackhole and explodes
+- **Beams** - Full-screen light beam background animation
 - **Aquarium** - Underwater scene with fish, diver, boat, and sea life
+
+### Text Effects
+Effects that animate ASCII text and art (requires `-file` flag).
+
+- **Fire Text** - ASCII text consumed by rising flames
+- **Matrix Art** - ASCII art with Matrix-style digital streams
+- **Rain Art** - ASCII art with crystallizing rain effect
+- **Pour** - Characters pour into position from different directions
+- **Print** - Typewriter-style text rendering
+- **Beam Text** - Text display with animated light beams and auto-sizing
+- **Ring Text** - Text rotates and converges in spectacular ring animation
+- **Blackhole** - Text gets consumed by a swirling blackhole and explodes
 
 ## Installation
 
@@ -79,18 +86,37 @@ syscgo-tui
 
 Run any animation directly from command line:
 
+**Animations** (no text input required):
 ```bash
 # Fire effect with Dracula theme (infinite loop)
 syscgo -effect fire -theme dracula -duration 0
-
-# Fire text effect with ASCII art
-syscgo -effect fire-text -file logo.txt -theme rama -duration 0
 
 # Matrix rain with Nord theme for 30 seconds
 syscgo -effect matrix -theme nord -duration 30
 
 # Rain effect with Tokyo Night theme
 syscgo -effect rain -theme tokyo-night
+
+# Fireworks display
+syscgo -effect fireworks -theme catppuccin -duration 20
+
+# Beams effect (full-screen background)
+syscgo -effect beams -theme nord -duration 0
+
+# Aquarium effect (infinite)
+syscgo -effect aquarium -theme dracula -duration 0
+```
+
+**Text Effects** (require `-file` flag with text/ASCII art):
+```bash
+# Fire text effect with ASCII art
+syscgo -effect fire-text -file logo.txt -theme rama -duration 0
+
+# Matrix art effect
+syscgo -effect matrix-art -file art.txt -theme eldritch -duration 20
+
+# Rain art effect
+syscgo -effect rain-art -file banner.txt -theme tokyo-night -duration 15
 
 # Pour effect with text file
 syscgo -effect pour -file message.txt -theme gruvbox -duration 10
@@ -106,12 +132,6 @@ syscgo -effect ring-text -file title.txt -theme eldritch -duration 10
 
 # Blackhole effect with text
 syscgo -effect blackhole -file text.txt -theme dark -duration 15
-
-# Beams effect (full-screen background)
-syscgo -effect beams -theme nord -duration 0
-
-# Aquarium effect (infinite)
-syscgo -effect aquarium -theme dracula -duration 0
 ```
 
 **Available themes:** dracula, gruvbox, nord, tokyo-night, catppuccin, material, solarized, monochrome, transishardjob, rama, eldritch, dark
