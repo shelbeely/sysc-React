@@ -1,5 +1,6 @@
 # Binaries
 syscgo
+installer
 *.exe
 *.dll
 *.so
@@ -7,6 +8,7 @@ syscgo
 
 # Test binary
 *.test
+test_*.go
 
 # Output of the go coverage tool
 *.out
@@ -20,6 +22,10 @@ go.work
 *.swp
 *.swo
 *~
+*.backup
+
+# Development
+.beads/
 
 # OS
 .DS_Store
