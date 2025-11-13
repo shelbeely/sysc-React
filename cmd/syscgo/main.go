@@ -14,8 +14,10 @@ import (
 	"golang.org/x/term"
 )
 
-const banner = `▄▀▀▀▀ █   █ ▄▀▀▀▀ ▄▀▀▀▀    ▄▀    ▄▀ 
- ▀▀▀▄ ▀▀▀▀█  ▀▀▀▄ █      ▄▀    ▄▀   
+const version = "1.0.1"
+
+const banner = `▄▀▀▀▀ █   █ ▄▀▀▀▀ ▄▀▀▀▀    ▄▀    ▄▀
+ ▀▀▀▄ ▀▀▀▀█  ▀▀▀▄ █      ▄▀    ▄▀
 ▀▀▀▀  ▀▀▀▀▀ ▀▀▀▀   ▀▀▀▀ ▀     ▀
 
 Terminal Animation Library
@@ -238,12 +240,18 @@ func main() {
 	display := flag.Bool("display", false, "Display mode: complete once and hold (beam-text only)")
 	help := flag.Bool("h", false, "Show help")
 	flag.BoolVar(help, "help", false, "Show help")
+	showVersion := flag.Bool("version", false, "Show version")
 
 	flag.Usage = showHelp
 	flag.Parse()
 
 	if *help {
 		showHelp()
+		return
+	}
+
+	if *showVersion {
+		fmt.Printf("syscgo version %s\n", version)
 		return
 	}
 
