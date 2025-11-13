@@ -552,8 +552,8 @@ func runPour(width, height int, theme string, file string, frames int) {
 		}
 	}
 
-	// Wrap text to fit terminal width (leave margin for centering)
-	text = wrapText(text, width-10)
+	// Don't wrap text - ASCII art needs to be preserved as-is
+	// The pour effect will handle centering
 
 	// Create pour effect with sample text centered in terminal
 	config := animations.PourConfig{
