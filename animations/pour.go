@@ -105,12 +105,25 @@ func (p *PourEffect) init() {
 		startY = 0
 	}
 
+	// Find maximum line width for proper ASCII art alignment
+	maxLineWidth := 0
+	for _, line := range lines {
+		lineLen := len([]rune(line))
+		if lineLen > maxLineWidth {
+			maxLineWidth = lineLen
+		}
+	}
+
+	// Calculate starting X position based on max line width (centers the entire block)
+	baseStartX := (p.width - maxLineWidth) / 2
+	if baseStartX < 0 {
+		baseStartX = 0
+	}
+
 	// Map text to terminal coordinates
 	for lineIdx, line := range lines {
-		startX := (p.width - len(line)) / 2
-		if startX < 0 {
-			startX = 0
-		}
+		// All lines start at the same X position for proper ASCII art alignment
+		startX := baseStartX
 
 		for charIdx, char := range line {
 			if char == ' ' || char == '\t' {
