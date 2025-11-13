@@ -31,7 +31,7 @@ type BeamsEffect struct {
 	finalWipeSpeed       int
 
 	// Character data
-	chars []BeamCharacter
+	Chars []BeamCharacter
 
 	// Beam groups
 	rowGroups    []BeamGroup
@@ -201,7 +201,7 @@ func (b *BeamsEffect) initBackgroundMode() {
 
 	for y := 0; y < b.height; y += spacing {
 		for x := 0; x < b.width; x += spacing {
-			b.chars = append(b.chars, BeamCharacter{
+			b.Chars = append(b.Chars, BeamCharacter{
 				original:         ' ',
 				x:                x,
 				y:                y,
@@ -222,7 +222,7 @@ func (b *BeamsEffect) initBackgroundMode() {
 func (b *BeamsEffect) createRowGroups() {
 	// Group characters by row
 	rowMap := make(map[int][]int)
-	for i, char := range b.chars {
+	for i, char := range b.Chars {
 		rowMap[char.y] = append(rowMap[char.y], i)
 	}
 
@@ -230,7 +230,7 @@ func (b *BeamsEffect) createRowGroups() {
 	for _, indices := range rowMap {
 		// Sort by x coordinate
 		sort.Slice(indices, func(i, j int) bool {
-			return b.chars[indices[i]].x < b.chars[indices[j]].x
+			return b.Chars[indices[i]].x < b.Chars[indices[j]].x
 		})
 
 		// Randomly reverse
@@ -262,7 +262,7 @@ func (b *BeamsEffect) createRowGroups() {
 func (b *BeamsEffect) createColumnGroups() {
 	// Group characters by column
 	colMap := make(map[int][]int)
-	for i, char := range b.chars {
+	for i, char := range b.Chars {
 		colMap[char.x] = append(colMap[char.x], i)
 	}
 
@@ -270,7 +270,7 @@ func (b *BeamsEffect) createColumnGroups() {
 	for _, indices := range colMap {
 		// Sort by y coordinate
 		sort.Slice(indices, func(i, j int) bool {
-			return b.chars[indices[i]].y < b.chars[indices[j]].y
+			return b.Chars[indices[i]].y < b.Chars[indices[j]].y
 		})
 
 		// Randomly reverse
@@ -326,7 +326,7 @@ func (b *BeamsEffect) shuffleGroups() {
 func (b *BeamsEffect) createDiagonalGroups() {
 	// Group by diagonal (top-left to bottom-right)
 	diagMap := make(map[int][]int)
-	for i, char := range b.chars {
+	for i, char := range b.Chars {
 		diag := char.x + char.y
 		diagMap[diag] = append(diagMap[diag], i)
 	}
@@ -487,7 +487,7 @@ func (b *BeamsEffect) updateGroup(group *BeamGroup) bool {
 
 	for i := 0; i < charsToActivate && group.currentCharIndex < len(group.charIndices); i++ {
 		charIdx := group.charIndices[group.currentCharIndex]
-		char := &b.chars[charIdx]
+		char := &b.Chars[charIdx]
 
 		// Activate beam scene
 		if group.direction == "row" {
@@ -509,7 +509,7 @@ func (b *BeamsEffect) updateGroup(group *BeamGroup) bool {
 		// Update trailing characters to use progressively thinner symbols
 		for j := 1; j < group.beamLength && group.currentCharIndex-j >= 0; j++ {
 			trailCharIdx := group.charIndices[group.currentCharIndex-j]
-			trailChar := &b.chars[trailCharIdx]
+			trailChar := &b.Chars[trailCharIdx]
 
 			if trailChar.sceneActive == "beam_row" || trailChar.sceneActive == "beam_column" {
 				symbolIdx := j
@@ -545,8 +545,8 @@ func (b *BeamsEffect) updateHoldPhase() {
 
 // updateCharacterAnimations updates all character animation scenes
 func (b *BeamsEffect) updateCharacterAnimations() {
-	for i := range b.chars {
-		char := &b.chars[i]
+	for i := range b.Chars {
+		char := &b.Chars[i]
 
 		if !char.visible {
 			continue
@@ -631,7 +631,7 @@ func (b *BeamsEffect) Render() string {
 	}
 
 	// Draw characters
-	for _, char := range b.chars {
+	for _, char := range b.Chars {
 		if !char.visible {
 			continue
 		}
@@ -672,12 +672,12 @@ func (b *BeamsEffect) Reset() {
 	b.holdCounter = 0
 
 	// Reset all characters
-	for i := range b.chars {
-		b.chars[i].visible = false
-		b.chars[i].sceneActive = ""
-		b.chars[i].sceneFrame = 0
-		b.chars[i].currentSymbol = b.chars[i].original
-		b.chars[i].currentColor = ""
+	for i := range b.Chars {
+		b.Chars[i].visible = false
+		b.Chars[i].sceneActive = ""
+		b.Chars[i].sceneFrame = 0
+		b.Chars[i].currentSymbol = b.Chars[i].original
+		b.Chars[i].currentColor = ""
 	}
 
 	// Reset all groups
@@ -712,7 +712,7 @@ func formatHexColor(rgb [3]uint8) string {
 func (b *BeamsEffect) Resize(width, height int) {
 	b.width = width
 	b.height = height
-	b.chars = b.chars[:0]
+	b.Chars = b.Chars[:0]
 	b.rowGroups = b.rowGroups[:0]
 	b.columnGroups = b.columnGroups[:0]
 	b.diagonalGroups = b.diagonalGroups[:0]
