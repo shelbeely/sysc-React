@@ -4,20 +4,20 @@ Terminal animation library for Go. Pure Go animations ready to use in your TUI a
 
 ## Effects
 
-- **Rain Effect** - ASCII character rain effect
-- **Matrix Rain** - Classic Matrix digital rain
-- **Fireworks** - Particle-based fireworks display
 - **Fire Effect** - DOOM PSX-style fire animation
+- **Fire Text Effect** - ASCII text consumed by rising flames
+- **Matrix Rain** - Classic Matrix digital rain
+- **Matrix Art** - ASCII art with Matrix-style digital streams
+- **Rain Effect** - ASCII character rain effect
+- **Rain Art** - ASCII art with crystallizing rain effect
+- **Fireworks** - Particle-based fireworks display
 - **Pour Effect** - Characters pour into position from different directions
+- **Print Effect** - Typewriter-style text rendering
 - **Beams Effect** - Full-screen light beam background animation
 - **Beam Text Effect** - Text display with animated light beams and auto-sizing
 - **Ring Text Effect** - Text rotates and converges in spectacular ring animation
 - **Blackhole Effect** - Text gets consumed by a swirling blackhole and explodes
-- **Blackhole Particles** - Pure particle blackhole effect with random stars (no text)
 - **Aquarium** - Underwater scene with fish, diver, boat, and sea life
-- **Print Effect** - Typewriter-style text rendering
-- **Rain Art** - ASCII art with crystallizing rain effect
-- **Matrix Art** - ASCII art with Matrix-style digital streams
 
 ## Installation
 
@@ -64,51 +64,62 @@ The easiest way to browse and select animations is through the interactive TUI:
 syscgo-tui
 ```
 
-Visual selector for animations, themes, and durations. Built-in ASCII art editor with live preview (Ctrl+S). Navigate with arrows or vim keys.
+![TUI Showcase](assets/showcase_tui.gif)
+
+**Features:**
+- Visual selector for all animations, themes, and durations
+- Built-in ASCII art editor (BIT) with live preview
+- 174 block-style fonts for creating ASCII art
+- Real-time animation preview
+- Export ASCII art to file (Ctrl+S)
+- Navigate with arrow keys or vim keybindings (h/j/k/l)
+- Instant theme switching
 
 ### Command Line
 
 Run any animation directly from command line:
 
 ```bash
-# Rain effect with Tokyo Night theme
-syscgo -effect rain -theme tokyo-night
+# Fire effect with Dracula theme (infinite loop)
+syscgo -effect fire -theme dracula -duration 0
+
+# Fire text effect with ASCII art
+syscgo -effect fire-text -file logo.txt -theme rama -duration 0
 
 # Matrix rain with Nord theme for 30 seconds
 syscgo -effect matrix -theme nord -duration 30
 
-# Fire effect with Dracula theme (infinite loop)
-syscgo -effect fire -theme dracula -duration 0
+# Rain effect with Tokyo Night theme
+syscgo -effect rain -theme tokyo-night
 
-# Pour effect with Tokyo Night theme
-syscgo -effect pour -theme tokyo-night -duration 10
+# Pour effect with text file
+syscgo -effect pour -file message.txt -theme gruvbox -duration 10
 
-# Beams effect with Nord theme (full-screen background)
-syscgo -effect beams -theme nord -duration 0
+# Print effect (typewriter style)
+syscgo -effect print -file banner.txt -theme catppuccin -duration 15
 
 # Beam text effect with auto-sizing and display mode
-syscgo -effect beam-text -theme nord -file message.txt -auto -display -duration 5
+syscgo -effect beam-text -file header.txt -auto -display -theme nord -duration 5
 
-# Aquarium effect with Dracula theme (infinite)
+# Ring text effect
+syscgo -effect ring-text -file title.txt -theme eldritch -duration 10
+
+# Blackhole effect with text
+syscgo -effect blackhole -file text.txt -theme dark -duration 15
+
+# Beams effect (full-screen background)
+syscgo -effect beams -theme nord -duration 0
+
+# Aquarium effect (infinite)
 syscgo -effect aquarium -theme dracula -duration 0
-
-# Blackhole particles effect with Eldritch theme (dramatic full-screen particle animation)
-syscgo -effect blackhole-particles -theme eldritch -duration 0
 ```
 
 **Available themes:** dracula, gruvbox, nord, tokyo-night, catppuccin, material, solarized, monochrome, transishardjob, rama, eldritch, dark
 
-### Beam Text Special Flags
-
-The `beam-text` effect supports two special flags:
-
-- **`-auto`** - Automatically sizes the canvas to fit text dimensions exactly
-- **`-display`** - Completes animation once and holds at final bright state
-
-Example:
-```bash
-syscgo -effect beam-text -file ~/header.txt -auto -display -theme nord -duration 5
-```
+**Text Effect Flags:**
+- `-auto` - Auto-size canvas to fit text (beam-text only)
+- `-display` - Complete once and hold at final state (beam-text only)
+- `-file` - Path to text file for text-based effects
 
 ## Effect Showcase
 
@@ -123,9 +134,6 @@ syscgo -effect beam-text -file ~/header.txt -auto -display -theme nord -duration
 
 ### Fire
 ![Fire Effect](assets/fire.gif)
-
-### Decrypt
-![Decrypt Effect](assets/decrypt.gif)
 
 ### Pour
 ![Pour Effect](assets/pour.gif)
@@ -155,9 +163,10 @@ go run .
 
 See [GUIDE.md](GUIDE.md) for detailed CLI usage.
 
-## Inspiration
+## Acknowledgements
 
-This project was inspired by [terminaltexteffects](https://github.com/ChrisBuilds/terminaltexteffects) - an amazing Python library for terminal visual effects. sysc-Go brings similar visual effects to the Go ecosystem with a focus on performance and easy integration into Go TUI applications.
+- [terminaltexteffects](https://github.com/ChrisBuilds/terminaltexteffects) - Inspiration for terminal visual effects
+- [bit](https://github.com/superstarryeyes/bit) - ASCII art editor and font library integration
 
 ## License
 
