@@ -67,10 +67,14 @@ func (m Model) renderCanvas() string {
 
 	// Wrap raw content in a styled box WITHOUT transforming the content itself
 	// Pattern from sysc-greet: border provides structure, content stays raw
-	// No padding - lipgloss adds enough space with the border
+	// Add padding for symmetry with selector area (4 selectors × 20 width = 80)
+	// Minimum dimensions to create a more balanced viewport
 	return lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("#88C0D0")).
+		Padding(2, 4).
+		Width(82).
+		Align(lipgloss.Center, lipgloss.Top).
 		Render(content)
 }
 
