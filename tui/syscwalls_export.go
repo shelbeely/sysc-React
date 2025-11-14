@@ -105,14 +105,14 @@ func updateSyscWallsConfig(configPath, artPath string) error {
 
 	// Read existing config or create default
 	config := make(map[string]map[string]string)
-	config["idle"] = map[string]string{"timeout": "300"}
-	config["daemon"] = map[string]string{"monitors": "all"}
-	config["terminal"] = map[string]string{"fullscreen": "true", "opacity": "0.95"}
+	config["idle"] = map[string]string{"timeout": "300s", "min_duration": "30s"}
+	config["daemon"] = map[string]string{"debug": "false"}
+	config["terminal"] = map[string]string{"fullscreen": "true", "kitty": "true"}
 	config["animation"] = map[string]string{
-		"type":     "beam-text",
-		"theme":    "dracula",
-		"file":     artPath,
-		"duration": "infinite",
+		"effect": "beam-text",
+		"theme":  "dracula",
+		"file":   artPath,
+		"cycle":  "false",
 	}
 
 	// If config exists, read and merge
@@ -123,9 +123,9 @@ func updateSyscWallsConfig(configPath, artPath string) error {
 			config["animation"] = make(map[string]string)
 		}
 		config["animation"]["file"] = artPath
-		config["animation"]["type"] = "beam-text"
+		config["animation"]["effect"] = "beam-text"
 		config["animation"]["theme"] = "dracula"
-		config["animation"]["duration"] = "infinite"
+		config["animation"]["cycle"] = "false"
 	}
 
 	// Write config
