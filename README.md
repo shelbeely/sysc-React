@@ -2,6 +2,8 @@
 
 Terminal animation library for Go. Pure Go animations ready to use in your TUI applications.
 
+![Fire Text Showcase](assets/fire-text.gif)
+
 ## Effects
 
 ### Animations
@@ -143,32 +145,45 @@ syscgo -effect blackhole -file text.txt -theme dark -duration 15
 
 ## Effect Showcase
 
-### Rain
-![ASCII Rain](assets/rain.gif)
+### Animations
 
-### Matrix
-![Matrix Rain](assets/matrix.gif)
-
-### Fireworks
-![Fireworks](assets/fireworks.gif)
-
-### Fire
+#### Fire
 ![Fire Effect](assets/fire.gif)
 
-### Pour
-![Pour Effect](assets/pour.gif)
+#### Matrix Rain
+![Matrix Rain](assets/matrix.gif)
 
-### Beams
+#### Rain
+![ASCII Rain](assets/rain.gif)
+
+#### Fireworks
+![Fireworks](assets/fireworks.gif)
+
+#### Beams
 ![Beams Effect](assets/beams.gif)
 
-### Beam Text
-![Beam Text Effect](assets/beamtext.gif)
-
-### Aquarium
+#### Aquarium
 ![Aquarium Effect](assets/aquarium.gif)
 
-### Print
-![Print Effect](assets/print.gif)
+### Text Effects
+
+#### Fire Text
+![Fire Text Effect](assets/fire-text.gif)
+
+#### Matrix Art
+![Matrix Art Effect](assets/matrix-text.gif)
+
+#### Rain Art
+![Rain Art Effect](assets/rain-text.gif)
+
+#### Beam Text
+![Beam Text Effect](assets/beam-text.gif)
+
+#### Ring Text
+![Ring Text Effect](assets/ring-text.gif)
+
+#### Blackhole
+![Blackhole Effect](assets/blackhole.gif)
 
 ## Demo
 
