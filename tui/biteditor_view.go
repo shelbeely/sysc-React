@@ -275,7 +275,7 @@ func (m Model) renderSpacingControl() string {
 
 // renderBitHelp renders help text for BIT editor
 func (m Model) renderBitHelp() string {
-	helpText := "Tab/Shift+Tab Controls • ←/→ Adjust • Enter Select • F Font List • C Color • Ctrl+S Save • Esc Back"
+	helpText := "Tab/Shift+Tab Controls • ←/→ Adjust • Enter Select • Ctrl+F Font • Ctrl+C Color • Ctrl+S Save • Esc Back"
 	return m.styles.Help.Render(helpText)
 }
 

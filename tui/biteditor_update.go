@@ -42,19 +42,15 @@ func (m Model) handleBitEditorKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.exportTarget = 0 // Default to syscgo
 		return m, nil
 
-	case "f", "F":
-		// Open font browser (only when text input is not focused)
-		if m.bitFocusedControl != 0 {
-			m.bitShowFontList = true
-			return m, nil
-		}
+	case "ctrl+f":
+		// Open font browser
+		m.bitShowFontList = true
+		return m, nil
 
-	case "c", "C":
-		// Open color picker (only when text input is not focused)
-		if m.bitFocusedControl != 0 {
-			m.bitColorPicker = true
-			return m, nil
-		}
+	case "ctrl+c":
+		// Open color picker
+		m.bitColorPicker = true
+		return m, nil
 
 	case "tab":
 		// Next control
