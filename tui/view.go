@@ -49,9 +49,16 @@ func (m Model) View() string {
 	// Help text (no j/k hints)
 	sections = append(sections, m.renderHelp())
 
-	// Join all sections - no background wrapping to prevent bleeding
+	// Join all sections
 	content := lipgloss.JoinVertical(lipgloss.Left, sections...)
-	return content
+
+	// Wrap in outer container with centering - pattern from installer
+	// This centers the entire layout without distorting ASCII art
+	return lipgloss.NewStyle().
+		Width(m.width).
+		Height(m.height).
+		Align(lipgloss.Center, lipgloss.Top).
+		Render(content)
 }
 
 // renderCanvas renders the animation preview viewport
@@ -66,15 +73,11 @@ func (m Model) renderCanvas() string {
 	}
 
 	// Wrap raw content in a styled box WITHOUT transforming the content itself
-	// Pattern from sysc-greet: border provides structure, content stays raw
-	// Add padding for symmetry with selector area (4 selectors × 20 width = 80)
-	// Minimum dimensions to create a more balanced viewport
+	// Pattern from installer/sysc-greet: only border, NO padding/align on ASCII
+	// These transformations distort the ASCII art by adding extra spacing
 	return lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("#88C0D0")).
-		Padding(2, 4).
-		Width(82).
-		Align(lipgloss.Center, lipgloss.Top).
 		Render(content)
 }
 
