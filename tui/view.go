@@ -79,12 +79,12 @@ func (m Model) renderCanvas() string {
 	// Wrap raw content in a styled box WITHOUT transforming the content itself
 	// Pattern from installer/sysc-greet: only border, NO padding/align on ASCII
 	// Set explicit dimensions for 80% height viewport
+	// NO Align() here - that distorts ASCII. Centering happens at outer container.
 	return lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("#88C0D0")).
 		Width(viewportWidth).
 		Height(viewportHeight).
-		Align(lipgloss.Center, lipgloss.Top).
 		Render(content)
 }
 
