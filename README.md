@@ -1,4 +1,4 @@
-# sysc-Go
+![sysc-Go](assets/sysc-go.png)
 
 Terminal animation library for Go. Pure Go animations ready to use in your TUI applications.
 
