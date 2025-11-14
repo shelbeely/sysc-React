@@ -171,7 +171,7 @@ syscgo -effect blackhole -file text.txt -theme dark -duration 15
 ![Fire Text Effect](assets/fire-text.gif)
 
 #### Matrix Art
-![Matrix Art Effect](assets/matrix-text.gif)
+![Matrix Art Effect](assets/matrix.gif)
 
 #### Rain Art
 ![Rain Art Effect](assets/rain-text.gif)
