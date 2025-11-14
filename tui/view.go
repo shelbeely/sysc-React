@@ -72,12 +72,19 @@ func (m Model) renderCanvas() string {
 		content = m.renderWelcome()
 	}
 
+	// Calculate viewport dimensions - 80% of terminal height, full width minus padding
+	viewportHeight := int(float64(m.height) * 0.8)
+	viewportWidth := m.width - 10 // Leave some margin
+
 	// Wrap raw content in a styled box WITHOUT transforming the content itself
 	// Pattern from installer/sysc-greet: only border, NO padding/align on ASCII
-	// These transformations distort the ASCII art by adding extra spacing
+	// Set explicit dimensions for 80% height viewport
 	return lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("#88C0D0")).
+		Width(viewportWidth).
+		Height(viewportHeight).
+		Align(lipgloss.Center, lipgloss.Top).
 		Render(content)
 }
 
