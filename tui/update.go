@@ -120,6 +120,13 @@ func (m Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "q", "esc":
 		return m, tea.Quit
 
+	case "ctrl+b":
+		// Launch BIT editor
+		m.bitEditorMode = true
+		m.bitTextInput.Focus()
+		m.bitFocusedControl = 0
+		return m, nil
+
 	case "up":
 		return m.navigateUp(), nil
 

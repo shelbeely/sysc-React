@@ -188,7 +188,7 @@ func (m Model) renderHelp() string {
 	if m.animationRunning {
 		helpText = "ESC Stop animation • ↑/↓ Navigate options • ←/→ Change selector"
 	} else {
-		helpText = "↑/↓ Navigate options • ←/→ Change selector • ENTER Start animation • Q Quit"
+		helpText = "↑/↓ Navigate options • ←/→ Change selector • ENTER Start animation • Ctrl+B BIT Editor • Q Quit"
 	}
 	return m.styles.Help.Render(helpText)
 }
@@ -308,7 +308,7 @@ func (m Model) renderExportPrompt() string {
 	// Export options
 	exportOptions := []string{
 		"syscgo - Save to assets/ folder for animations",
-		"sysc-walls (WIP) - Save as wallpaper (coming soon)",
+		"sysc-walls - Save as wallpaper for sysc-walls",
 	}
 
 	optionStyle := lipgloss.NewStyle().
@@ -318,8 +318,7 @@ func (m Model) renderExportPrompt() string {
 	selectedStyle := lipgloss.NewStyle().
 		Padding(0, 2).
 		Bold(true).
-		Foreground(lipgloss.Color("#88C0D0")).
-		Background(lipgloss.Color("#2E3440"))
+		Foreground(lipgloss.Color("#88C0D0"))
 
 	var optionsRendered []string
 	for i, option := range exportOptions {
@@ -334,8 +333,7 @@ func (m Model) renderExportPrompt() string {
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("#88C0D0")).
 		Padding(1, 2).
-		Width(m.width - 6).
-		Background(lipgloss.Color("#1E1E2E"))
+		Width(m.width - 6)
 
 	sections = append(sections, optionsBox.Render(lipgloss.JoinVertical(lipgloss.Left, optionsRendered...)))
 
