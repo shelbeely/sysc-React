@@ -2,7 +2,7 @@
 
 Terminal animation library for Go. Pure Go animations ready to use in your TUI applications.
 
-![Fire Text Showcase](assets/fire-text.gif)
+![Matrix Rain Showcase](assets/matrix.gif)
 
 ## Effects
 
