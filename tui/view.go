@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -80,6 +81,8 @@ func (m Model) renderCanvas() string {
 
 // renderWelcome renders the welcome screen
 func (m Model) renderWelcome() string {
+	// Render ASCII art as raw string to preserve exact spacing
+	// Pattern from sysc-greet: keep ASCII in raw backticks to prevent distortion
 	welcome := `▄▀▀▀▀ █   █ ▄▀▀▀▀ ▄▀▀▀▀       ▄▀▀▀▀ ▄▀▀▀▄    ▄▀    ▄▀
  ▀▀▀▄ ▀▀▀▀█  ▀▀▀▄ █     ▀▀▀▀▀ █ ▀▀█ █   █  ▄▀    ▄▀
 ▀▀▀▀  ▀▀▀▀▀ ▀▀▀▀   ▀▀▀▀        ▀▀▀   ▀▀▀  ▀     ▀
@@ -90,6 +93,8 @@ Terminal Animation Library - Interactive TUI
 Select animation settings below
 Press ENTER to preview animation in viewport
 Press ESC to stop preview`
+
+	// Return raw ASCII without any manipulation
 	return welcome
 }
 
