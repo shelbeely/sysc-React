@@ -57,6 +57,8 @@ go install github.com/Nomadcxx/sysc-Go/cmd/syscgo@latest
 go install github.com/Nomadcxx/sysc-Go/cmd/syscgo-tui@latest
 ```
 
+> **Note:** Installing via `go install` does not include fonts or assets. The TUI will work but the BIT editor font browser will be empty. For full functionality, use the installer or AUR package, or manually download fonts from `fonts/` to `~/.local/share/syscgo/fonts/`.
+
 ### As Library
 
 ```bash
@@ -142,6 +144,35 @@ syscgo -effect blackhole -file text.txt -theme dark -duration 15
 - `-auto` - Auto-size canvas to fit text (beam-text only)
 - `-display` - Complete once and hold at final state (beam-text only)
 - `-file` - Path to text file for text-based effects
+
+## Asset Directories
+
+When using text effects with `-file`, syscgo searches for files in the following order:
+
+1. **Absolute path** - If you provide a full path (e.g., `/home/user/art.txt`)
+2. **Current directory** - Files in your working directory
+3. **User assets** - `~/.local/share/syscgo/assets/` (where new art is saved)
+4. **System assets** - `/usr/local/share/syscgo/assets/` or `/usr/share/syscgo/assets/`
+
+**Where your ASCII art is saved:**
+
+When you create ASCII art using the TUI (syscgo-tui) and export it, files are saved to:
+
+```
+~/.local/share/syscgo/assets/
+```
+
+**Example usage:**
+```bash
+# Create art in TUI
+syscgo-tui
+# Use BIT editor, export as "hyprland.txt"
+
+# Use your exported art
+syscgo -effect fire-text -file hyprland.txt -theme rama -duration 0
+```
+
+For sysc-walls integration, art exports to `~/.config/sysc-walls/ascii/` instead.
 
 ## Effect Showcase
 
