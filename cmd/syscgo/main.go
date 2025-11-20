@@ -658,8 +658,8 @@ func runPrint(width, height int, theme string, file string, frames int) {
 		Width:           width,
 		Height:          height,
 		Text:            text,
-		FramesPerChar:   1,  // Print every frame for smooth animation
-		PrintSpeed:      2,  // 2 characters per update
+		FramesPerChar:   1, // Print every frame for smooth animation
+		PrintSpeed:      2, // 2 characters per update
 		PrintHeadSymbol: "█",
 		TrailSymbols:    []string{"░", "▒", "▓"},
 		GradientStops:   gradientStops,

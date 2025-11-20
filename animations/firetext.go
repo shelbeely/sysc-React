@@ -16,12 +16,12 @@ type FireTextEffect struct {
 	chars   []rune   // Fire characters for density (8-level gradient)
 
 	// Text masking
-	text         string
-	textMask     [][]bool // [y][x] = true if character exists at this position
-	centerX      int
-	centerY      int
-	artWidth     int
-	artHeight    int
+	text      string
+	textMask  [][]bool // [y][x] = true if character exists at this position
+	centerX   int
+	centerY   int
+	artWidth  int
+	artHeight int
 }
 
 // NewFireTextEffect creates a new fire-text effect with given dimensions, palette, and ASCII art
@@ -171,7 +171,7 @@ func (f *FireTextEffect) Update() {
 	// Maintain constant heat source at bottom of terminal (not text base)
 	// This keeps fire burning continuously from the bottom up
 	for x := 0; x < f.width; x++ {
-		bottomIdx := (f.height - 1) * f.width + x
+		bottomIdx := (f.height-1)*f.width + x
 		if !f.textMask[f.height-1][x] {
 			f.buffer[bottomIdx] = 65 // Maximum heat
 		}
