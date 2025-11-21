@@ -10,11 +10,11 @@ const (
 
 // EffectMetadata describes an animation effect
 type EffectMetadata struct {
-	Name          string // Effect name (e.g., "fire", "matrix")
-	RequiresText  bool   // Whether effect requires text input
-	Description   string // Brief description
-	VersionAdded  string // Version when effect was added
-	Category      string // Effect category (e.g., "particle", "text", "abstract")
+	Name         string // Effect name (e.g., "fire", "matrix")
+	RequiresText bool   // Whether effect requires text input
+	Description  string // Brief description
+	VersionAdded string // Version when effect was added
+	Category     string // Effect category (e.g., "particle", "text", "abstract")
 }
 
 // EffectRegistry contains metadata for all available effects
