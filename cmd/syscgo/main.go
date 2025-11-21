@@ -866,8 +866,15 @@ func runBeamText(width, height int, theme string, file string, auto bool, displa
 	quit := setupKeyboardInterrupt()
 	defer close(quit)
 
+	// When display mode is enabled, ignore duration and run until completion
+	// This allows the multi-phase beam-text animation to reach its final "hold" state
+	effectiveFrames := frames
+	if display {
+		effectiveFrames = 0
+	}
+
 	frame := 0
-	for frames == 0 || frame < frames {
+	for effectiveFrames == 0 || frame < effectiveFrames {
 		// Check for user exit
 		select {
 		case <-quit:
