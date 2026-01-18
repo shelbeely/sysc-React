@@ -16,7 +16,7 @@
     "example": "examples"
   },
   "scripts": {
-    "build": "bun run build:tsc",
+    "build": "tsc",
     "build:tsc": "tsc",
     "watch": "tsc --watch",
     "prepublishOnly": "npm run build"

@@ -1,239 +1,269 @@
-![sysc-Go](assets/sysc-go.png)
+# sysc-React
 
-Terminal animation library for Go. Pure Go animations ready to use in your TUI applications.
+Terminal animation library for React with Ink support. Pure React animations ready to use in your TUI applications.
 
-![Matrix Rain Showcase](assets/matrix.gif)
+This is a React/TypeScript port of [sysc-Go](https://github.com/Nomadcxx/sysc-Go), designed to work seamlessly with [Ink](https://github.com/vadimdemedes/ink) - the React renderer for interactive command-line applications.
 
-## Effects
+## Features
 
-### Animations
-Standalone effects that don't require text input.
-
-- **Fire** - DOOM PSX-style fire animation
-- **Matrix Rain** - Classic Matrix digital rain
-- **Rain** - ASCII character rain effect
-- **Fireworks** - Particle-based fireworks display
-- **Beams** - Full-screen light beam background animation
-- **Aquarium** - Underwater scene with fish, diver, boat, and sea life
-
-### Text Effects
-Effects that animate ASCII text and art (requires `-file` flag).
-
-- **Fire Text** - ASCII text consumed by rising flames
-- **Matrix Art** - ASCII art with Matrix-style digital streams
-- **Rain Art** - ASCII art with crystallizing rain effect
-- **Pour** - Characters pour into position from different directions
-- **Print** - Typewriter-style text rendering
-- **Beam Text** - Text display with animated light beams and auto-sizing
-- **Ring Text** - Text rotates and converges in spectacular ring animation
-- **Blackhole** - Text gets consumed by a swirling blackhole and explodes
+- 🔥 **Fire Effect** - DOOM PSX-style fire animation
+- 🌧️ **Matrix Rain** - Classic Matrix digital rain effect
+- 🎨 **12+ Color Themes** - Dracula, Nord, Catppuccin, Tokyo Night, Gruvbox, and more
+- ⚛️ **React Components** - Drop-in components for Ink applications
+- 🎯 **TypeScript** - Full type safety and IntelliSense support
+- 🚀 **Bun Compatible** - Optimized for Bun.js runtime
 
 ## Installation
 
-### CLI Tools
-
-**Via one-line installer (fastest):**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Nomadcxx/sysc-Go/master/install.sh | sudo bash
+npm install sysc-react react ink
 ```
 
-**Via interactive installer:**
-```bash
-# Clone and run the TUI installer (requires sudo for system-wide installation)
-# Installs both syscgo and syscgo-tui binaries
-git clone https://github.com/Nomadcxx/sysc-Go.git
-cd sysc-Go
-sudo go run ./cmd/installer/
-```
-
-**Via AUR (Arch Linux):**
-```bash
-yay -S syscgo
-```
-
-**Via Go:**
-```bash
-go install github.com/Nomadcxx/sysc-Go/cmd/syscgo@latest
-go install github.com/Nomadcxx/sysc-Go/cmd/syscgo-tui@latest
-```
-
-> **Note:** Installing via `go install` does not include fonts or assets. The TUI will work but the BIT editor font browser will be empty. For full functionality, use the installer or AUR package, or manually download fonts from `fonts/` to `~/.local/share/syscgo/fonts/`.
-
-### As Library
+Or with Bun:
 
 ```bash
-go get github.com/Nomadcxx/sysc-Go
+bun add sysc-react react ink
 ```
 
 ## Quick Start
 
-### Interactive TUI
+### Using Ink Components
 
-The easiest way to browse and select animations is through the interactive TUI:
+```tsx
+import React from 'react';
+import { render } from 'ink';
+import { Fire, Matrix } from 'sysc-react';
+
+const App = () => {
+  return (
+    <>
+      <Fire width={80} height={24} theme="dracula" />
+      {/* or */}
+      <Matrix width={80} height={24} theme="nord" />
+    </>
+  );
+};
+
+render(<App />);
+```
+
+### Using Animation Classes Directly
+
+```typescript
+import { FireEffect, getFirePalette } from 'sysc-react';
+
+const palette = getFirePalette('dracula');
+const fire = new FireEffect(80, 24, palette);
+
+// In your render loop
+setInterval(() => {
+  fire.update();
+  const frame = fire.render();
+  console.log(frame);
+}, 50);
+```
+
+## Available Effects
+
+### Fire
+
+Classic DOOM PSX-style fire effect with rising flames.
+
+```tsx
+import { Fire } from 'sysc-react';
+
+<Fire 
+  width={80}
+  height={24}
+  theme="dracula"
+  frameRate={50}
+/>
+```
+
+**Props:**
+- `width` (number, default: 80) - Terminal width in characters
+- `height` (number, default: 24) - Terminal height in characters
+- `theme` (string, default: 'dracula') - Color theme name
+- `frameRate` (number, default: 50) - Frame rate in milliseconds
+
+### Matrix
+
+Matrix-style digital rain with falling character streaks.
+
+```tsx
+import { Matrix } from 'sysc-react';
+
+<Matrix 
+  width={80}
+  height={24}
+  theme="nord"
+  frameRate={50}
+/>
+```
+
+**Props:**
+- `width` (number, default: 80) - Terminal width in characters
+- `height` (number, default: 24) - Terminal height in characters
+- `theme` (string, default: 'dracula') - Color theme name
+- `frameRate` (number, default: 50) - Frame rate in milliseconds
+
+## Available Themes
+
+- `dracula` - Dracula dark theme with purple and pink accents
+- `catppuccin` - Catppuccin Mocha soothing pastel theme
+- `nord` - Nord arctic, north-bluish color palette
+- `tokyo-night` - Tokyo Night dark theme inspired by Tokyo
+- `gruvbox` - Gruvbox retro groove color scheme
+- `material` - Material Design color palette
+- `solarized` - Solarized precision colors
+- `monochrome` - Grayscale monochrome theme
+- `transishardjob` - Trans pride colors
+- `rama` - Rama custom color scheme
+- `eldritch` - Eldritch dark theme with purple and cyan
+- `dark` - Simple dark theme with grayscale
+
+## Examples
+
+See the [`examples/`](./examples) directory for complete working examples:
 
 ```bash
-syscgo-tui
+cd examples
+npm install
+npm run demo:fire    # Run fire animation demo
+npm run demo:matrix  # Run matrix animation demo
 ```
 
-![TUI Showcase](assets/showcase_tui.gif)
+## Recording Animations
 
-**Features:**
-- Visual selector for all animations, themes, and durations
-- Built-in ASCII art editor (BIT) with live preview
-- 174 block-style fonts for creating ASCII art
-- Real-time animation preview
-- Export ASCII art to file (Ctrl+S)
-- Navigate with arrow keys or vim keybindings (h/j/k/l)
-- Instant theme switching
+Want to capture animations as GIFs for your README or documentation? See [examples/RECORDING.md](./examples/RECORDING.md) for a comprehensive guide.
 
-### Command Line
+### Quick Recording with VHS
 
-Run any animation directly from command line:
+[VHS](https://github.com/charmbracelet/vhs) is the recommended tool for recording terminal animations as GIFs.
 
-**Animations** (no text input required):
+**Install:**
 ```bash
-# Fire effect with Dracula theme (infinite loop)
-syscgo -effect fire -theme dracula -duration 0
+# macOS
+brew install vhs
 
-# Matrix rain with Nord theme for 30 seconds
-syscgo -effect matrix -theme nord -duration 30
-
-# Rain effect with Tokyo Night theme
-syscgo -effect rain -theme tokyo-night
-
-# Fireworks display
-syscgo -effect fireworks -theme catppuccin -duration 20
-
-# Beams effect (full-screen background)
-syscgo -effect beams -theme nord -duration 0
-
-# Aquarium effect (infinite)
-syscgo -effect aquarium -theme dracula -duration 0
+# Linux (with Go)
+go install github.com/charmbracelet/vhs@latest
 ```
 
-**Text Effects** (require `-file` flag with text/ASCII art):
+**Record:**
 ```bash
-# Fire text effect with ASCII art
-syscgo -effect fire-text -file logo.txt -theme rama -duration 0
-
-# Matrix art effect
-syscgo -effect matrix-art -file art.txt -theme eldritch -duration 20
-
-# Rain art effect
-syscgo -effect rain-art -file banner.txt -theme tokyo-night -duration 15
-
-# Pour effect with text file
-syscgo -effect pour -file message.txt -theme gruvbox -duration 10
-
-# Print effect (typewriter style)
-syscgo -effect print -file banner.txt -theme catppuccin -duration 15
-
-# Beam text effect with auto-sizing and display mode
-syscgo -effect beam-text -file header.txt -auto -display -theme nord -duration 5
-
-# Ring text effect
-syscgo -effect ring-text -file title.txt -theme eldritch -duration 10
-
-# Blackhole effect with text
-syscgo -effect blackhole -file text.txt -theme dark -duration 15
+cd examples
+npm run record:fire    # Creates demos/fire.gif
+npm run record:matrix  # Creates demos/matrix.gif
 ```
 
-**Available themes:** dracula, gruvbox, nord, tokyo-night, catppuccin, material, solarized, monochrome, transishardjob, rama, eldritch, dark
+### Other Recording Tools
 
-**Text Effect Flags:**
-- `-auto` - Auto-size canvas to fit text (beam-text only)
-- `-display` - Complete once and hold at final state (beam-text only)
-- `-file` - Path to text file for text-based effects
+The repository includes instructions for multiple recording tools:
 
-## Asset Directories
+- **VHS** (recommended) - High-quality terminal recorder with tape files
+- **asciinema + agg** - Record as asciicast, convert to GIF
+- **ttygif** - Simple npm-based recorder
+- **terminalizer** - Feature-rich terminal recorder
 
-When using text effects with `-file`, syscgo searches for files in the following order:
+Each tool has different strengths. See [examples/RECORDING.md](./examples/RECORDING.md) for detailed instructions.
 
-1. **Absolute path** - If you provide a full path (e.g., `/home/user/art.txt`)
-2. **Current directory** - Files in your working directory
-3. **User assets** - `~/.local/share/syscgo/assets/` (where new art is saved)
-4. **System assets** - `/usr/local/share/syscgo/assets/` or `/usr/share/syscgo/assets/`
+### Manual Recording Tips
 
-**Where your ASCII art is saved:**
+For best results in your README:
+- Use 60-80 character width, 20-24 lines height
+- Record 3-5 seconds (enough to show animation looping)
+- Use 10-15 FPS for GIFs to keep file size manageable
+- Optimize with `gifsicle -O3 --colors 256 input.gif -o output.gif`
+- Keep file size under 5MB for GitHub
 
-When you create ASCII art using the TUI (syscgo-tui) and export it, files are saved to:
+## API Reference
 
+### Animation Interface
+
+All effects implement the `Animation` interface:
+
+```typescript
+interface Animation {
+  update(): void;           // Advance animation by one frame
+  render(): string;         // Get current frame as colored string
+  reset(): void;            // Restart animation from beginning
+}
 ```
-~/.local/share/syscgo/assets/
+
+### Palette Functions
+
+```typescript
+import { getFirePalette, hexToAnsi, hexToRGB } from 'sysc-react';
+
+// Get color palette for a theme
+const palette = getFirePalette('dracula'); // string[]
+
+// Convert hex color to ANSI escape code
+const ansiCode = hexToAnsi('#ff5555'); // '\x1b[38;2;255;85;85m'
+
+// Convert hex to RGB values
+const [r, g, b] = hexToRGB('#ff5555'); // [255, 85, 85]
 ```
 
-**Example usage:**
-```bash
-# Create art in TUI
-syscgo-tui
-# Use BIT editor, export as "hyprland.txt"
+### Registry Functions
 
-# Use your exported art
-syscgo -effect fire-text -file hyprland.txt -theme rama -duration 0
+```typescript
+import { 
+  getEffectNames, 
+  getEffectMetadata, 
+  getThemeNames,
+  getThemeMetadata 
+} from 'sysc-react';
+
+// Get all available effect names
+const effects = getEffectNames(); // ['fire', 'matrix']
+
+// Get effect metadata
+const fireInfo = getEffectMetadata('fire');
+
+// Get all theme names
+const themes = getThemeNames();
+
+// Get theme metadata
+const draculaInfo = getThemeMetadata('dracula');
 ```
 
-For sysc-walls integration, art exports to `~/.config/sysc-walls/ascii/` instead.
-
-## Effect Showcase
-
-### Animations
-
-#### Fire
-![Fire Effect](assets/fire.gif)
-
-#### Matrix Rain
-![Matrix Rain](assets/matrix.gif)
-
-#### Rain
-![ASCII Rain](assets/rain.gif)
-
-#### Fireworks
-![Fireworks](assets/fireworks.gif)
-
-#### Beams
-![Beams Effect](assets/beams.gif)
-
-#### Aquarium
-![Aquarium Effect](assets/aquarium.gif)
-
-### Text Effects
-
-#### Fire Text
-![Fire Text Effect](assets/fire-text.gif)
-
-#### Matrix Art
-![Matrix Art Effect](assets/matrix.gif)
-
-#### Rain Art
-![Rain Art Effect](assets/rain-text.gif)
-
-#### Beam Text
-![Beam Text Effect](assets/beam-text.gif)
-
-#### Ring Text
-![Ring Text Effect](assets/ring-text.gif)
-
-#### Blackhole
-![Blackhole Effect](assets/blackhole.gif)
-
-## Demo
-
-Run the interactive demo to see all animations:
+## Building from Source
 
 ```bash
-cd examples/demo
-go run .
+# Clone the repository
+git clone https://github.com/shelbeely/sysc-React.git
+cd sysc-React
+
+# Install dependencies
+npm install  # or: bun install
+
+# Build
+npm run build  # or: bun run build
+
+# Watch mode for development
+npm run watch
 ```
 
-## Documentation
+## Development
 
-See [GUIDE.md](GUIDE.md) for detailed CLI usage.
+This project uses:
+- **TypeScript** for type safety
+- **React** for component model
+- **Ink** for terminal rendering
+- **Bun** as the recommended runtime (also works with Node.js)
 
 ## Acknowledgements
 
+- [sysc-Go](https://github.com/Nomadcxx/sysc-Go) - Original Go implementation
+- [Ink](https://github.com/vadimdemedes/ink) - React for CLIs
 - [terminaltexteffects](https://github.com/ChrisBuilds/terminaltexteffects) - Inspiration for terminal visual effects
-- [bit](https://github.com/superstarryeyes/bit) - ASCII art editor and font library integration
 
 ## License
 
 MIT
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
