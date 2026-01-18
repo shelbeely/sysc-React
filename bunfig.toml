@@ -1,0 +1,15 @@
+# Bun configuration
+[install]
+# Production dependencies only for builds
+production = false
+
+# Optional: Use faster registry
+registry = "https://registry.npmjs.org"
+
+[install.cache]
+# Enable caching
+dir = ".bun-cache"
+
+[test]
+# Test configuration (for future)
+preload = []

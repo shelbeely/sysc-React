@@ -1,0 +1,61 @@
+{
+  "name": "sysc-react",
+  "version": "1.0.0",
+  "description": "Terminal animation library for React with Ink support. Pure React animations ready to use in your TUI applications.",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:tsc": "tsc",
+    "watch": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "trustedDependencies": [
+    "esbuild"
+  ],
+  "keywords": [
+    "terminal",
+    "animation",
+    "react",
+    "ink",
+    "tui",
+    "cli",
+    "fire",
+    "matrix",
+    "effects"
+  ],
+  "author": "",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "peerDependencies": {
+    "ink": "^5.0.0 || ^6.0.0",
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^25.0.9",
+    "@types/react": "^19.2.8",
+    "ink": "^6.6.0",
+    "react": "^19.2.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

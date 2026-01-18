@@ -1,0 +1,16 @@
+#!/usr/bin/env node
+import React from 'react';
+import { render } from 'ink';
+import { Fire } from 'sysc-react';
+
+// Fire demo for README animation capture
+const FireDemo = () => {
+  return React.createElement(Fire, {
+    width: 60,
+    height: 20,
+    theme: 'dracula',
+    frameRate: 50
+  });
+};
+
+render(React.createElement(FireDemo));
