@@ -2,8 +2,16 @@
   "name": "sysc-react",
   "version": "1.0.0",
   "description": "Terminal animation library for React with Ink support. Pure React animations ready to use in your TUI applications.",
+  "type": "module",
   "main": "dist/index.js",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "directories": {
     "example": "examples"
   },

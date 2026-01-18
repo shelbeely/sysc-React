@@ -1,4 +1,4 @@
-import { EffectMetadata, ThemeMetadata } from './types';
+import { EffectMetadata, ThemeMetadata } from './types.js';
 
 /**
  * Library version

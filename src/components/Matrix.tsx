@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Text } from 'ink';
-import { MatrixEffect } from '../animations/matrix';
-import { getFirePalette } from '../palettes';
+import { MatrixEffect } from '../animations/matrix.js';
+import { getFirePalette } from '../palettes.js';
 
 export interface MatrixProps {
   /** Terminal width in characters (default: 80) */

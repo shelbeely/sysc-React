@@ -1,5 +1,5 @@
-import { Animation } from '../types';
-import { hexToAnsi, ANSI_RESET } from '../palettes';
+import { Animation } from '../types.js';
+import { hexToAnsi, ANSI_RESET } from '../palettes.js';
 
 /**
  * MatrixStreak represents a single vertical streak falling down the screen

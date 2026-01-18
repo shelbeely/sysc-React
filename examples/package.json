@@ -4,13 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "demo:fire": "tsx demos/fire-demo.tsx",
-    "demo:matrix": "tsx demos/matrix-demo.tsx",
+    "demo:fire": "node demos/fire-demo.js",
+    "demo:matrix": "node demos/matrix-demo.js",
     "record:fire": "vhs record-fire.tape",
     "record:matrix": "vhs record-matrix.tape",
     "record:all": "npm run record:fire && npm run record:matrix"
   },
   "dependencies": {
-    "sysc-react": "file:../.."
+    "sysc-react": "file:.."
   }
 }

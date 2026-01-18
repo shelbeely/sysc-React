@@ -1,18 +1,18 @@
 // Types
-export * from './types';
+export * from './types.js';
 
 // Registry
-export * from './registry';
+export * from './registry.js';
 
 // Palettes
-export * from './palettes';
+export * from './palettes.js';
 
 // Animations
-export { FireEffect } from './animations/fire';
-export { MatrixEffect } from './animations/matrix';
+export { FireEffect } from './animations/fire.js';
+export { MatrixEffect } from './animations/matrix.js';
 
 // Components
-export { Fire } from './components/Fire';
-export type { FireProps } from './components/Fire';
-export { Matrix } from './components/Matrix';
-export type { MatrixProps } from './components/Matrix';
+export { Fire } from './components/Fire.js';
+export type { FireProps } from './components/Fire.js';
+export { Matrix } from './components/Matrix.js';
+export type { MatrixProps } from './components/Matrix.js';

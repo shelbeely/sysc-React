@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Text } from 'ink';
-import { FireEffect } from '../animations/fire';
-import { getFirePalette } from '../palettes';
+import { FireEffect } from '../animations/fire.js';
+import { getFirePalette } from '../palettes.js';
 
 export interface FireProps {
   /** Terminal width in characters (default: 80) */
