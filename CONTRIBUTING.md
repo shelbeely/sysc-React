@@ -27,6 +27,8 @@ This project uses Vercel's Agent Skills system to maintain consistent code quali
 
 ### Currently Installed Skills
 
+#### From Vercel
+
 - **vercel-react-best-practices**: React and Next.js performance optimization guidelines
   - Located in `.github/skills/vercel-react-best-practices/`
   - 45 rules across 8 categories (eliminating waterfalls, bundle optimization, server-side performance, etc.)
@@ -38,6 +40,21 @@ This project uses Vercel's Agent Skills system to maintain consistent code quali
   - 100+ rules covering accessibility, performance, and UX
   - Audits for ARIA labels, semantic HTML, keyboard handlers, focus states, animations, typography, images, and more
   - Triggered by "Review my UI", "Check accessibility", or "Audit design" tasks
+
+#### From OpenCode Community
+
+- **frontend-ui-ux**: Designer-turned-developer who crafts stunning UI/UX
+  - From [code-yeongyu/oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode)
+  - Creates visually stunning, emotionally engaging interfaces
+  - Obsesses over pixel-perfect details, smooth animations, and intuitive interactions
+
+- **git-master**: Git expert for commit architecture, rebasing, and history archaeology
+  - From [code-yeongyu/oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode)
+  - Handles atomic commits, rebase/squash, history search (blame, bisect, log -S)
+  - Triggered by git operations: 'commit', 'rebase', 'squash', 'who wrote', 'when was X added'
+
+- **test-skill**: Test skill for skill system validation
+  - From [anomalyco/opencode](https://github.com/anomalyco/opencode)
 
 ### Available Skills from Vercel
 
@@ -61,8 +78,12 @@ This project uses Bun. Install skills using `bunx`:
 # Add skills from Vercel
 bunx skills add vercel-labs/agent-skills
 
-# Or add a specific skill
-bunx skills add vercel-labs/agent-skills/vercel-deploy-claimable
+# Add skills from OpenCode community
+bunx skills add anomalyco/opencode
+bunx skills add code-yeongyu/oh-my-opencode
+
+# Or add from any GitHub repository
+bunx skills add owner/repo
 ```
 
 Skills are automatically installed to `.github/skills/` directory for GitHub Copilot.
