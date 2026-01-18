@@ -55,18 +55,17 @@ Additional skills can be installed from the [vercel-labs/agent-skills](https://g
 
 ### Installing Additional Skills
 
-Use `bunx` (Bun) or `npx` (Node.js) to install skills:
+This project uses Bun. Install skills using `bunx`:
 
 ```bash
-# Using Bun (recommended for this project)
-bunx add-skill vercel-labs/agent-skills/web-design-guidelines
-bunx add-skill vercel-labs/agent-skills/vercel-deploy-claimable
+# Add skills from Vercel
+bunx skills add vercel-labs/agent-skills
 
-# Using Node.js/npm
-npx add-skill vercel-labs/agent-skills/web-design-guidelines
+# Or add a specific skill
+bunx skills add vercel-labs/agent-skills/vercel-deploy-claimable
 ```
 
-Skills should be installed to `.github/skills/` directory to work with GitHub Copilot.
+Skills are automatically installed to `.github/skills/` directory for GitHub Copilot.
 
 ## Recording Animations
 
