@@ -23,29 +23,50 @@ bun install
 
 ## AI Coding Agent Skills
 
-This project uses Vercel's Agent Skills system to maintain consistent code quality and follow React best practices.
-
-### Installing Skills (Bun)
-
-When available, use `bunx` instead of `npx` for better performance:
-
-```bash
-# List available skills
-bunx add-skill vercel-labs/agent-skills --list
-
-# Install React best practices
-bunx add-skill vercel-labs/agent-skills --skill vercel-react-best-practices
-
-# Install web design guidelines
-bunx add-skill vercel-labs/agent-skills --skill web-design-guidelines
-```
+This project uses Vercel's Agent Skills system to maintain consistent code quality and follow React best practices. Skills are located in `.github/skills/` for GitHub Copilot integration.
 
 ### Currently Installed Skills
 
 - **vercel-react-best-practices**: React and Next.js performance optimization guidelines
   - Located in `.github/skills/vercel-react-best-practices/`
-  - 45 rules across 8 categories
+  - 45 rules across 8 categories (eliminating waterfalls, bundle optimization, server-side performance, etc.)
   - Used by GitHub Copilot and other AI coding agents
+  - Automatically triggered when working with React components or Next.js pages
+
+- **web-design-guidelines**: Review UI code for web interface best practices
+  - Located in `.github/skills/web-design-guidelines/`
+  - 100+ rules covering accessibility, performance, and UX
+  - Audits for ARIA labels, semantic HTML, keyboard handlers, focus states, animations, typography, images, and more
+  - Triggered by "Review my UI", "Check accessibility", or "Audit design" tasks
+
+### Available Skills from Vercel
+
+Additional skills can be installed from the [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) repository:
+
+1. **web-design-guidelines**: Review UI code for compliance with web interface best practices
+   - 100+ rules covering accessibility, performance, and UX
+   - Audits for ARIA labels, semantic HTML, keyboard handlers, focus states, animations, typography, images, and more
+   - Useful for "Review my UI", "Check accessibility", or "Audit design" tasks
+
+2. **vercel-deploy-claimable**: Deploy applications to Vercel directly from conversations
+   - Auto-detects 40+ frameworks from `package.json`
+   - Returns preview URL and claim URL for ownership transfer
+   - Useful for "Deploy my app" or "Push this live" tasks
+
+### Installing Additional Skills
+
+Use `bunx` (Bun) or `npx` (Node.js) to install skills:
+
+```bash
+# Using Bun (recommended for this project)
+bunx add-skill vercel-labs/agent-skills/web-design-guidelines
+bunx add-skill vercel-labs/agent-skills/vercel-deploy-claimable
+
+# Using Node.js/npm
+npx add-skill vercel-labs/agent-skills/web-design-guidelines
+```
+
+Skills should be installed to `.github/skills/` directory to work with GitHub Copilot.
 
 ## Recording Animations
 
