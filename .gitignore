@@ -16,6 +16,14 @@ test_*.go
 # Go workspace file
 go.work
 
+# Node/Bun
+node_modules/
+dist/
+*.log
+npm-debug.log*
+.bun-cache/
+bun.lockb
+
 # IDE
 .vscode/
 .idea/
