@@ -11,6 +11,8 @@
     "record:all": "npm run record:fire && npm run record:matrix"
   },
   "dependencies": {
+    "ink": "^6.6.0",
+    "react": "^19.2.3",
     "sysc-react": "file:.."
   }
 }
